@@ -1,9 +1,5 @@
 /*
- * (c)2014 Expeditors International of Washington, Inc.
- * Business confidential and proprietary.  This information may not be reproduced 
- * in any form without advance written consent of an authorized officer of the 
- * copyright holder.
- *
+ * see license.txt
  */
 package jslt2;
 
@@ -16,7 +12,7 @@ import jslt2.parser.Scanner;
 import jslt2.parser.Source;
 
 /**
- * @author chq-tonys
+ * @author Tony
  *
  */
 public class Main {
