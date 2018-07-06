@@ -1,0 +1,19 @@
+import x
+import x as y
+def x() $x
+let v = "hi"
+
+{    
+    "test" : 1,
+    "testArray": [
+        1,"t",true 
+    ],
+    
+    "testIf": if (true) true else false,
+    "testForArray" : [for (.foo.bar) . > 2],
+    "testForObject" : {
+        for (.foo.bar) string(.) : . 
+    },
+    * - bar, baz, quuz:.,
+    "testArraySlice" : .array[2 : 0]
+}
