@@ -98,6 +98,9 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                 else if(fieldName instanceof StringExpr) {
                     asm.addfieldc(((StringExpr)fieldName).getString());
                 }
+                else if(fieldName instanceof MatchExpr) {
+                    fieldName.visit(this);
+                }
                 else {
                     throw new Jslt2Exception("Invalid field expression: " + fieldName);
                 }
@@ -399,8 +402,25 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     @Override
     public void visit(MatchExpr expr) {
         asm.line(expr.getLineNumber());
-     //   expr.
-        // TODO
+        List<Expr> fields = expr.getFields();
+        int numFieldsToOmit = 0;
+        
+        if(fields != null) {
+            numFieldsToOmit = fields.size();
+            for(Expr field : fields) {
+                if(field instanceof IdentifierExpr) {
+                    asm.addAndloadconst(((IdentifierExpr)field).getIdentifier());
+                }
+                else if(field instanceof StringExpr) {
+                    asm.addAndloadconst(((StringExpr)field).getString());
+                }
+                else {
+                    throw new Jslt2Exception("Invalid match field expression: " + field);
+                }
+            }
+        }
+        
+        asm.matcher(numFieldsToOmit);
     }
         
     

@@ -1,0 +1,6 @@
+def add(array, a)
+    [for ($array) . + $a]
+
+{
+    "result" : add(., 2)
+}     

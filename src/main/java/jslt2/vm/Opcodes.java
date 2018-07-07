@@ -272,7 +272,11 @@ public class Opcodes {
             case NAMESPACE_DEF: {
                 op = "NAMESPACE_DEF";
                 break;
-            }            
+            }
+            case MATCHER: {
+                op = "MATCHER";
+                break;
+            }
             
             case INVOKE:    {        
                 op = "INVOKE";
@@ -461,6 +465,9 @@ public class Opcodes {
         FUNC_DEF = 25,                /* ARGx */        
         NAMESPACE_DEF = 26,           /* ARGx */
         
+
+        MATCHER  = 27,                /* ARGx */   
+        
         /* method invocation */
         INVOKE = 28,                  /* ARG1, ARG2 */          
         TAIL_CALL = 29,               /* ARG1, ARG2 */
@@ -548,6 +555,7 @@ public class Opcodes {
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
         opcodes.put("NAMESPACE_DEF", NAMESPACE_DEF);
+        opcodes.put("MATCHER", MATCHER);
                         
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("TAIL_CALL", TAIL_CALL);        

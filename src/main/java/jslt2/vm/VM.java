@@ -5,6 +5,8 @@ package jslt2.vm;
 
 import static jslt2.vm.Opcodes.*;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Stack;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -339,6 +341,46 @@ public class VM {
                             int pos = ARGsx(i);
                             pc += pos;
                         }
+                        break;
+                    }
+                    case MATCHER: {
+                        JsonNode node = this.valueStack.peek();
+                        if(!node.isObject()) {
+                            error(node + " is not an object.");
+                        }
+                        ObjectNode outputObj = (ObjectNode)node;
+                        
+                        int n = ARGx(i);
+                        JsonNode[] omittedFields = readArrayFromStack(n, stack);
+                        
+                        JsonNode inputNode = null;
+                        if(forStack != null && !forStack.isEmpty()) {                            
+                            ForEntry it = forStack.peek();
+                            inputNode = it.current();                            
+                        }
+                        else {
+                            inputNode = input;
+                        }
+                        
+                        if(!inputNode.isObject()) {
+                            error(inputNode + " is not an object.");
+                        }
+                        
+                        ObjectNode inputObj = (ObjectNode)inputNode;
+                        Iterator<Map.Entry<String, JsonNode>> it = inputObj.fields();
+                        
+                        while(it.hasNext()) {
+                            Map.Entry<String, JsonNode> next = it.next();
+                            String key = next.getKey();
+                            if(!outputObj.has(key)) {
+                                if(isOmittedField(omittedFields, key)) {
+                                    continue;
+                                }
+                                
+                                outputObj.set(key, next.getValue());
+                            }
+                        }
+                        
                         break;
                     }
                     case FOR_START: {
@@ -748,12 +790,24 @@ public class VM {
      */
     private JsonNode[] readArrayFromStack(int nargs, JsonNode[] stack) {
         JsonNode[] args = null;
-        if ( nargs > 0 ) {
+        if (nargs > 0) {
             args = new JsonNode[nargs];
             return readArrayFromStack(args, nargs, stack);
         }
         
         return args;
+    }
+    
+    private boolean isOmittedField(JsonNode[] omittedFields, String key) {
+        if(omittedFields != null) {
+            for(int j = 0; j < omittedFields.length; j++) {
+                if(omittedFields[j].asText().equals(key)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**

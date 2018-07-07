@@ -914,6 +914,11 @@ public class BytecodeEmitter {
         return labelName;
     }
     
+    public void matcher(int numOfOmittedFields) {
+        instrx(MATCHER, numOfOmittedFields);
+        decrementMaxstackSize(numOfOmittedFields);
+    }
+    
     public void idx() {
         instr(IDX);
         decrementMaxstackSize();
