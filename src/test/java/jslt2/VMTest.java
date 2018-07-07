@@ -50,7 +50,7 @@ public class VMTest {
         em.start(ScopeType.GLOBAL_SCOPE, 0);
             em.newobj();
             em.addAndloadconst("tony");
-            em.addfield("name");
+            em.addfieldc("name");
             em.sealobj();
             
             em.funcdef(1);
@@ -84,21 +84,21 @@ public class VMTest {
             em.newobj();
             em.loadinput();
             em.getk("name");
-            em.addfield("name");
+            em.addfieldc("name");
             
             em.loadinput();
             em.getk("person");
             em.dup();
             em.getk("first");
-            em.addfield("first");
+            em.addfieldc("first");
             
             em.dup();
             em.getk("last");
-            em.addfield("last");
+            em.addfieldc("last");
             
             //em.dup();
             em.getk("age");
-            em.addfield("age");
+            em.addfieldc("age");
             em.sealobj();                        
         em.end();
         
@@ -126,7 +126,7 @@ public class VMTest {
             em.ifeq("endif");
             em.pop();
             em.label("endif");
-            em.addfield("name");            
+            em.addfieldc("name");            
             em.sealobj();                        
         em.end();
         

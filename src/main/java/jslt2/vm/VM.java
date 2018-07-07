@@ -186,6 +186,8 @@ public class VM {
 
         int lineNumber = -1;
         
+        Stack<ForEntry> forStack = null;
+        
         try {
             while( pc < len ) {
                 int i = instr[pc++];
@@ -195,7 +197,7 @@ public class VM {
                     case LINE:
                         break;
                     case NEW_OBJ: {
-                        this.valueStack.push(new ObjectNode(this.runtime.getObjectMapper().getNodeFactory()));
+                        this.valueStack.push(this.runtime.newObjectNode());
                         break;     
                     }
                     case SEAL_OBJ: {
@@ -204,7 +206,7 @@ public class VM {
                     }
                     
                     case NEW_ARRAY: {
-                        this.valueStack.push(new ArrayNode(this.runtime.getObjectMapper().getNodeFactory()));
+                        this.valueStack.push(this.runtime.newArrayNode(16));
                         break;       
                     }
                     case SEAL_ARRAY: {
@@ -212,17 +214,38 @@ public class VM {
                         break;
                     }
                     
-                    case ADD_FIELD: {                       
+                    case ADD_FIELDC: {                       
                         JsonNode node = this.valueStack.peek();
                         if(!node.isObject()) {
                             error(node + " is not an object.");
                         }
+                        ObjectNode obj = (ObjectNode)node;
                         
                         int iname = ARGx(i);
                         JsonNode fieldName = constants[iname];
-                        ObjectNode obj = (ObjectNode)node;
                         obj.set(fieldName.asText(), stack[--top]);
                         
+                        break;
+                    }
+                    case ADD_FIELD: {
+                        JsonNode obj = this.valueStack.peek();
+                        
+                        JsonNode value = stack[--top];
+                        JsonNode index = stack[--top];
+                        
+                        if(obj.isArray()) {
+                            ArrayNode array = (ArrayNode)obj;
+                            array.set(index.asInt(), value);
+                        }
+                        else if(obj.isObject()) {
+                            ObjectNode object = (ObjectNode)obj;
+                            object.set(index.asText(), value);
+                        }
+                        else {
+                            error(obj + " is not an indexable object");
+                        }
+                        
+                        stack[top++] = obj; 
                         break;
                     }
                     case ADD_ELEMENT: {
@@ -266,7 +289,16 @@ public class VM {
                         break;
                     }
                     case LOAD_INPUT: {
-                        stack[top++] = input;
+                        JsonNode obj = null;
+                        if(forStack != null && !forStack.isEmpty()) {                            
+                            ForEntry it = forStack.peek();
+                            obj = it.current();                            
+                        }
+                        else {
+                            obj = input;
+                        }
+                        
+                        stack[top++] = obj;
                         break;
                     }
                     case STORE_LOCAL: {
@@ -306,6 +338,26 @@ public class VM {
                         if (!cond.asBoolean()) {
                             int pos = ARGsx(i);
                             pc += pos;
+                        }
+                        break;
+                    }
+                    case FOR_START: {
+                        if(forStack == null) {
+                            forStack = new Stack<>();
+                        }
+                        
+                        ForEntry entry = new ForEntry(this.runtime, stack[top-1]);
+                        forStack.push(entry);
+                        
+                        break;
+                    }
+                    case FOR_END: {
+                        forStack.pop();
+                        break;
+                    }
+                    case FOR_INC: {
+                        if(!forStack.peek().advance()) {
+                            pc += ARGsx(i);
                         }
                         break;
                     }
@@ -452,26 +504,6 @@ public class VM {
                         }
                         
                         stack[top++] = value;
-                        break;
-                    }
-                    case SET: {
-                        JsonNode index = stack[--top];
-                        JsonNode obj = stack[--top];
-                        JsonNode value = stack[--top];
-              
-                        if(obj.isArray()) {
-                            ArrayNode array = (ArrayNode)obj;
-                            array.set(index.asInt(), value);
-                        }
-                        else if(obj.isObject()) {
-                            ObjectNode object = (ObjectNode)obj;
-                            object.set(index.asText(), value);
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = obj; 
                         break;
                     }
                     case SETK: {

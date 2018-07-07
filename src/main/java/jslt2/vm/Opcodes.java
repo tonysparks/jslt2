@@ -256,6 +256,10 @@ public class Opcodes {
                 op = "ADD_FIELD";
                 break;
             }
+            case ADD_FIELDC: {
+                op = "ADD_FIELDC";
+                break;
+            }
             case ADD_ELEMENT: {
                 op = "ADD_ELEMENT";
                 break;
@@ -269,7 +273,7 @@ public class Opcodes {
                 op = "NAMESPACE_DEF";
                 break;
             }            
-                        
+            
             case INVOKE:    {        
                 op = "INVOKE";
                 break;
@@ -385,6 +389,18 @@ public class Opcodes {
                 op = "ARRAY_SLICE";
                 break;
             }
+            case FOR_START: {
+                op = "FOR_START";
+                break;
+            }
+            case FOR_END: {
+                op = "FOR_END";
+                break;
+            }
+            case FOR_INC:    {
+                op = "FOR_INC";
+                break;
+            }
             case LINE: {
                 op = "LINE";
                 break;
@@ -437,15 +453,14 @@ public class Opcodes {
         NEW_OBJ    = 20,              /*       */
         SEAL_OBJ   = 21,
         
-        ADD_FIELD    = 22,
-        ADD_ELEMENT  = 23,
-        
-        
+        ADD_FIELDC   = 22,
+        ADD_FIELD    = 23,
+        ADD_ELEMENT  = 24,
         
         /* type declarations */
-        FUNC_DEF = 24,                /* ARGx */        
-        NAMESPACE_DEF = 25,           /* ARGx */
-                
+        FUNC_DEF = 25,                /* ARGx */        
+        NAMESPACE_DEF = 26,           /* ARGx */
+        
         /* method invocation */
         INVOKE = 28,                  /* ARG1, ARG2 */          
         TAIL_CALL = 29,               /* ARG1, ARG2 */
@@ -465,6 +480,11 @@ public class Opcodes {
         SIDX = 39,                    /*      */
         
         ARRAY_SLICE  = 40,            /*      */
+
+
+        FOR_START    = 41,            /*      */
+        FOR_END      = 42,            /*      */
+        FOR_INC      = 43,            /*      */
         
         /* arithmetic operators */
         ADD = 44,                     /*      */
@@ -523,12 +543,12 @@ public class Opcodes {
         opcodes.put("SEAL_OBJ", SEAL_OBJ);
         
         opcodes.put("ADD_FIELD", ADD_FIELD);
+        opcodes.put("ADD_FIELDC", ADD_FIELDC);
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
         opcodes.put("NAMESPACE_DEF", NAMESPACE_DEF);
-        
-                
+                        
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("TAIL_CALL", TAIL_CALL);        
         
@@ -542,6 +562,10 @@ public class Opcodes {
         opcodes.put("SET_GLOBAL", SET_GLOBAL);
         opcodes.put("GET_NAMESPACE", GET_NAMESPACE);        
         
+
+        opcodes.put("FOR_START", FOR_START);
+        opcodes.put("FOR_END", FOR_END);
+        opcodes.put("FOR_INC", FOR_INC);
         
         /* arithmetic operators */
         opcodes.put("ADD", ADD);

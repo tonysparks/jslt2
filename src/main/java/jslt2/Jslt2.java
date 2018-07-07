@@ -12,6 +12,8 @@ import java.io.StringReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
@@ -49,6 +51,14 @@ public class Jslt2 {
     
     public Jslt2() {
         this(new ObjectMapper());
+    }
+    
+    public ObjectNode newObjectNode() {
+        return new ObjectNode(this.objectMapper.getNodeFactory());
+    }
+    
+    public ArrayNode newArrayNode(int capacity) {
+        return new ArrayNode(this.objectMapper.getNodeFactory(), capacity);
     }
     
     public JsonNode eval(File file, JsonNode input) {

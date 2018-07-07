@@ -849,6 +849,7 @@ public class BytecodeEmitter {
     }
     public void sealobj() {
         instr(SEAL_OBJ);
+        incrementMaxstackSize();
     }
     
     public void newarray() {
@@ -857,23 +858,60 @@ public class BytecodeEmitter {
     
     public void sealarray() {
         instr(SEAL_ARRAY);
+        incrementMaxstackSize();
     }
     
-    public void addfield(String fieldName) {
+    public void addfieldc(String fieldName) {
         int index = addConst(TextNode.valueOf(fieldName));
-        addfield(index);
+        addfieldc(index);
     }
     
-    public void addfield(int constIndex) {
-        instrx(ADD_FIELD, constIndex);
+    public void addfieldc(int constIndex) {
+        instrx(ADD_FIELDC, constIndex);
+        decrementMaxstackSize();
+    }
+    
+    public void addfield() {
+        instr(ADD_FIELD);
+        decrementMaxstackSize(2);
     }
     
     public void addelement() {
         instr(ADD_ELEMENT);
+        decrementMaxstackSize();
+    }
+    
+    public void arrayslice() {
+        instr(ARRAY_SLICE);
+        decrementMaxstackSize(2);
     }
     
     public void loadinput() {
         instr(LOAD_INPUT);
+        incrementMaxstackSize();
+    }
+    
+    public void forstart() {
+        instr(FOR_START);        
+    }
+    
+    public void forend() {
+        instr(FOR_END);
+    }
+    
+    public void forinc(String label) {
+        markLabel(FOR_INC, label);        
+    }
+    
+    public void forinc(int offset) {
+        instrsx(FOR_INC, offset);
+    }
+    
+    public String forinc() {
+        String labelName = nextLabelName();
+        forinc(labelName);
+        
+        return labelName;
     }
     
     public void idx() {

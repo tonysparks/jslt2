@@ -6,31 +6,7 @@ import java.util.List;
 
 import static jslt2.parser.tokens.TokenType.*;
 
-import jslt2.ast.ArrayExpr;
-import jslt2.ast.ArraySliceExpr;
-import jslt2.ast.BinaryExpr;
-import jslt2.ast.BooleanExpr;
-import jslt2.ast.DefExpr;
-import jslt2.ast.DotExpr;
-import jslt2.ast.Expr;
-import jslt2.ast.ForArrayExpr;
-import jslt2.ast.ForObjectExpr;
-import jslt2.ast.FuncCallExpr;
-import jslt2.ast.GetExpr;
-import jslt2.ast.IdentifierExpr;
-import jslt2.ast.IfExpr;
-import jslt2.ast.ImportExpr;
-import jslt2.ast.ImportGetExpr;
-import jslt2.ast.LetExpr;
-import jslt2.ast.MatchExpr;
-import jslt2.ast.Node;
-import jslt2.ast.NullExpr;
-import jslt2.ast.NumberExpr;
-import jslt2.ast.ObjectExpr;
-import jslt2.ast.ProgramExpr;
-import jslt2.ast.StringExpr;
-import jslt2.ast.UnaryExpr;
-import jslt2.ast.VariableExpr;
+import jslt2.ast.*;
 import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
 import jslt2.util.Tuple;
@@ -263,7 +239,13 @@ public class Parser {
             if(match(LEFT_PAREN)) {
                 expr = finishFunctionCall(expr);
             }
-            else if(match(LEFT_BRACKET)) {
+            else if(check(LEFT_BRACKET)) {
+                if(lookahead(1).getType().equals(FOR)) {
+                    break;
+                }
+                
+                advance();
+                
                 Expr startIndexExpr = expression();
                 Expr endIndexExpr = null;
                 if(match(COLON)) {
@@ -276,6 +258,7 @@ public class Parser {
                 }
                 consume(RIGHT_BRACKET, ErrorCode.MISSING_RIGHT_BRACKET);                
                 expr = node(new ArraySliceExpr(expr, startIndexExpr, endIndexExpr));
+                
             }
             else if(match(DOT)) {
                 Token name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
@@ -587,6 +570,10 @@ public class Parser {
      */
     private Token peek() {
         return this.tokens.get(current);
+    }
+    
+    private Token lookahead(int amount) {
+        return this.tokens.get(current + amount);
     }
     
     /**
