@@ -249,7 +249,7 @@ public class Parser {
                 Expr startIndexExpr = expression();
                 Expr endIndexExpr = null;
                 if(match(COLON)) {
-                    if(!match(TokenType.RIGHT_BRACKET)) {
+                    if(!check(TokenType.RIGHT_BRACKET)) {
                         endIndexExpr = expression();
                     }
                     else {
@@ -573,7 +573,12 @@ public class Parser {
     }
     
     private Token lookahead(int amount) {
-        return this.tokens.get(current + amount);
+        int index = current + amount;
+        if(index < this.tokens.size()) {
+            return this.tokens.get(index);
+        }
+        
+        return this.tokens.get(this.tokens.size() - 1);
     }
     
     /**

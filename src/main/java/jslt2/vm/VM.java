@@ -471,7 +471,7 @@ public class VM {
 
                         break;
                     }
-                    case IDX: {
+                    /*case IDX: {
                         JsonNode index = stack[--top];
                         JsonNode obj = stack[--top];
 
@@ -509,7 +509,7 @@ public class VM {
                         stack[top++] = obj; 
                         break;
                     }
-                    
+                    */
                     /* object access */
                     case GET: {
                         JsonNode index = stack[--top];

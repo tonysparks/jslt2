@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
@@ -24,8 +25,6 @@ public class ForEntry {
     
     private int index;
     
-    private ObjectNode scopeNode;
-    private boolean isObject;
     private boolean isNull;
     
     /**
@@ -38,13 +37,17 @@ public class ForEntry {
             this.current = NullNode.instance;
         }
         else if(object.isObject()) {
-            this.isObject = true;
-            this.scopeNode = runtime.newObjectNode();
             this.array = runtime.newArrayNode(object.size());
             
             Iterator<String> it = ((ObjectNode)object).fieldNames();            
             while(it.hasNext()) {
-                this.array.add(it.next());
+                String key = it.next();
+                
+                ObjectNode node = runtime.newObjectNode();
+                node.set("key", TextNode.valueOf(key));
+                node.set("value", this.object.get(key));
+                
+                this.array.add(node);
             }
         }
         else if(object.isArray()) {            
@@ -71,17 +74,7 @@ public class ForEntry {
     
     public boolean advance() {
         if(hasNext()) {
-            JsonNode next = this.array.get(this.index++);
-            if(this.isObject) {
-                String key = next.asText(); 
-                this.scopeNode.set("key", next);
-                this.scopeNode.set("value", this.object.get(key));
-                this.current = this.scopeNode;
-            }            
-            else {
-                this.current = (JsonNode) next;
-            }
-            
+            this.current = this.array.get(this.index++);            
             return true;
         }
         

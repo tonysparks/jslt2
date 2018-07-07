@@ -44,12 +44,12 @@ public class Jslt2Test {
     
     @Ignore
     private void testAgainstSpec(JsonNode input, String query) {
-        JsonNode result = runtime.eval(query, input);
-        System.out.println("Mine: " + result);        
-
-        
         Expression jslt = Parser.compileString(query);
+
         JsonNode jsltResult = jslt.apply(input);
+        JsonNode result = runtime.eval(query, input);
+        
+        System.out.println("Mine: " + result);
         System.out.println("Jslt: " + jsltResult);
         
         assertEquals(jsltResult, result);
@@ -95,7 +95,16 @@ public class Jslt2Test {
         ObjectNode input = runtime.newObjectNode();
         input.set("name", TextNode.valueOf("tony"));
         
-    //    testAgainstSpec(input, "let t = {\"one\":\"1\", \"two\": \"3\", \"three\": \"3\" } {for ($t) .key : .}");
+        testAgainstSpec(input, "let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } {for ($t) .key : .}");
+    }
+    
+    @Test
+    public void testObject() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        testAgainstSpec(input, "{ let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } \"x\" : .name, \"y\": .team }");
     }
 
     
@@ -111,6 +120,14 @@ public class Jslt2Test {
         input.set("qb", person);
         
         testAgainstSpec(input, "{ \"team\": \"Green Bay\", * - name: .}");
+    }
+    
+    @Test
+    public void testArraySlice() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        testAgainstSpec(input, "let t = [1.0,2.0,3.0] [for ($t[1:]) . + 20]");        
     }
     
     @Test

@@ -606,17 +606,7 @@ public class BytecodeEmitter {
     private void instrsx(int opcode, int argsx) {
         instr(SET_ARGsx(opcode, argsx));
     }
-    
-    /**
-     * Outputs an instruction with 1 argument
-     * 
-     * @param opcode
-     * @param arg1
-     */
-    private void instr1(int opcode, int arg1) {
-        instr(SET_ARG1(opcode, arg1));
-    }
-    
+        
     /**
      * Outputs an instruction with 2 arguments
      * 
