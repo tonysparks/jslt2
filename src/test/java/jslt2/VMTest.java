@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -42,7 +41,7 @@ public class VMTest {
 
     @Test
     public void test() {
-        Jslt2 runtime = new Jslt2(new ObjectMapper());
+        Jslt2 runtime = new Jslt2();
         
         JsonNode input = NullNode.instance;
         

@@ -13,23 +13,23 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  */
 public class Main {
+    
+    
     /**
      * @param args
      */
     public static void main(String[] args) throws Exception {
+        if(args.length == 0) {
+            System.out.println("<usage> jslt2 [options] ");
+        }
+        
         Jslt2 runtime = new Jslt2();
         JsonNode input = runtime.getObjectMapper().readTree(new FileReader(new File(args[1])));
         
         Template template = runtime.compile(new FileReader(new File(args[0])));
         JsonNode result = template.eval(input);
         
-        System.out.println(result);
-        
-//        Source source = new Source(new FileReader(new File(args[0])));
-//        Scanner scanner = new Scanner(source);
-//        Parser parser = new Parser(scanner);
-//        ProgramExpr program = parser.parseProgram();
-//        program.visit(new PrettyPrinter());
+        System.out.println(result);        
     }
 
 }
