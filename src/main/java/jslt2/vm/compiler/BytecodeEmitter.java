@@ -8,7 +8,7 @@ package jslt2.vm.compiler;
 import static jslt2.vm.Opcodes.ADD;
 import static jslt2.vm.Opcodes.ADD_ELEMENT;
 import static jslt2.vm.Opcodes.ADD_FIELD;
-import static jslt2.vm.Opcodes.ADD_FIELDC;
+import static jslt2.vm.Opcodes.ADD_FIELDK;
 import static jslt2.vm.Opcodes.AND;
 import static jslt2.vm.Opcodes.ARRAY_SLICE;
 import static jslt2.vm.Opcodes.DIV;
@@ -18,7 +18,7 @@ import static jslt2.vm.Opcodes.FOR_END;
 import static jslt2.vm.Opcodes.FOR_INC;
 import static jslt2.vm.Opcodes.FOR_START;
 import static jslt2.vm.Opcodes.FUNC_DEF;
-import static jslt2.vm.Opcodes.GETK;
+import static jslt2.vm.Opcodes.GET_FIELDK;
 import static jslt2.vm.Opcodes.GT;
 import static jslt2.vm.Opcodes.GTE;
 import static jslt2.vm.Opcodes.IFEQ;
@@ -848,13 +848,13 @@ public class BytecodeEmitter {
         incrementMaxstackSize();
     }
     
-    public void addfieldc(String fieldName) {
+    public void addfieldk(String fieldName) {
         int index = addConst(TextNode.valueOf(fieldName));
-        addfieldc(index);
+        addfieldk(index);
     }
     
-    public void addfieldc(int constIndex) {
-        instrx(ADD_FIELDC, constIndex);
+    public void addfieldk(int constIndex) {
+        instrx(ADD_FIELDK, constIndex);
         decrementMaxstackSize();
     }
     
@@ -906,13 +906,13 @@ public class BytecodeEmitter {
         decrementMaxstackSize(numOfOmittedFields);
     }
     
-    public void getk(int constIndex) {
-        instrx(GETK, constIndex);
+    public void getfieldk(int constIndex) {
+        instrx(GET_FIELDK, constIndex);
         decrementMaxstackSize();
     }
-    public void getk(String stringconst) {
+    public void getfieldk(String stringconst) {
         int index = getConstants().store(stringconst);
-        instrx(GETK, index);
+        instrx(GET_FIELDK, index);
         decrementMaxstackSize();
     }
             

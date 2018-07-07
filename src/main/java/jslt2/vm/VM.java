@@ -218,7 +218,7 @@ public class VM {
                         break;
                     }
                     
-                    case ADD_FIELDC: {                       
+                    case ADD_FIELDK: {                       
                         JsonNode node = this.valueStack.peek();
                         if(!node.isObject()) {
                             error(node + " is not an object.");
@@ -474,7 +474,7 @@ public class VM {
                         break;
                     }
                     
-                    case GETK: {
+                    case GET_FIELDK: {
                         int iname = ARGx(i);                        
                         JsonNode index = constants[iname];
                         JsonNode obj = stack[--top];

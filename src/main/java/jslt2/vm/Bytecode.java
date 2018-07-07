@@ -319,7 +319,7 @@ public class Bytecode {
                     }
                     break;
                 }
-                case Opcodes.GETK:
+                case Opcodes.GET_FIELDK:
                 case Opcodes.LOAD_CONST: {
                     String argx = Integer.toString(Opcodes.ARGx(code));                                                         
                     sb.append(String.format(lineFormat4, opcode, argx, i, bytecode.constants[Opcodes.ARGx(code)]));

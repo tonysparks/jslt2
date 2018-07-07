@@ -93,10 +93,10 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                 
                 Expr fieldName = field.getFirst();
                 if(fieldName instanceof IdentifierExpr) {
-                    asm.addfieldc(((IdentifierExpr)fieldName).getIdentifier());
+                    asm.addfieldk(((IdentifierExpr)fieldName).getIdentifier());
                 }
                 else if(fieldName instanceof StringExpr) {
-                    asm.addfieldc(((StringExpr)fieldName).getString());
+                    asm.addfieldk(((StringExpr)fieldName).getString());
                 }
                 else if(fieldName instanceof MatchExpr) {
                     fieldName.visit(this);
@@ -241,7 +241,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     @Override
     public void visit(IdentifierExpr expr) {
         asm.line(expr.getLineNumber());
-        asm.getk(expr.getIdentifier()); 
+        asm.getfieldk(expr.getIdentifier()); 
     }
 
     @Override
@@ -266,7 +266,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.line(expr.getLineNumber());
         
         expr.getObject().visit(this);
-        asm.getk(expr.getIdentifier());        
+        asm.getfieldk(expr.getIdentifier());        
     }
 
     /* (non-Javadoc)

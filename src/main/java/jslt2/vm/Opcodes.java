@@ -252,12 +252,18 @@ public class Opcodes {
                 break;
             }
             
+            /* object access */
+            case GET_FIELDK: {
+                op = "GET_FIELDK";
+                break;
+            }
+            
             case ADD_FIELD: {
                 op = "ADD_FIELD";
                 break;
             }
-            case ADD_FIELDC: {
-                op = "ADD_FIELDC";
+            case ADD_FIELDK: {
+                op = "ADD_FIELDK";
                 break;
             }
             case ADD_ELEMENT: {
@@ -282,13 +288,7 @@ public class Opcodes {
                 op = "TAIL_CALL";
                 break;
             }
-        
-            /* object access */
-            case GETK: {
-                op = "GETK";
-                break;
-            }
-            
+
             /* arithmetic operators */
             case ADD:    {
                 op = "ADD";
@@ -420,7 +420,7 @@ public class Opcodes {
         NEW_OBJ    = 20,              /*       */
         SEAL_OBJ   = 21,
         
-        ADD_FIELDC   = 22,
+        ADD_FIELDK   = 22,
         ADD_FIELD    = 23,
         ADD_ELEMENT  = 24,
         
@@ -434,7 +434,7 @@ public class Opcodes {
         TAIL_CALL = 29,               /* ARG1, ARG2 */
         
         /* member access */   
-        GETK = 33,                    /* ARGx */
+        GET_FIELDK = 33,                    /* ARGx */
         
         ARRAY_SLICE  = 40,            /*      */
 
@@ -498,9 +498,10 @@ public class Opcodes {
         
         opcodes.put("NEW_OBJ", NEW_OBJ);
         opcodes.put("SEAL_OBJ", SEAL_OBJ);
-        
+
+        opcodes.put("GET_FIELDK", GET_FIELDK);
         opcodes.put("ADD_FIELD", ADD_FIELD);
-        opcodes.put("ADD_FIELDC", ADD_FIELDC);
+        opcodes.put("ADD_FIELDK", ADD_FIELDK);
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
@@ -509,9 +510,6 @@ public class Opcodes {
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("TAIL_CALL", TAIL_CALL);        
         
-        
-        /* object access */
-        opcodes.put("GETK", GETK);
 
         opcodes.put("FOR_START", FOR_START);
         opcodes.put("FOR_END", FOR_END);

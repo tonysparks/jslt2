@@ -50,7 +50,7 @@ public class VMTest {
         em.start(ScopeType.GLOBAL_SCOPE, 0);
             em.newobj();
             em.addAndloadconst("tony");
-            em.addfieldc("name");
+            em.addfieldk("name");
             em.sealobj();
             
             em.funcdef(1);
@@ -83,22 +83,22 @@ public class VMTest {
         em.start(ScopeType.GLOBAL_SCOPE, 0);
             em.newobj();
             em.loadinput();
-            em.getk("name");
-            em.addfieldc("name");
+            em.getfieldk("name");
+            em.addfieldk("name");
             
             em.loadinput();
-            em.getk("person");
+            em.getfieldk("person");
             em.dup();
-            em.getk("first");
-            em.addfieldc("first");
+            em.getfieldk("first");
+            em.addfieldk("first");
             
             em.dup();
-            em.getk("last");
-            em.addfieldc("last");
+            em.getfieldk("last");
+            em.addfieldk("last");
             
             //em.dup();
-            em.getk("age");
-            em.addfieldc("age");
+            em.getfieldk("age");
+            em.addfieldk("age");
             em.sealobj();                        
         em.end();
         
@@ -120,13 +120,13 @@ public class VMTest {
         em.start(ScopeType.GLOBAL_SCOPE, 0);
             em.newobj();
             em.loadinput();
-            em.getk("name");
+            em.getfieldk("name");
             em.dup();
             em.addAndloadconst("favre");
             em.ifeq("endif");
             em.pop();
             em.label("endif");
-            em.addfieldc("name");            
+            em.addfieldk("name");            
             em.sealobj();                        
         em.end();
         
