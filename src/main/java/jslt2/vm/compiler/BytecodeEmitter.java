@@ -5,7 +5,59 @@
 */
 package jslt2.vm.compiler;
 
-import static jslt2.vm.Opcodes.*;
+import static jslt2.vm.Opcodes.ADD;
+import static jslt2.vm.Opcodes.ADD_ELEMENT;
+import static jslt2.vm.Opcodes.ADD_FIELD;
+import static jslt2.vm.Opcodes.ADD_FIELDC;
+import static jslt2.vm.Opcodes.AND;
+import static jslt2.vm.Opcodes.ARRAY_SLICE;
+import static jslt2.vm.Opcodes.DIV;
+import static jslt2.vm.Opcodes.DUP;
+import static jslt2.vm.Opcodes.EQ;
+import static jslt2.vm.Opcodes.FOR_END;
+import static jslt2.vm.Opcodes.FOR_INC;
+import static jslt2.vm.Opcodes.FOR_START;
+import static jslt2.vm.Opcodes.FUNC_DEF;
+import static jslt2.vm.Opcodes.GETK;
+import static jslt2.vm.Opcodes.GT;
+import static jslt2.vm.Opcodes.GTE;
+import static jslt2.vm.Opcodes.IFEQ;
+import static jslt2.vm.Opcodes.INVOKE;
+import static jslt2.vm.Opcodes.JMP;
+import static jslt2.vm.Opcodes.LINE;
+import static jslt2.vm.Opcodes.LOAD_CONST;
+import static jslt2.vm.Opcodes.LOAD_FALSE;
+import static jslt2.vm.Opcodes.LOAD_INPUT;
+import static jslt2.vm.Opcodes.LOAD_LOCAL;
+import static jslt2.vm.Opcodes.LOAD_NULL;
+import static jslt2.vm.Opcodes.LOAD_OUTER;
+import static jslt2.vm.Opcodes.LOAD_TRUE;
+import static jslt2.vm.Opcodes.LT;
+import static jslt2.vm.Opcodes.LTE;
+import static jslt2.vm.Opcodes.MATCHER;
+import static jslt2.vm.Opcodes.MOD;
+import static jslt2.vm.Opcodes.MUL;
+import static jslt2.vm.Opcodes.NEG;
+import static jslt2.vm.Opcodes.NEQ;
+import static jslt2.vm.Opcodes.NEW_ARRAY;
+import static jslt2.vm.Opcodes.NEW_OBJ;
+import static jslt2.vm.Opcodes.NOT;
+import static jslt2.vm.Opcodes.OPCODE;
+import static jslt2.vm.Opcodes.OPPOP;
+import static jslt2.vm.Opcodes.OR;
+import static jslt2.vm.Opcodes.POP;
+import static jslt2.vm.Opcodes.SEAL_ARRAY;
+import static jslt2.vm.Opcodes.SEAL_OBJ;
+import static jslt2.vm.Opcodes.SET_ARG1;
+import static jslt2.vm.Opcodes.SET_ARG2;
+import static jslt2.vm.Opcodes.SET_ARGsx;
+import static jslt2.vm.Opcodes.SET_ARGx;
+import static jslt2.vm.Opcodes.STORE_LOCAL;
+import static jslt2.vm.Opcodes.STORE_OUTER;
+import static jslt2.vm.Opcodes.SUB;
+import static jslt2.vm.Opcodes.TAIL_CALL;
+import static jslt2.vm.Opcodes.xLOAD_LOCAL;
+import static jslt2.vm.Opcodes.xLOAD_OUTER;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -493,44 +545,6 @@ public class BytecodeEmitter {
     }
     
     /**
-     * Emits a store instruction.  Depending on the scope of the supplied reference, the
-     * storage instruction will either be a <code>storelocal</code>, <code>storeouter</code> or a <code>setglobal</code>.
-     * 
-     * <p>
-     * <ol>
-     *     <li>If the supplied reference is found in the current local storage, a <code>storelocal</code> instruction is emitted.</li>
-     *     <li>If not in the local storage, it will check the parent scopes looking for an {@link OuterDesc}.  If an {@link OuterDesc} is found,
-     *     a <code>storeouter</code> instruction is emitted.</li>
-     *     <li>Finally, if the reference is not found in the parent scopes, a <code>setglobal</code> instruction is emitted.</li>
-     * </ol>
-     * 
-     * @see BytecodeEmitter#storelocal(int)
-     * @see BytecodeEmitter#storeouter(int)
-     * @see BytecodeEmitter#setglobal(String)
-     * @param ref the reference name of the variable
-     */
-    public void store(String ref) {
-        int index = getLocals().get(ref);
-        
-        /* this is a global */
-        if ( index == -1 ) {                        
-            OuterDesc upvalue = this.scopes.peek().find(ref);
-            if ( upvalue == null ) {
-                setglobal(ref);
-            }
-            else {
-                Outers outers = getOuters();
-                index = outers.store(upvalue);
-                storeouter(index);
-            }
-        }
-        /* Otherwise this is a local */
-        else {
-            storelocal(index);
-        }            
-    }
-    
-    /**
      * @return the number of instructions
      */
     public int getInstructionCount() {
@@ -628,22 +642,6 @@ public class BytecodeEmitter {
         instr(opcode); // will eventually be replaced
         getLabels().markLabel(this, label, opcode);                
     }
-    
-    /**
-     * Constructs a new embedded {@link BytecodeEmitter} with the
-     * object scope.
-     * 
-     * @param numberOfParameters
-     */
-    private void newObjectScopeEmitter(int numberOfParameters) {
-
-        BytecodeEmitter asm = new BytecodeEmitter(this.scopes);
-        asm.start(ScopeType.OBJECT_SCOPE, numberOfParameters);
-        asm.setDebug(this.isDebug());
-
-        peek().innerEmmitters.add(asm);
-        this.innerEmitterStack.push(asm);
-    }
 
     /**
      * Constructs a new embedded {@link BytecodeEmitter} with the 
@@ -652,7 +650,6 @@ public class BytecodeEmitter {
      * @param numberOfParameters
      */
     private void newLocalScopeEmitter(int numberOfParameters) {
-
         BytecodeEmitter asm = new BytecodeEmitter(this.scopes);
         asm.start(ScopeType.LOCAL_SCOPE, numberOfParameters);
         asm.setDebug(this.isDebug());
@@ -909,23 +906,6 @@ public class BytecodeEmitter {
         decrementMaxstackSize(numOfOmittedFields);
     }
     
-    public void idx() {
-        instr(IDX);
-        decrementMaxstackSize();
-    }
-    public void sidx() {
-        instr(SIDX);
-        decrementMaxstackSize();
-    }
-    
-    public void get() {
-        instr(GET);
-        decrementMaxstackSize();
-    }
-    public void set() {
-        instr(SET);
-        decrementMaxstackSize(2);
-    }
     public void getk(int constIndex) {
         instrx(GETK, constIndex);
         decrementMaxstackSize();
@@ -935,58 +915,14 @@ public class BytecodeEmitter {
         instrx(GETK, index);
         decrementMaxstackSize();
     }
-    
-    public void setk(int constIndex) {
-        instrx(SETK, constIndex);
-        decrementMaxstackSize();
-    }
-    public void setk(String stringconst) {
-        int index = getConstants().store(stringconst);
-        instrx(SETK, index);
-        decrementMaxstackSize();
-    }
-    
-    public void getnamespace(String stringconst) {
-        int index = getConstants().store(stringconst);
-        getnamespace(index);
-    }
-    public void getnamespace(int constindex) {
-        instrx(GET_NAMESPACE, constindex);
-        incrementMaxstackSize();
-    }
-    
-    public void getglobal(String stringconst) {
-        int index = getConstants().store(stringconst);
-        getglobal(index);
-    }
-    
-    public void setglobal(String stringconst) {
-        int index = getConstants().store(stringconst);
-        setglobal(index);
-    }
-    
-    public void getglobal(int constindex) {
-        instrx(GET_GLOBAL, constindex);
-        incrementMaxstackSize();
-    }
-    
-    public void setglobal(int constindex) {
-        instrx(SET_GLOBAL, constindex);
-        decrementMaxstackSize();
-    }    
-        
+            
     public void funcdef(int numberOfParameters) {
         instrx(FUNC_DEF, getBytecodeIndex());        
         incrementMaxstackSize(numberOfParameters);
         
         newLocalScopeEmitter(numberOfParameters);        
     }
-    
-    public void namespacedef(String name) {
-        instrx(NAMESPACE_DEF, getBytecodeIndex());
-        newObjectScopeEmitter(0);
-    }
-           
+               
     public void ifeq(String label) {
         markLabel(IFEQ, label);
         decrementMaxstackSize();

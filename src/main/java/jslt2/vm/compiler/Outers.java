@@ -6,10 +6,9 @@
 package jslt2.vm.compiler;
 
 import jslt2.util.ArrayUtil;
-import jslt2.vm.Scope;
 
 /**
- * Represents the {@link Outer}s that are stored in a particular {@link Scope}.  
+ * Represents the {@link Outer}s that are stored in a particular scope.  
  * 
  * @author Tony
  *

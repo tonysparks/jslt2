@@ -269,10 +269,6 @@ public class Opcodes {
                 op = "FUNC_DEF";
                 break;
             }            
-            case NAMESPACE_DEF: {
-                op = "NAMESPACE_DEF";
-                break;
-            }
             case MATCHER: {
                 op = "MATCHER";
                 break;
@@ -288,36 +284,10 @@ public class Opcodes {
             }
         
             /* object access */
-            case GET: {
-                op = "GET";
-                break;
-            }
-            case SET: {
-                op = "SET";
-                break;
-            }
             case GETK: {
                 op = "GETK";
                 break;
             }
-            case SETK: {
-                op = "SETK";
-                break;
-            }
-            
-            case GET_GLOBAL: {
-                op = "GET_GLOBAL";
-                break;
-            }
-            case SET_GLOBAL: {
-                op = "SET_GLOBAL";
-                break;
-            }
-            case GET_NAMESPACE: {
-                op = "GET_NAMESPACE";
-                break;
-            }            
-            
             
             /* arithmetic operators */
             case ADD:    {
@@ -381,14 +351,7 @@ public class Opcodes {
                 op = "LTE";
                 break;
             }
-            case IDX:    {
-                op = "IDX";
-                break;
-            }
-            case SIDX:    {
-                op = "SIDX";
-                break;
-            }
+
             case ARRAY_SLICE:    {
                 op = "ARRAY_SLICE";
                 break;
@@ -463,8 +426,6 @@ public class Opcodes {
         
         /* type declarations */
         FUNC_DEF = 25,                /* ARGx */        
-        NAMESPACE_DEF = 26,           /* ARGx */
-        
 
         MATCHER  = 27,                /* ARGx */   
         
@@ -472,19 +433,8 @@ public class Opcodes {
         INVOKE = 28,                  /* ARG1, ARG2 */          
         TAIL_CALL = 29,               /* ARG1, ARG2 */
         
-        /* member access */
-        GET = 30,                     /*      */
-        SET = 31,                     /*      */        
+        /* member access */   
         GETK = 33,                    /* ARGx */
-        SETK = 34,                    /* ARGx */
-        
-        GET_GLOBAL = 35,              /* ARGx */
-        SET_GLOBAL = 36,              /* ARGx */
-        
-        GET_NAMESPACE = 37,           /* ARGx */
-
-        IDX = 38,                     /*      */
-        SIDX = 39,                    /*      */
         
         ARRAY_SLICE  = 40,            /*      */
 
@@ -554,7 +504,6 @@ public class Opcodes {
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
-        opcodes.put("NAMESPACE_DEF", NAMESPACE_DEF);
         opcodes.put("MATCHER", MATCHER);
                         
         opcodes.put("INVOKE", INVOKE);
@@ -562,14 +511,7 @@ public class Opcodes {
         
         
         /* object access */
-        opcodes.put("GET", GET);
-        opcodes.put("SET", SET);
         opcodes.put("GETK", GETK);
-        opcodes.put("SETK", SETK);
-        opcodes.put("GET_GLOBAL", GET_GLOBAL);
-        opcodes.put("SET_GLOBAL", SET_GLOBAL);
-        opcodes.put("GET_NAMESPACE", GET_NAMESPACE);        
-        
 
         opcodes.put("FOR_START", FOR_START);
         opcodes.put("FOR_END", FOR_END);
@@ -594,8 +536,6 @@ public class Opcodes {
         opcodes.put("LT", LT);
         opcodes.put("LTE", LTE);
         
-        opcodes.put("IDX", IDX);
-        opcodes.put("SIDX", SIDX);        
         opcodes.put("ARRAY_SLICE", ARRAY_SLICE);
         
         opcodes.put("LINE", LINE);    

@@ -196,8 +196,10 @@ public class VM {
                 int opcode =  i & 255; //OPCODE(i);
 
                 switch(opcode) {
-                    case LINE:
+                    case LINE: {
+                        lineNumber = ARGx(i);
                         break;
+                    }
                     case NEW_OBJ: {
                         this.valueStack.push(this.runtime.newObjectNode());
                         break;     
@@ -471,64 +473,7 @@ public class VM {
 
                         break;
                     }
-                    /*case IDX: {
-                        JsonNode index = stack[--top];
-                        JsonNode obj = stack[--top];
-
-                        JsonNode value = null;
-                        if(obj.isArray()) {
-                            value = obj.get(index.asInt());
-                        }
-                        else if(obj.isObject()) {
-                            value = obj.get(index.asText());
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = value;                            
-                        break;
-                    }
-                    case SIDX: {
-                        JsonNode index = stack[--top];
-                        JsonNode obj = stack[--top];
-                        JsonNode value = stack[--top];
-              
-                        if(obj.isArray()) {
-                            ArrayNode array = (ArrayNode)obj;
-                            array.set(index.asInt(), value);
-                        }
-                        else if(obj.isObject()) {
-                            ObjectNode object = (ObjectNode)obj;
-                            object.set(index.asText(), value);
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = obj; 
-                        break;
-                    }
-                    */
-                    /* object access */
-                    case GET: {
-                        JsonNode index = stack[--top];
-                        JsonNode obj = stack[--top];
-
-                        JsonNode value = null;
-                        if(obj.isArray()) {
-                            value = obj.get(index.asInt());
-                        }
-                        else if(obj.isObject()) {
-                            value = obj.get(index.asText());
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = value;
-                        break;
-                    }
+                    
                     case GETK: {
                         int iname = ARGx(i);                        
                         JsonNode index = constants[iname];
@@ -547,28 +492,7 @@ public class VM {
                         
                         stack[top++] = value;
                         break;
-                    }
-                    case SETK: {
-                        int iname = ARGx(i);
-                        JsonNode index = constants[iname];
-                        JsonNode obj = stack[--top];
-                        JsonNode value = stack[--top];
-              
-                        if(obj.isArray()) {
-                            ArrayNode array = (ArrayNode)obj;
-                            array.set(index.asInt(), value);
-                        }
-                        else if(obj.isObject()) {
-                            ObjectNode object = (ObjectNode)obj;
-                            object.set(index.asText(), value);
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = obj; 
-                        break;
-                    }
+                    }                    
                     case ARRAY_SLICE: {
                         JsonNode end = stack[--top];
                         JsonNode start = stack[--top];
@@ -715,12 +639,41 @@ public class VM {
                 }
             }
         }
-        catch(Exception e) {
-            error("RuntimeError: " + e);
+        catch(Exception e) {            
+            buildStackTrace(code, lineNumber, e);
         }
         
-        result = stack[--top];        
+        result = stack[--top];   
+        
+        exitCall(code, closeOuters, base, pc, len);
+                    
         return result;
+    }
+    
+    private void buildStackTrace(Bytecode code, int lineNumber, Exception e) {
+        error(String.format("RuntimeError: '%s' at line %d stack trace: %s", code.getSourceFileName(), lineNumber, e));
+    }
+    
+    private void exitCall(Bytecode code, boolean closeOuters, int base, int pc, int len) {
+        final int stackSize = Math.min(stack.length, base+code.maxstacksize);
+        /* close the outers for this function call */
+        if (closeOuters) {
+            for(int j=base;j<stackSize;j++) {
+                if(openouters[j]!=null) {
+                    openouters[j].close();
+                    openouters[j] = null;
+                }
+
+                stack[j] = null;
+            }
+        }
+        else {
+            for(int j=base;j<stackSize;j++) {
+                stack[j] = null;
+            }                
+        }
+
+        top = base;            
     }
     
     /**

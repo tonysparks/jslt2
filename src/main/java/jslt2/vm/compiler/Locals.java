@@ -6,16 +6,15 @@
 package jslt2.vm.compiler;
 
 import jslt2.util.ArrayUtil;
-import jslt2.vm.Scope;
 
 /**
- * Represents local variables within a {@link Scope}.  Used for compilation to determine the 
+ * Represents local variables within a scope.  Used for compilation to determine the 
  * the amount of stack space needed for local variables.
  * 
  * <p>
- * Local variables within a {@link Scope} follow proper lexical scoping by overriding out
+ * Local variables within a scope follow proper lexical scoping by overriding out
  * of scope values.  That is, the {@link Locals#getNumberOfLocals()} pool will only be the
- * max number of visible variables within a {@link Scope}.
+ * max number of visible variables within a scope.
  * 
  * @author Tony
  *

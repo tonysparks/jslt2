@@ -287,9 +287,6 @@ public class Bytecode {
                 case Opcodes.LOAD_TRUE:
                 case Opcodes.LOAD_FALSE:
                     
-                case Opcodes.GET:
-                case Opcodes.SET:
-                    
                 case Opcodes.ADD:
                 case Opcodes.SUB:
                 case Opcodes.MUL:
@@ -306,10 +303,7 @@ public class Bytecode {
                 case Opcodes.GT:
                 case Opcodes.GTE:
                 case Opcodes.LT:
-                case Opcodes.LTE:
-                
-                case Opcodes.IDX:
-                case Opcodes.SIDX: {                                                                 
+                case Opcodes.LTE: {                                                                 
                     sb.append(String.format(lineFormat3, opcode, "", i));
                     break;
                 }
@@ -326,11 +320,7 @@ public class Bytecode {
                     break;
                 }
                 case Opcodes.GETK:
-                case Opcodes.SETK:
-                case Opcodes.LOAD_CONST:
-                case Opcodes.GET_GLOBAL:                
-                case Opcodes.SET_GLOBAL:
-                case Opcodes.GET_NAMESPACE: {
+                case Opcodes.LOAD_CONST: {
                     String argx = Integer.toString(Opcodes.ARGx(code));                                                         
                     sb.append(String.format(lineFormat4, opcode, argx, i, bytecode.constants[Opcodes.ARGx(code)]));
                     break;

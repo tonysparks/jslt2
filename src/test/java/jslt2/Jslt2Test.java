@@ -17,8 +17,6 @@ import com.schibsted.spt.data.jslt.Parser;
 
 import static org.junit.Assert.*;
 
-import java.util.concurrent.SynchronousQueue;
-
 /**
  * @author Tony
  *
