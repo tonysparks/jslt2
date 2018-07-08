@@ -65,8 +65,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     @Override
     public void visit(NumberExpr expr) {
         asm.line(expr.getLineNumber());
-        asm.addAndloadconst(expr.getNumber());
-        
+        asm.addAndloadconst(expr.getNumber());        
     }
 
     @Override
@@ -133,13 +132,19 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     public void visit(IfExpr expr) {
         asm.line(expr.getLineNumber());
         
+        
         Expr cond = expr.getCondition();
         cond.visit(this);
+        
+        asm.markLexicalScope();
+        expr.getLets().forEach(field -> field.visit(this));
         
         String elseLabel = asm.ifeq();
         Expr then = expr.getThenExpr();
         then.visit(this);
         String endif = asm.jmp();
+        
+        asm.unmarkLexicalScope();
         
         asm.label(elseLabel);
         Expr elseExpr = expr.getElseExpr();
@@ -151,6 +156,16 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         }
         asm.label(endif);
         
+    }
+    
+    @Override
+    public void visit(ElseExpr expr) {
+        asm.line(expr.getLineNumber());
+        
+        asm.markLexicalScope();
+        expr.getLets().forEach(field -> field.visit(this));
+        expr.getExpr().visit(this);
+        asm.unmarkLexicalScope();
     }
 
     
@@ -253,6 +268,14 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.arrayslice();
     }
 
+
+    @Override
+    public void visit(ArrayIndexExpr expr) {
+        expr.getArray().visit(this);
+        expr.getIndex().visit(this);
+        asm.getfield();        
+    }
+    
     @Override
     public void visit(GetExpr expr) {
         asm.line(expr.getLineNumber());
@@ -261,6 +284,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.getfieldk(expr.getIdentifier());        
     }
 
+    
     /* (non-Javadoc)
      * @see jslt2.ast.NodeVisitor#visit(jslt2.ast.ImportGetExpr)
      */
@@ -314,7 +338,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
 
         TokenType operator = expr.getOperator();
         switch(operator) {
-            case LOGICAL_AND: {
+            case AND: {
                 expr.getLeft().visit(this);
                 String escape = asm.ifeq();
                 
@@ -325,7 +349,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                 asm.label(endif);
                 break;
             }
-            case LOGICAL_OR: {
+            case OR: {
                 expr.getLeft().visit(this);
                 String secondConditional = asm.ifeq();
                 String skip = asm.jmp();
@@ -364,8 +388,8 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             case MOD:   asm.mod(); break;
             
             // comparisons
-            case LOGICAL_AND:     asm.and();  break;
-            case LOGICAL_OR:      asm.or();   break;
+            case AND:             asm.and();  break;
+            case OR:              asm.or();   break;
             case NOT_EQUALS:      asm.neq();  break;
             case GREATER_THAN:    asm.gt();   break;
             case GREATER_EQUALS:  asm.gte();  break;

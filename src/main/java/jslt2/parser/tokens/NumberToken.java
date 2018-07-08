@@ -5,6 +5,10 @@ import static jslt2.parser.tokens.TokenType.*;
 
 import java.math.BigInteger;
 
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.LongNode;
+
 import jslt2.parser.Source;
 
 
@@ -42,7 +46,7 @@ public class NumberToken extends Token {
         boolean sawDotDot = false; // true if saw .. token
         char currentChar; // current character
 
-        type = NUMBER; // assume INTEGER token type for now
+        type = INTEGER; // assume INTEGER token type for now
 
         // Extract the digits of the whole part of the number.
         wholeDigits = unsignedIntegerDigits(textBuffer);
@@ -57,7 +61,8 @@ public class NumberToken extends Token {
             if (this.source.peekChar() == '.') {
                 sawDotDot = true; // it's a ".." token, so don't consume it
             }
-            else {                
+            else {
+                type = DOUBLE; // decimal point, so token type is REAL
                 textBuffer.append(currentChar);
                 currentChar = this.source.nextChar(); // consume decimal point
 
@@ -72,7 +77,8 @@ public class NumberToken extends Token {
         // Is there an exponent part?
         // There cannot be an exponent if we already saw a ".." token.
         currentChar = this.source.currentChar();
-        if (!sawDotDot && ((currentChar == 'E') || (currentChar == 'e'))) {            
+        if (!sawDotDot && ((currentChar == 'E') || (currentChar == 'e'))) {
+            type = DOUBLE; // exponent, so token type is REAL
             textBuffer.append(currentChar);
             currentChar = this.source.nextChar(); // consume 'E' or 'e'
 
@@ -87,11 +93,32 @@ public class NumberToken extends Token {
             exponentDigits = unsignedIntegerDigits(textBuffer);
         }
 
-        double floatValue = computeFloatValue(wholeDigits, fractionDigits, exponentDigits, exponentSign);
+        // Compute the value of an integer number token.
+        if (type == INTEGER) {
+            int integerValue = computeIntegerValue(wholeDigits);
 
-        if (type != ERROR) {
-            value = new Double(floatValue);
+            if (type != ERROR) {
+                type = NUMBER;
+                value = IntNode.valueOf(integerValue);
+            }
+            else if (value == RANGE_INTEGER) {                
+                long longValue = computeLongValue(wholeDigits);
+                
+                type = NUMBER;
+                value = LongNode.valueOf(longValue);
+            }
         }
+
+        // Compute the value of a real number token.
+        else if (type == DOUBLE) {
+            double floatValue = computeFloatValue(wholeDigits, fractionDigits, exponentDigits, exponentSign);
+
+            if (type != ERROR) {
+                type = NUMBER;
+                value = DoubleNode.valueOf(floatValue);
+            }
+        }
+
     }
 
     /**
@@ -191,6 +218,56 @@ public class NumberToken extends Token {
             type = ERROR;
             value = RANGE_INTEGER;
             return 0;
+        }
+    }
+
+    /**
+     * Compute and return the long value of a string of digits. Check for
+     * overflow.
+     * 
+     * @param digits
+     *            the string of digits.
+     * @return the integer value.
+     */
+    private long computeLongValue(String digits) {
+        // Return 0 if no digits.
+        if (digits == null) {
+            return 0L;
+        }
+
+        /* If it's a HEX number, parse it out */
+        if (digits.contains("0x")) {
+            if (digits.length() > "0xFFFFFFFFFFFFFFFF".length()) {
+                // Overflow: Set the integer out of range error.
+                type = ERROR;
+                value = RANGE_LONG;
+                return 0L;
+            }
+
+            return Long.parseLong(digits.replace("0x", ""), 16);
+        }
+
+        long longValue = 0L;
+        long prevValue = -1L; // overflow occurred if prevValue > integerValue
+        int index = 0;
+
+        // Loop over the digits to compute the integer value
+        // as long as there is no overflow.
+        while ((index < digits.length()) && (longValue >= prevValue)) {
+            prevValue = longValue;
+            longValue = 10 * longValue + Character.getNumericValue(digits.charAt(index++));
+        }
+
+        // No overflow: Return the integer value.
+        if (longValue >= prevValue) {
+            return longValue;
+        }
+
+        // Overflow: Set the integer out of range error.
+        else {
+            type = ERROR;
+            value = RANGE_LONG;
+            return 0L;
         }
     }
 

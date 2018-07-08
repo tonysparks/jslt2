@@ -7,7 +7,6 @@ import static jslt2.vm.Opcodes.*;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Stack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -21,6 +20,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.util.Jslt2Util;
+import jslt2.util.Stack;
 import jslt2.vm.compiler.Outer;
 import jslt2.vm.compiler.Outer.StackValue;
 
@@ -369,7 +369,7 @@ public class VM {
                             Iterator<JsonNode> it = object.elements();           
                             while(it.hasNext()) {
                                 JsonNode current = it.next();
-                                execute(forCode, current);
+                                execute(forCode, current);                                
                             }
                         }
                         else {
@@ -465,7 +465,25 @@ public class VM {
                         
                         stack[top++] = value;
                         break;
-                    }                    
+                    }     
+                    case GET_FIELD: {                                     
+                        JsonNode index = stack[--top];
+                        JsonNode obj = stack[--top];
+
+                        JsonNode value = null;
+                        if(obj.isArray()) {
+                            value = obj.get(index.asInt());
+                        }
+                        else if(obj.isObject()) {
+                            value = obj.get(index.asText());
+                        }
+                        else {
+                            error(obj + " is not an indexable object");
+                        }
+                        
+                        stack[top++] = value;
+                        break;
+                    } 
                     case ARRAY_SLICE: {
                         JsonNode end = stack[--top];
                         JsonNode start = stack[--top];
@@ -708,25 +726,12 @@ public class VM {
     }
     
     /**
-     * Prepares the stack by assigning NULL to all of the bytecode's
-     * arguments.
+     * Checks to see if we should grow the stack
      * 
      * @param code
      */
     private void prepareStack(Bytecode code) {        
-        growStackIfRequired(stack, top, code.maxstacksize);        
-    }
-
-    /**
-     * Checks to see if we should grow the stack
-     * 
-     * @param stack
-     * @param base
-     * @param neededSize
-     * @return the new stack (if no growth was required, the supplied stack is returned).
-     */
-    private void growStackIfRequired(JsonNode[] stack, int base, int neededSize) {
-        final int requiredStackSize = base + neededSize;
+        final int requiredStackSize = top + code.maxstacksize;
         if(requiredStackSize > stack.length) {
             if (requiredStackSize > this.maxStackSize) {
                 error("Stack overflow, required stack size over maxStackSize '" + this.maxStackSize + "'");
@@ -734,13 +739,13 @@ public class VM {
             
             final int newStackSize = Math.min( stack.length + ((requiredStackSize-stack.length) << 1), this.maxStackSize);
             JsonNode[] newStack = new JsonNode[newStackSize];
-            System.arraycopy(stack, 0, newStack, 0, base);
+            System.arraycopy(stack, 0, newStack, 0, top);
             this.stack = newStack;
             
             Outer[] newOuters = new Outer[newStack.length];
-            System.arraycopy(openouters, 0, newOuters, 0, base);
+            System.arraycopy(openouters, 0, newOuters, 0, top);
             this.openouters = newOuters;
-        }        
+        }  
     }
     
     /**

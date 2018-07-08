@@ -17,6 +17,7 @@ public interface NodeVisitor {
     void visit(ArrayExpr expr);
     
     void visit(IfExpr expr);
+    void visit(ElseExpr expr);
     void visit(ForObjectExpr expr);
     void visit(ForArrayExpr expr);
     void visit(LetExpr expr);
@@ -27,6 +28,7 @@ public interface NodeVisitor {
     void visit(VariableExpr expr);
     
     void visit(ArraySliceExpr expr);
+    void visit(ArrayIndexExpr expr);
     void visit(GetExpr expr);
     void visit(ImportGetExpr expr);
     

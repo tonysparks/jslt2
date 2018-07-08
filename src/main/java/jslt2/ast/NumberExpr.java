@@ -3,25 +3,27 @@
  */
 package jslt2.ast;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * @author Tony
  *
  */
 public class NumberExpr extends Expr {
 
-    private double number;
+    private JsonNode number;
     
     /**
      * 
      */
-    public NumberExpr(double number) {
+    public NumberExpr(JsonNode number) {
         this.number = number;
     }
     
     /**
      * @return the number
      */
-    public double getNumber() {
+    public JsonNode getNumber() {
         return number;
     }
 

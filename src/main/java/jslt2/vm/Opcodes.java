@@ -253,6 +253,11 @@ public class Opcodes {
                 op = "GET_FIELDK";
                 break;
             }
+            case GET_FIELD: {
+                op = "GET_FIELD";
+                break;
+            }
+            
             
             case ADD_FIELD: {
                 op = "ADD_FIELD";
@@ -421,7 +426,8 @@ public class Opcodes {
         TAIL_CALL = 29,               /* ARG1, ARG2 */
         
         /* member access */   
-        GET_FIELDK = 33,                    /* ARGx */
+        GET_FIELDK = 33,              /* ARGx */
+        GET_FIELD  = 34,              /*      */
         
         ARRAY_SLICE  = 40,            /*      */
 
@@ -484,6 +490,8 @@ public class Opcodes {
         opcodes.put("SEAL_OBJ", SEAL_OBJ);
 
         opcodes.put("GET_FIELDK", GET_FIELDK);
+        opcodes.put("GET_FIELD", GET_FIELD);
+        
         opcodes.put("ADD_FIELD", ADD_FIELD);
         opcodes.put("ADD_FIELDK", ADD_FIELDK);
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
@@ -493,7 +501,6 @@ public class Opcodes {
                         
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("TAIL_CALL", TAIL_CALL);        
-        
 
         opcodes.put("FOR_DEF", FOR_DEF);
         

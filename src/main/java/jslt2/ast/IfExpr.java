@@ -3,23 +3,34 @@
  */
 package jslt2.ast;
 
+import java.util.List;
+
 /**
  * @author Tony
  *
  */
 public class IfExpr extends Expr {
 
+    private List<LetExpr> lets;
     private Expr condition;
     private Expr thenExpr;
-    private Expr elseExpr;
+    private ElseExpr elseExpr;
     
     /**
      * 
      */
-    public IfExpr(Expr condition, Expr thenExpr, Expr elseExpr) {
+    public IfExpr(List<LetExpr> lets, Expr condition, Expr thenExpr, ElseExpr elseExpr) {
+        this.lets = lets;
         this.condition = condition;
         this.thenExpr = thenExpr;
         this.elseExpr = elseExpr;
+    }
+    
+    /**
+     * @return the lets
+     */
+    public List<LetExpr> getLets() {
+        return lets;
     }
     
     /**
@@ -39,7 +50,7 @@ public class IfExpr extends Expr {
     /**
      * @return the elseExpr
      */
-    public Expr getElseExpr() {
+    public ElseExpr getElseExpr() {
         return elseExpr;
     }
     

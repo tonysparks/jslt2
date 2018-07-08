@@ -6,11 +6,13 @@ package jslt2;
 import java.util.List;
 
 import jslt2.ast.ArrayExpr;
+import jslt2.ast.ArrayIndexExpr;
 import jslt2.ast.ArraySliceExpr;
 import jslt2.ast.BinaryExpr;
 import jslt2.ast.BooleanExpr;
 import jslt2.ast.DefExpr;
 import jslt2.ast.DotExpr;
+import jslt2.ast.ElseExpr;
 import jslt2.ast.Expr;
 import jslt2.ast.ForArrayExpr;
 import jslt2.ast.ForObjectExpr;
@@ -107,7 +109,7 @@ public class PrettyPrinter implements NodeVisitor {
     public void visit(NumberExpr expr) {
         print(expr.getNumber());
     }
-
+    
     @Override
     public void visit(StringExpr expr) {
         print("\"" + expr.getString() + "\"");
@@ -177,7 +179,16 @@ public class PrettyPrinter implements NodeVisitor {
         expr.getThenExpr().visit(this);
         unindent();
                 
-        Expr elseExpr = expr.getElseExpr();
+        ElseExpr elseExpr = expr.getElseExpr();
+        if(elseExpr != null) {
+            elseExpr.visit(this);
+        }
+
+    }
+    
+    @Override
+    public void visit(ElseExpr expr) {
+        Expr elseExpr = expr.getExpr();
         if(elseExpr != null) {
             println();
             print("else");
@@ -186,7 +197,6 @@ public class PrettyPrinter implements NodeVisitor {
             elseExpr.visit(this);
             unindent();
         }
-
     }
 
     @Override
@@ -269,6 +279,14 @@ public class PrettyPrinter implements NodeVisitor {
             print(" : ");
             endExpr.visit(this);
         }
+        print("]");
+    }
+    
+    @Override
+    public void visit(ArrayIndexExpr expr) {
+        expr.getArray().visit(this);
+        print("[");
+        expr.getIndex().visit(this);
         print("]");
     }
 

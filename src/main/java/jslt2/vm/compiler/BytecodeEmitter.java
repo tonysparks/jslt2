@@ -816,6 +816,11 @@ public class BytecodeEmitter {
         int index = getConstants().store(stringconst);
         instrx(GET_FIELDK, index);
     }
+    
+    public void getfield() {
+        instr(GET_FIELD);
+        incrementMaxstackSize();
+    }
             
     public void funcdef(int numberOfParameters) {
         instrx(FUNC_DEF, getBytecodeIndex());        

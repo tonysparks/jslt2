@@ -28,15 +28,17 @@ public enum TokenType {
         DOT("."), VAR_ARGS("..."), AT("@"), QUESTION_MARK("?"), COMMA(","), SEMICOLON(";"), COLON(":"),
         EQUALS_EQUALS("=="), EQUALS("="), NOT_EQUALS("!="), LESS_THAN("<"), LESS_EQUALS("<="),
         GREATER_EQUALS(">="), GREATER_THAN(">"), LEFT_PAREN("("), RIGHT_PAREN(")"),
-        LEFT_BRACKET("["), RIGHT_BRACKET("]"), LEFT_BRACE("{"), RIGHT_BRACE("}"),
-        LOGICAL_OR("||"), LOGICAL_AND("&&"), NOT("!"), 
+        LEFT_BRACKET("["), RIGHT_BRACKET("]"), LEFT_BRACE("{"), RIGHT_BRACE("}"), NOT("!"), 
     DOUBLE_QUOTE("\""),  
 
     // end Special symbols
 
     IDENTIFIER,
     VARIABLE,
-    NUMBER, 
+    NUMBER,
+    INTEGER,
+    DOUBLE,
+    LONG,
     STRING,
     ERROR, 
     END_OF_FILE;

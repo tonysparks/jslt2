@@ -135,7 +135,17 @@ public class Jslt2Test {
         ObjectNode input = runtime.newObjectNode();
         input.set("name", TextNode.valueOf("tony"));
         
-        testAgainstSpec(input, "let t = [1.0,2.0,3.0] [for ($t[1:]) . + 20]");        
+        testAgainstSpec(input, "let t = [1.0,2.0,3.0] [for ($t[1:]) . + 20]");
+        
+        //testAgainstSpec(input, "let a = 10 let b = $a [0]"); ?? jslt doesn't allow reference other vars in global scope
+        //testAgainstSpec(input, "let x = 10 def f() ($x) [f(), f(), 20, $x]");    
+        
+        
+        testAgainstSpec(input, "let x = [0] [1]");
+        //testAgainstSpec(input, "let x = [0,1] [$x[0:-1]]");
+        testAgainstSpec(input, "def x() [2] \n x()[0]");
+        testAgainstSpec(input, "let x = [2] [$x[0]]");
+        //testAgainstSpec(input, "let x = [0] [$x[0:1]]");
     }
     
     @Test
@@ -155,12 +165,21 @@ public class Jslt2Test {
         testAgainstSpec(input, "let t = [1.0,2.0,3.0] [for ($t) let i = . let x = 10 $i + 2]");        
     }
     
+    
+    @Test
+    public void testFuncDefWithArrayDef() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        testAgainstSpec(input, "let x = 10 def f() 10 [f(), f(), 20, $x]");        
+    }
+    
     @Test
     public void testJslt() {
         ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
         input.set("name", TextNode.valueOf("tony"));
         
-        Expression jslt = Parser.compileString("let t = [1,2,3] [for ($t) . + 2]");
+        Expression jslt = Parser.compileString("let x = [2] [$x[0]]");
         JsonNode result = jslt.apply(input);
         System.out.println(result);
     }
