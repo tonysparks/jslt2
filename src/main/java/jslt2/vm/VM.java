@@ -13,12 +13,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
+import jslt2.util.Jslt2Util;
 import jslt2.vm.compiler.Outer;
 import jslt2.vm.compiler.Outer.StackValue;
 
@@ -35,9 +37,10 @@ public class VM {
     
     private Jslt2 runtime;
     
-    /* Value stack 
+    /* Value stacks 
      */
-    private Stack<JsonNode> valueStack;
+    private Stack<ObjectNode> objectStack;
+    private Stack<ArrayNode>  arrayStack;
     
 
     /*thread stack
@@ -88,7 +91,8 @@ public class VM {
 
         this.maxStackSize = Math.max(runtime.getMaxStackSize(), stackSize);
         
-        this.valueStack = new Stack<>();
+        this.objectStack = new Stack<>();
+        this.arrayStack  = new Stack<>();
         
         this.stack = new JsonNode[stackSize];
         this.openouters = new Outer[stackSize];
@@ -188,8 +192,6 @@ public class VM {
 
         int lineNumber = -1;
         
-        Stack<ForEntry> forStack = null;
-        
         try {
             while( pc < len ) {
                 int i = instr[pc++];
@@ -201,29 +203,25 @@ public class VM {
                         break;
                     }
                     case NEW_OBJ: {
-                        this.valueStack.push(this.runtime.newObjectNode());
+                        this.objectStack.push(this.runtime.newObjectNode());
                         break;     
                     }
                     case SEAL_OBJ: {
-                        stack[top++] = this.valueStack.pop();
+                        stack[top++] = this.objectStack.pop();
                         break;
                     }
                     
                     case NEW_ARRAY: {
-                        this.valueStack.push(this.runtime.newArrayNode(16));
+                        this.arrayStack.push(this.runtime.newArrayNode(16));
                         break;       
                     }
                     case SEAL_ARRAY: {
-                        stack[top++] = this.valueStack.pop();
+                        stack[top++] = this.arrayStack.pop();
                         break;
                     }
                     
                     case ADD_FIELDK: {                       
-                        JsonNode node = this.valueStack.peek();
-                        if(!node.isObject()) {
-                            error(node + " is not an object.");
-                        }
-                        ObjectNode obj = (ObjectNode)node;
+                        ObjectNode obj = this.objectStack.peek();
                         
                         int iname = ARGx(i);
                         JsonNode fieldName = constants[iname];
@@ -232,35 +230,17 @@ public class VM {
                         break;
                     }
                     case ADD_FIELD: {
-                        JsonNode obj = this.valueStack.peek();
+                        ObjectNode obj = this.objectStack.peek();
                         
                         JsonNode value = stack[--top];
                         JsonNode index = stack[--top];
                         
-                        if(obj.isArray()) {
-                            ArrayNode array = (ArrayNode)obj;
-                            array.set(index.asInt(), value);
-                        }
-                        else if(obj.isObject()) {
-                            ObjectNode object = (ObjectNode)obj;
-                            object.set(index.asText(), value);
-                        }
-                        else {
-                            error(obj + " is not an indexable object");
-                        }
-                        
-                        stack[top++] = obj; 
+                        obj.set(index.asText(), value);
                         break;
                     }
                     case ADD_ELEMENT: {
-                        JsonNode node = this.valueStack.peek();
-                        if(!node.isArray()) {
-                            error(node + " is not an array.");
-                        }
-                                            
-                        ArrayNode array = (ArrayNode)node;
-                        array.add(stack[--top]);
-                        
+                        ArrayNode array = this.arrayStack.peek();                        
+                        array.add(stack[--top]);                        
                         break;
                     }
                     
@@ -292,17 +272,8 @@ public class VM {
                         stack[top++] = BooleanNode.FALSE;
                         break;
                     }
-                    case LOAD_INPUT: {
-                        JsonNode obj = null;
-                        if(forStack != null && !forStack.isEmpty()) {                            
-                            ForEntry it = forStack.peek();
-                            obj = it.current();                            
-                        }
-                        else {
-                            obj = input;
-                        }
-                        
-                        stack[top++] = obj;
+                    case LOAD_INPUT: {                        
+                        stack[top++] = input;
                         break;
                     }
                     case STORE_LOCAL: {
@@ -319,12 +290,6 @@ public class VM {
                     /* stack operators */
                     case POP:    {
                         stack[--top] = null;                            
-                        break;
-                    }
-                    case OPPOP:    {
-                        if (top>topStack) {
-                            stack[--top] = null;
-                        }
                         break;
                     }
                     case DUP: {
@@ -346,24 +311,12 @@ public class VM {
                         break;
                     }
                     case MATCHER: {
-                        JsonNode node = this.valueStack.peek();
-                        if(!node.isObject()) {
-                            error(node + " is not an object.");
-                        }
-                        ObjectNode outputObj = (ObjectNode)node;
-                        
+                        ObjectNode outputObj = this.objectStack.peek();
+                                                
                         int n = ARGx(i);
                         JsonNode[] omittedFields = readArrayFromStack(n, stack);
                         
-                        JsonNode inputNode = null;
-                        if(forStack != null && !forStack.isEmpty()) {                            
-                            ForEntry it = forStack.peek();
-                            inputNode = it.current();                            
-                        }
-                        else {
-                            inputNode = input;
-                        }
-                        
+                        JsonNode inputNode = input;                        
                         if(!inputNode.isObject()) {
                             error(inputNode + " is not an object.");
                         }
@@ -385,24 +338,44 @@ public class VM {
                         
                         break;
                     }
-                    case FOR_START: {
-                        if(forStack == null) {
-                            forStack = new Stack<>();
+                    case FOR_DEF: {                        
+                        int bytecodeIndex = ARGx(i);
+                        Bytecode forCode = inner[bytecodeIndex];
+                        
+                        Outer[] outers = forCode.outers;                            
+                        if (assignOuters(outers, calleeouters, openouters, forCode.numOuters, base, pc, code)) {
+                            closeOuters = true;
+                        }
+                        pc += forCode.numOuters;
+                        
+                        JsonNode object = stack[top-1];
+                        if(object.isNull()) {
+                            JsonNode current = NullNode.instance;
+                            execute(forCode, current);
+                        }
+                        else if(object.isObject()) {
+                            Iterator<String> it = ((ObjectNode)object).fieldNames();            
+                            while(it.hasNext()) {
+                                String key = it.next();
+                                
+                                ObjectNode current = runtime.newObjectNode();
+                                current.set("key", TextNode.valueOf(key));
+                                current.set("value", object.get(key));
+                                
+                                execute(forCode, current); 
+                            }
+                        }
+                        else if(object.isArray()) {            
+                            Iterator<JsonNode> it = object.elements();           
+                            while(it.hasNext()) {
+                                JsonNode current = it.next();
+                                execute(forCode, current);
+                            }
+                        }
+                        else {
+                            throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
                         }
                         
-                        ForEntry entry = new ForEntry(this.runtime, stack[top-1]);
-                        forStack.push(entry);
-                        
-                        break;
-                    }
-                    case FOR_END: {
-                        forStack.pop();
-                        break;
-                    }
-                    case FOR_INC: {
-                        if(!forStack.peek().advance()) {
-                            pc += ARGsx(i);
-                        }
                         break;
                     }
                     case INVOKE:    {
@@ -514,7 +487,7 @@ public class VM {
                             error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
                         }
                         
-                        ArrayNode slice = new ArrayNode(this.runtime.getObjectMapper().getNodeFactory(), endIndex - startIndex);
+                        ArrayNode slice = this.runtime.newArrayNode(endIndex - startIndex);
                         for(int j = startIndex; j < endIndex; j++) {
                             slice.add(a.get(j));
                         }
@@ -526,11 +499,34 @@ public class VM {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
                         JsonNode c = null;
-                        if(l.isTextual()) {
+                        if(l.isTextual() || r.isTextual()) {
                             c = TextNode.valueOf(l.asText() + r.asText()); 
                         }
+                        else if(l.isArray() && r.isArray()) {
+                            ArrayNode a = (ArrayNode)l;
+                            ArrayNode b = (ArrayNode)r;
+                            ArrayNode union = this.runtime.newArrayNode(a.size() + b.size());
+                            union.addAll(a);
+                            union.addAll(b);
+                            
+                            c = union;
+                        }
+                        else if(l.isObject() && r.isObject()) {
+                            ObjectNode a = (ObjectNode)l;
+                            ObjectNode b = (ObjectNode)r;
+                            ObjectNode union = this.runtime.newObjectNode();
+                            union.setAll(b);
+                            union.setAll(a);
+                            
+                            c = union;
+                        }
                         else {
-                            c = DoubleNode.valueOf(l.asDouble() + r.asDouble());
+                            if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                                c = LongNode.valueOf(l.asLong() + r.asLong());
+                            }
+                            else {
+                                c = DoubleNode.valueOf(l.asDouble() + r.asDouble());
+                            }
                         }
                         stack[top++] = c;
                         break;
@@ -538,34 +534,65 @@ public class VM {
                     case SUB:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = DoubleNode.valueOf(l.asDouble() - r.asDouble());
+                        
+                        JsonNode c = null;
+                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                            c = LongNode.valueOf(l.asLong() - r.asLong());
+                        }
+                        else {
+                            c = DoubleNode.valueOf(l.asDouble() - r.asDouble());
+                        }
                         stack[top++] = c;
                         break;
                     }
                     case MUL:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = DoubleNode.valueOf(l.asDouble() * r.asDouble());
+                        JsonNode c = null;
+                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                            c = LongNode.valueOf(l.asLong() * r.asLong());
+                        }
+                        else {
+                            c = DoubleNode.valueOf(l.asDouble() * r.asDouble());
+                        }
                         stack[top++] = c;
                         break;
                     }
                     case DIV:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = DoubleNode.valueOf(l.asDouble() / r.asDouble());
+                        JsonNode c = null;
+                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                            c = LongNode.valueOf(l.asLong() / r.asLong());
+                        }
+                        else {
+                            c = DoubleNode.valueOf(l.asDouble() / r.asDouble());
+                        }
                         stack[top++] = c;
                         break;
                     }
                     case MOD:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = DoubleNode.valueOf(l.asDouble() % r.asDouble());
+                        JsonNode c = null;
+                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                            c = LongNode.valueOf(l.asLong() % r.asLong());
+                        }
+                        else {
+                            c = DoubleNode.valueOf(l.asDouble() % r.asDouble());
+                        }
                         stack[top++] = c;
                         break;
                     }
                     case NEG:    {
                         JsonNode l = stack[--top];
-                        JsonNode c = DoubleNode.valueOf(-l.asDouble());
+                        JsonNode c = null;
+                        if(l.isIntegralNumber()) {
+                            c = LongNode.valueOf(-l.asLong());
+                        }
+                        else {
+                            c = DoubleNode.valueOf(-l.asDouble());
+                        }
                         stack[top++] = c;
                         break;
                     }
@@ -573,20 +600,20 @@ public class VM {
                     case OR:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asBoolean() || r.asBoolean());
+                        JsonNode c = BooleanNode.valueOf(Jslt2Util.isTrue(l) || Jslt2Util.isTrue(r));
                         stack[top++] = c;
                         break;
                     }
                     case AND:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asBoolean() && r.asBoolean());
+                        JsonNode c = BooleanNode.valueOf(Jslt2Util.isTrue(l) && Jslt2Util.isTrue(r));
                         stack[top++] = c;
                         break;
                     }
                     case NOT:    {
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(!l.asBoolean());
+                        JsonNode c = BooleanNode.valueOf(!Jslt2Util.isTrue(l));
                         stack[top++] = c;
                         break;
                     }
@@ -594,42 +621,46 @@ public class VM {
                     case EQ:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.equals(r));
+                        JsonNode c = BooleanNode.valueOf(Jslt2Util.equals(l, r));
                         stack[top++] = c;
                         break;
                     }
                     case NEQ:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(!l.equals(r));
+                        JsonNode c = BooleanNode.valueOf(!Jslt2Util.equals(l, r));
                         stack[top++] = c;
                         break;
                     }
                     case GT:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asDouble() > r.asDouble());
+                        int n = Jslt2Util.compare(l, r);
+                        JsonNode c = BooleanNode.valueOf(n > 0);
                         stack[top++] = c;
                         break;
                     }
                     case GTE:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asDouble() >= r.asDouble());
+                        int n = Jslt2Util.compare(l, r);
+                        JsonNode c = BooleanNode.valueOf(n >= 0);
                         stack[top++] = c;
                         break;
                     }
                     case LT:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asDouble() < r.asDouble());
+                        int n = Jslt2Util.compare(l, r);
+                        JsonNode c = BooleanNode.valueOf(n < 0);
                         stack[top++] = c;
                         break;
                     }
                     case LTE:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(l.asDouble() <= r.asDouble());
+                        int n = Jslt2Util.compare(l, r);
+                        JsonNode c = BooleanNode.valueOf(n <= 0);
                         stack[top++] = c;
                         break;
                     }
@@ -682,14 +713,8 @@ public class VM {
      * 
      * @param code
      */
-    private void prepareStack(Bytecode code) {
-        final int base = top;
-        
-        growStackIfRequired(stack, base, code.maxstacksize);
-        
-        for(int i = 0; i < code.numArgs; i++) {
-            stack[base + i] = NullNode.instance;
-        }
+    private void prepareStack(Bytecode code) {        
+        growStackIfRequired(stack, top, code.maxstacksize);        
     }
 
     /**
@@ -702,11 +727,11 @@ public class VM {
      */
     private void growStackIfRequired(JsonNode[] stack, int base, int neededSize) {
         final int requiredStackSize = base + neededSize;
-        if ( requiredStackSize > this.maxStackSize) {
-            error("Stack overflow, required stack size over maxStackSize '" + this.maxStackSize + "'");
-        }
-        
-        if( requiredStackSize > stack.length) {
+        if(requiredStackSize > stack.length) {
+            if (requiredStackSize > this.maxStackSize) {
+                error("Stack overflow, required stack size over maxStackSize '" + this.maxStackSize + "'");
+            }
+            
             final int newStackSize = Math.min( stack.length + ((requiredStackSize-stack.length) << 1), this.maxStackSize);
             JsonNode[] newStack = new JsonNode[newStackSize];
             System.arraycopy(stack, 0, newStack, 0, base);

@@ -146,6 +146,9 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         if(elseExpr != null) {
             elseExpr.visit(this);            
         }
+        else {
+            asm.loadnull();
+        }
         asm.label(endif);
         
     }
@@ -157,43 +160,32 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.forstart();        
-        
-        String beginFor = asm.label();
-        String endFor = asm.forinc();
-        expr.getLets().forEach(let -> let.visit(this));
-        
-        Expr key = expr.getKeyExpr();
-        key.visit(this);
-        
-        Expr value = expr.getValueExpr();
-        value.visit(this);
-        
-        asm.addfield();
-        
-        asm.jmp(beginFor);        
-        asm.label(endFor);
-        asm.forend();
+        asm.fordef();                
+            expr.getLets().forEach(let -> let.visit(this));
+            
+            Expr key = expr.getKeyExpr();
+            key.visit(this);
+            
+            Expr value = expr.getValueExpr();
+            value.visit(this);
+            
+            asm.addfield();        
+        asm.end();
     }
 
     @Override
     public void visit(ForArrayExpr expr) {
-        asm.line(expr.getLineNumber());                    
+        asm.line(expr.getLineNumber());     
+        
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.forstart();        
-        
-        String beginFor = asm.label();
-        String endFor = asm.forinc();
-        expr.getLets().forEach(let -> let.visit(this));
-        
-        Expr value = expr.getValueExpr();
-        value.visit(this);
-        asm.addelement();
-        
-        asm.jmp(beginFor);        
-        asm.label(endFor);
-        asm.forend();
+        asm.fordef();                        
+            expr.getLets().forEach(let -> let.visit(this));
+            
+            Expr value = expr.getValueExpr();
+            value.visit(this);
+            asm.addelement();
+        asm.end();
     }
 
     @Override

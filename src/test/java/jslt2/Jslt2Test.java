@@ -104,6 +104,16 @@ public class Jslt2Test {
         
         testAgainstSpec(input, "{ let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } \"x\" : .name, \"y\": .team }");
     }
+    
+    
+    @Test
+    public void testEmbeddedObject() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        testAgainstSpec(input, "{ let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } \"x\" : .name, \"y\": .team, \"z\": { for ($t) .key : .value }}");
+    }
 
     
     @Test

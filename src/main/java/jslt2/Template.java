@@ -5,7 +5,7 @@ package jslt2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import jslt2.ast.ProgramExpr;
+import jslt2.vm.Bytecode;
 
 /**
  * @author Tony
@@ -14,15 +14,15 @@ import jslt2.ast.ProgramExpr;
 public class Template {
 
     private Jslt2 runtime;
-    private ProgramExpr expr;
+    private Bytecode bytecode;
     
     /**
      * @param runtime
-     * @param expr
+     * @param bytecode
      */
-    public Template(Jslt2 runtime, ProgramExpr expr) {
+    public Template(Jslt2 runtime, Bytecode bytecode) {
         this.runtime = runtime;
-        this.expr = expr;
+        this.bytecode = bytecode;
     }
     
     /**
@@ -32,7 +32,7 @@ public class Template {
      * @return the {@link JsonNode} result
      */
     public JsonNode eval(JsonNode input) {
-        return this.runtime.eval(this.expr, input);
+        return this.runtime.eval(this.bytecode, input);
     }
 
 }

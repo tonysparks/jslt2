@@ -18,7 +18,6 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Parser;
 
@@ -37,6 +36,12 @@ public class PerformanceTest {
     public static void setUpBeforeClass() throws Exception {
     }
 
+    @Ignore
+    private String query() throws Exception {
+        String query = new String(Files.readAllBytes(new File("./examples/functions2.json").toPath()));
+        return query;
+    }
+    
     
     @Ignore
     private Tuple<Long, JsonNode> runJslt(JsonNode input, Expression expr) {
@@ -55,10 +60,12 @@ public class PerformanceTest {
     }
     
     @Test
-    public void testFunctionCalls() throws Exception {
-        String query = new String(Files.readAllBytes(new File("./examples/functions.json").toPath()));
+    public void testFunctionCallsWithValidation() throws Exception {
+        String query = query();
         
-        Jslt2 runtime = new Jslt2();
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(false)
+                .build();
         
         Template template = runtime.compile(query);
         Expression expr = Parser.compileString(query);
@@ -78,12 +85,12 @@ public class PerformanceTest {
         
         int iterations = numberOfIterations;
         while(iterations --> 0) {
-
-            Tuple<Long, JsonNode> jslt2Result = runJslt2(array, template);
-            jslt2Results.add(jslt2Result);
             
             Tuple<Long, JsonNode> jsltResult = runJslt(array, expr);
-            jsltResults.add(jsltResult);
+            jsltResults.add(jsltResult);                        
+            
+            Tuple<Long, JsonNode> jslt2Result = runJslt2(array, template);
+            jslt2Results.add(jslt2Result);
                         
             for(int i = 0; i < capacity; i++) {    
                 array.set(rand.nextInt(capacity), DoubleNode.valueOf(rand.nextInt(Integer.MAX_VALUE)));
@@ -103,7 +110,104 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result.getFirst();
         }
         
-        System.out.printf("Total JSLT   time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT2  time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+    }
+    
+    
+    @Test
+    public void testFunctionCallsNoValidation() throws Exception {
+        String query = query();
+        
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(false)
+                .build();
+        
+        Template template = runtime.compile(query);
+        Expression expr = Parser.compileString(query);
+     
+        int capacity = 1000;//1024 * 1024;
+        ArrayNode array = runtime.newArrayNode(capacity);
+        for(int i = 0; i < capacity; i++) {
+            array.add((double)i);
+        }
+        
+        List<Long> jsltResults = new ArrayList<>();
+        List<Long> jslt2Results = new ArrayList<>();
+        
+        Random rand = new Random();
+        
+        final int numberOfIterations = 1000;
+        
+        int iterations = numberOfIterations;
+        while(iterations --> 0) {
+            
+            Tuple<Long, JsonNode> jsltResult = runJslt(array, expr);
+            jsltResults.add(jsltResult.getFirst());                        
+            
+            Tuple<Long, JsonNode> jslt2Result = runJslt2(array, template);
+            jslt2Results.add(jslt2Result.getFirst());
+                        
+            for(int i = 0; i < capacity; i++) {    
+                array.set(rand.nextInt(capacity), DoubleNode.valueOf(rand.nextInt(Integer.MAX_VALUE)));
+            }
+        }
+        
+        long jsltSum = 0L;
+        long jslt2Sum = 0L;
+        
+        for(int i = 0; i < jslt2Results.size(); i++) {
+            long jsltResult = jsltResults.get(i);
+            long jslt2Result = jslt2Results.get(i);
+            
+            jsltSum  += jsltResult;
+            jslt2Sum += jslt2Result;
+        }
+        
+        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+    }
+    
+    @Test
+    public void testVmFunctionCalls() throws Exception {
+        String query = query();
+        
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(false)
+                .build();
+        
+        Template template = runtime.compile(query);
+     
+        int capacity = 1000;//1024 * 1024;
+        ArrayNode array = runtime.newArrayNode(capacity);
+        for(int i = 0; i < capacity; i++) {
+            array.add((double)i);
+        }
+        
+        List<Long> jslt2Results = new ArrayList<>();
+        
+        Random rand = new Random();
+        
+        final int numberOfIterations = 1000;//10_000_000;
+        
+        int iterations = numberOfIterations;
+        while(iterations --> 0) {
+
+            Tuple<Long, JsonNode> jslt2Result = runJslt2(array, template);
+            jslt2Results.add(jslt2Result.getFirst());
+                        
+            for(int i = 0; i < capacity; i++) {    
+                array.set(rand.nextInt(capacity), DoubleNode.valueOf(rand.nextInt(Integer.MAX_VALUE)));
+            }
+        }
+        
+        long jslt2Sum = 0L;
+        
+        for(int i = 0; i < jslt2Results.size(); i++) {
+            long time = jslt2Results.get(i);
+            jslt2Sum += time;
+        }
+        
+        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
 }

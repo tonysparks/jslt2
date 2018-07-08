@@ -5,59 +5,7 @@
 */
 package jslt2.vm.compiler;
 
-import static jslt2.vm.Opcodes.ADD;
-import static jslt2.vm.Opcodes.ADD_ELEMENT;
-import static jslt2.vm.Opcodes.ADD_FIELD;
-import static jslt2.vm.Opcodes.ADD_FIELDK;
-import static jslt2.vm.Opcodes.AND;
-import static jslt2.vm.Opcodes.ARRAY_SLICE;
-import static jslt2.vm.Opcodes.DIV;
-import static jslt2.vm.Opcodes.DUP;
-import static jslt2.vm.Opcodes.EQ;
-import static jslt2.vm.Opcodes.FOR_END;
-import static jslt2.vm.Opcodes.FOR_INC;
-import static jslt2.vm.Opcodes.FOR_START;
-import static jslt2.vm.Opcodes.FUNC_DEF;
-import static jslt2.vm.Opcodes.GET_FIELDK;
-import static jslt2.vm.Opcodes.GT;
-import static jslt2.vm.Opcodes.GTE;
-import static jslt2.vm.Opcodes.IFEQ;
-import static jslt2.vm.Opcodes.INVOKE;
-import static jslt2.vm.Opcodes.JMP;
-import static jslt2.vm.Opcodes.LINE;
-import static jslt2.vm.Opcodes.LOAD_CONST;
-import static jslt2.vm.Opcodes.LOAD_FALSE;
-import static jslt2.vm.Opcodes.LOAD_INPUT;
-import static jslt2.vm.Opcodes.LOAD_LOCAL;
-import static jslt2.vm.Opcodes.LOAD_NULL;
-import static jslt2.vm.Opcodes.LOAD_OUTER;
-import static jslt2.vm.Opcodes.LOAD_TRUE;
-import static jslt2.vm.Opcodes.LT;
-import static jslt2.vm.Opcodes.LTE;
-import static jslt2.vm.Opcodes.MATCHER;
-import static jslt2.vm.Opcodes.MOD;
-import static jslt2.vm.Opcodes.MUL;
-import static jslt2.vm.Opcodes.NEG;
-import static jslt2.vm.Opcodes.NEQ;
-import static jslt2.vm.Opcodes.NEW_ARRAY;
-import static jslt2.vm.Opcodes.NEW_OBJ;
-import static jslt2.vm.Opcodes.NOT;
-import static jslt2.vm.Opcodes.OPCODE;
-import static jslt2.vm.Opcodes.OPPOP;
-import static jslt2.vm.Opcodes.OR;
-import static jslt2.vm.Opcodes.POP;
-import static jslt2.vm.Opcodes.SEAL_ARRAY;
-import static jslt2.vm.Opcodes.SEAL_OBJ;
-import static jslt2.vm.Opcodes.SET_ARG1;
-import static jslt2.vm.Opcodes.SET_ARG2;
-import static jslt2.vm.Opcodes.SET_ARGsx;
-import static jslt2.vm.Opcodes.SET_ARGx;
-import static jslt2.vm.Opcodes.STORE_LOCAL;
-import static jslt2.vm.Opcodes.STORE_OUTER;
-import static jslt2.vm.Opcodes.SUB;
-import static jslt2.vm.Opcodes.TAIL_CALL;
-import static jslt2.vm.Opcodes.xLOAD_LOCAL;
-import static jslt2.vm.Opcodes.xLOAD_OUTER;
+import static jslt2.vm.Opcodes.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -780,33 +728,6 @@ public class BytecodeEmitter {
         decrementMaxstackSize();
     }
     
-    
-    public void oppop() {
-        boolean dupOptimization = false;
-        
-        /* Check to see if there was an unused expression;
-         * if there was, that means there is a DUP instruction
-         * that we can ignore, along with this OPPOP
-         */
-        Instructions instructions = getInstructions();
-        int numberOfInstrs = instructions.getCount();
-        if(numberOfInstrs > 1) {
-            
-            /* We go back two instructions because the expression
-             * will DUP the expression value before it does a STORE
-             */
-            int instr = instructions.get(numberOfInstrs-2);                        
-            if(OPCODE(instr) == DUP) {
-                instructions.remove(numberOfInstrs-2);
-                dupOptimization = true;
-            }
-        }
-        
-        if(!dupOptimization) {
-            instr(OPPOP);
-        }
-        
-    }
     public void dup() {
         instr(DUP);
         incrementMaxstackSize();
@@ -878,42 +799,22 @@ public class BytecodeEmitter {
         incrementMaxstackSize();
     }
     
-    public void forstart() {
-        instr(FOR_START);        
+    public void fordef() {
+        instrx(FOR_DEF, getBytecodeIndex());        
+        newLocalScopeEmitter(0);
     }
-    
-    public void forend() {
-        instr(FOR_END);
-    }
-    
-    public void forinc(String label) {
-        markLabel(FOR_INC, label);        
-    }
-    
-    public void forinc(int offset) {
-        instrsx(FOR_INC, offset);
-    }
-    
-    public String forinc() {
-        String labelName = nextLabelName();
-        forinc(labelName);
         
-        return labelName;
-    }
-    
     public void matcher(int numOfOmittedFields) {
         instrx(MATCHER, numOfOmittedFields);
         decrementMaxstackSize(numOfOmittedFields);
     }
     
     public void getfieldk(int constIndex) {
-        instrx(GET_FIELDK, constIndex);
-        decrementMaxstackSize();
+        instrx(GET_FIELDK, constIndex);        
     }
     public void getfieldk(String stringconst) {
         int index = getConstants().store(stringconst);
         instrx(GET_FIELDK, index);
-        decrementMaxstackSize();
     }
             
     public void funcdef(int numberOfParameters) {
@@ -941,7 +842,7 @@ public class BytecodeEmitter {
     
     public void invoke(int numberOfArgs, int bytecodeIndex) {
         instr2(INVOKE, numberOfArgs, bytecodeIndex);          
-        decrementMaxstackSize(numberOfArgs);
+        decrementMaxstackSize(numberOfArgs-1);
     }
        
         
@@ -1014,8 +915,7 @@ public class BytecodeEmitter {
      * @return the {@link Bytecode} object
      */
     public Bytecode compile() {
-
-        int [] code = localScope.getRawInstructions();
+        int[] code = localScope.getRawInstructions();
         Bytecode bytecode = new Bytecode(code);
                     
         bytecode.numArgs = localScope.getNumArgs();
@@ -1023,6 +923,7 @@ public class BytecodeEmitter {
         if(this.localScope.hasOuters()) {
             Outers outers = this.localScope.getOuters();
             bytecode.numOuters = outers.getNumberOfOuters();
+            bytecode.outers = new Outer[bytecode.numOuters];
         }
         
         
@@ -1042,12 +943,12 @@ public class BytecodeEmitter {
         }
         
         /* we only care about this for classes */
-        if ( isDebug() ) {
+        if (isDebug()) {
             bytecode.setDebug();
             bytecode.debugSymbols = localScope.getDebugSymbols();
         }
                                         
-        if ( this.localScope.hasConstants() ) {
+        if (this.localScope.hasConstants()) {
             Constants constants = this.localScope.getConstants();
             bytecode.constants = constants.compile();
             bytecode.numConstants = constants.getNumberOfConstants();

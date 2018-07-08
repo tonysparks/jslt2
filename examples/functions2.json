@@ -1,0 +1,23 @@
+def add(array)
+    [for ($array) . + 2]
+
+def sub(array)
+    [for ($array) . - 2]
+    
+def mult(array)
+    [for ($array) . * 2]
+    
+def div(array)
+    [for ($array) . / 2]
+    
+//def mod(array)
+//    [for ($array) . % 2]    
+
+{
+    "input" : .,
+    "add"  : add(.),
+    "sub"  : sub(.),
+    "mult" : mult(.),
+    "div"  : div(.)
+    //"mod"  : mod(.)
+}     

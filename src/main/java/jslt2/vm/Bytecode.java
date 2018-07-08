@@ -271,7 +271,6 @@ public class Bytecode {
                                    
                     break;
                 }
-                case Opcodes.FOR_INC:
                 case Opcodes.IFEQ:
                 case Opcodes.JMP: {
                     String argsx = Integer.toString(Opcodes.ARGsx(code));                                                     
@@ -281,7 +280,6 @@ public class Bytecode {
                 
                 case Opcodes.POP:
                 case Opcodes.DUP:
-                case Opcodes.OPPOP:
                                 
                 case Opcodes.LOAD_NULL:
                 case Opcodes.LOAD_TRUE:

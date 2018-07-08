@@ -172,11 +172,7 @@ public class Opcodes {
             case DUP: {
                 op = "DUP";
                 break;
-            }
-            case OPPOP: {
-                op = "OPPOP";                   
-                break;
-            }        
+            } 
         
             /* Store operations */
             case LOAD_CONST: {
@@ -356,16 +352,8 @@ public class Opcodes {
                 op = "ARRAY_SLICE";
                 break;
             }
-            case FOR_START: {
-                op = "FOR_START";
-                break;
-            }
-            case FOR_END: {
-                op = "FOR_END";
-                break;
-            }
-            case FOR_INC:    {
-                op = "FOR_INC";
+            case FOR_DEF: {
+                op = "FOR_DEF";
                 break;
             }
             case LINE: {
@@ -388,7 +376,6 @@ public class Opcodes {
         /* stack operators */            
         POP = 1,                      /*      */
         DUP = 2,                      /*      */
-        OPPOP = 3,                    /*      */        
                 
         /* loading of values */
         LOAD_CONST = 4,               /* ARGx */
@@ -439,9 +426,7 @@ public class Opcodes {
         ARRAY_SLICE  = 40,            /*      */
 
 
-        FOR_START    = 41,            /*      */
-        FOR_END      = 42,            /*      */
-        FOR_INC      = 43,            /*      */
+        FOR_DEF    = 41,            /*      */
         
         /* arithmetic operators */
         ADD = 44,                     /*      */
@@ -473,7 +458,6 @@ public class Opcodes {
         /* stack operators */
         opcodes.put("POP", POP);        
         opcodes.put("DUP", DUP);
-        opcodes.put("OPPOP", OPPOP);
                 
         opcodes.put("LOAD_CONST", LOAD_CONST);
         opcodes.put("LOAD_LOCAL", LOAD_LOCAL);
@@ -511,9 +495,7 @@ public class Opcodes {
         opcodes.put("TAIL_CALL", TAIL_CALL);        
         
 
-        opcodes.put("FOR_START", FOR_START);
-        opcodes.put("FOR_END", FOR_END);
-        opcodes.put("FOR_INC", FOR_INC);
+        opcodes.put("FOR_DEF", FOR_DEF);
         
         /* arithmetic operators */
         opcodes.put("ADD", ADD);

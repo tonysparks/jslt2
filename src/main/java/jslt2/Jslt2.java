@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import jslt2.ast.ProgramExpr;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -140,25 +139,24 @@ public class Jslt2 {
         Scanner scanner = new Scanner(source);
         Parser parser = new Parser(scanner);
         
-        return eval(parser.parseProgram(), input);
+        Bytecode code = this.compiler.compile(parser.parseProgram());
+        return eval(code, input);
     }
         
     /**
-     * Evaluates the supplied {@link ProgramExpr} with the supplied {@link JsonNode}
+     * Evaluates the supplied {@link Bytecode} with the supplied {@link JsonNode}
      * input.
      * 
-     * @param expr
+     * @param bytecode
      * @param input
      * @return the {@link JsonNode} result
      */
-    public JsonNode eval(ProgramExpr expr, JsonNode input) {
-        Bytecode code = this.compiler.compile(expr);
-        
+    public JsonNode eval(Bytecode bytecode, JsonNode input) {
         if(this.isDebugMode) {
-            System.out.println(code.dump());
+            System.out.println(bytecode.dump());
         }
         
-        return this.vm.execute(code, input);
+        return this.vm.execute(bytecode, input);
     }
     
 
@@ -201,7 +199,8 @@ public class Jslt2 {
         Scanner scanner = new Scanner(source);
         Parser parser = new Parser(scanner);
         
-        return new Template(this, parser.parseProgram());
+        Bytecode code = this.compiler.compile(parser.parseProgram());
+        return new Template(this, code);
     }
     
     /**
