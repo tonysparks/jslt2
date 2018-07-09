@@ -18,6 +18,7 @@ import jslt2.ast.ForArrayExpr;
 import jslt2.ast.ForObjectExpr;
 import jslt2.ast.FuncCallExpr;
 import jslt2.ast.GetExpr;
+import jslt2.ast.GroupExpr;
 import jslt2.ast.IdentifierExpr;
 import jslt2.ast.IfExpr;
 import jslt2.ast.ImportExpr;
@@ -197,6 +198,13 @@ public class PrettyPrinter implements NodeVisitor {
             elseExpr.visit(this);
             unindent();
         }
+    }
+    
+    @Override
+    public void visit(GroupExpr expr) {
+        print("(");
+        expr.getExpr().visit(this);
+        print(")");
     }
 
     @Override

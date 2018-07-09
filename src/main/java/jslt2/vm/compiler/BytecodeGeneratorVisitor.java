@@ -284,6 +284,11 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.getfieldk(expr.getIdentifier());        
     }
 
+    @Override
+    public void visit(GroupExpr expr) {
+        asm.line(expr.getLineNumber());
+        expr.getExpr().visit(this);        
+    }
     
     /* (non-Javadoc)
      * @see jslt2.ast.NodeVisitor#visit(jslt2.ast.ImportGetExpr)

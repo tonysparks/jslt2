@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
+import jslt2.Jslt2Function;
 import jslt2.util.Jslt2Util;
 import jslt2.util.Stack;
 import jslt2.vm.compiler.Outer;
@@ -432,6 +433,19 @@ public class VM {
                         }
 
                         stack[top++] = c;    
+                        break;
+                    }
+                    case USER_INVOKE: {
+                        int nargs = ARG1(i);
+                        int constIndex = ARG2(i);
+                        
+                        JsonNode name = constants[constIndex];
+                        
+                        JsonNode[] args = readArrayFromStack(nargs, stack);
+                        Jslt2Function function = this.runtime.getFunction(name.asText());
+                        JsonNode c = function.execute(input, args);
+                        
+                        stack[top++] = c;
                         break;
                     }
                     case FUNC_DEF: {

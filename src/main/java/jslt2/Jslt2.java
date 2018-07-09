@@ -9,6 +9,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,6 +90,8 @@ public class Jslt2 {
     private Compiler compiler;
     private VM vm;
     
+    private Map<String, Jslt2Function> userFunctions;
+    
     /**
      * @param objectMapper
      */
@@ -100,10 +104,32 @@ public class Jslt2 {
         
         this.vm = new VM(this);
         this.compiler = new Compiler(this);
+        
+        this.userFunctions = new HashMap<>();
     }
     
     public Jslt2() {
         this(new ObjectMapper(), false, 1024, Integer.MAX_VALUE);
+    }
+    
+    /**
+     * Register a user defined {@link Jslt2Function}
+     * 
+     * @param name
+     * @param function
+     */
+    public void addFunction(String name, Jslt2Function function) {
+        this.userFunctions.put(name, function);
+    }
+    
+    /**
+     * Get a {@link Jslt2Function} by name
+     * 
+     * @param name
+     * @return the {@link Jslt2Function} if registered otherwise null
+     */
+    public Jslt2Function getFunction(String name) {
+        return this.userFunctions.get(name);
     }
     
     public ObjectNode newObjectNode() {

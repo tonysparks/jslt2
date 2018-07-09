@@ -346,7 +346,7 @@ public class Parser {
     private Expr groupExpr() {
         Expr expr = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
-        return expr;
+        return new GroupExpr(expr);
     }
     
     private ForArrayExpr forArrayExpr() {
