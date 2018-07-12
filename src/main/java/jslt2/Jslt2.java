@@ -51,7 +51,7 @@ public class Jslt2 {
         private int maxStackSize = Integer.MAX_VALUE;
         
         private ObjectMapper objectMapper;
-        
+                
         public Builder enableDebugMode(boolean enableDebugMode) {
             this.isDebugMode = enableDebugMode;
             return this;
@@ -106,6 +106,8 @@ public class Jslt2 {
         this.compiler = new Compiler(this);
         
         this.userFunctions = new HashMap<>();
+        
+        new Jslt2StdLibrary(this);
     }
     
     public Jslt2() {
@@ -130,6 +132,16 @@ public class Jslt2 {
      */
     public Jslt2Function getFunction(String name) {
         return this.userFunctions.get(name);
+    }
+    
+    /**
+     * Determines if the {@link Jslt2Function} exists
+     * 
+     * @param name
+     * @return true if the function is defined
+     */
+    public boolean hasFunction(String name) {
+        return this.userFunctions.containsKey(name);
     }
     
     public ObjectNode newObjectNode() {

@@ -246,11 +246,11 @@ public class BytecodeEmitter {
      */
     public BytecodeEmitter end() {    
         
-        /* reconcile the labels */
         reconcileLabels();
         
-        /* reconcile any Outers */        
         reconcileOuters(peek());
+        
+        reconcileFunctions();
         
         this.scopes.popScope();
         
@@ -267,6 +267,10 @@ public class BytecodeEmitter {
      */
     private void reconcileLabels() {
         peek().localScope.reconcileLabels();        
+    }
+    
+    private void reconcileFunctions() {
+    //    peek().localScope.reconcilePendingFunctions();
     }
     
     /**
@@ -292,8 +296,8 @@ public class BytecodeEmitter {
                 if (scope != null) {
 
                     /* find the asm from the parent scope */
-                    scope = scope.getParent();
-                    BytecodeEmitter outerAsm = findAsmByScope(scope);
+                    EmitterScope parentScope = scope.getParent();
+                    BytecodeEmitter outerAsm = findAsmByScope(parentScope);
                     if (outerAsm != null) {
                         int nup = outerUpIndex - 1;
 
@@ -307,7 +311,7 @@ public class BytecodeEmitter {
                             outerAsm.linstrx(xLOAD_OUTER, store);
                         }
                         else {
-                            outerAsm.linstrx(xLOAD_LOCAL, outer.getIndex());
+                            outerAsm.linstrx(xLOAD_LOCAL, outer.getIndex());                            
                         }
                     }
                 }
@@ -468,6 +472,10 @@ public class BytecodeEmitter {
     public int getFunction(String reference) {
         return peek().localScope.getFunction(reference);
     }
+    
+    public void addPendingFunction(String reference) {
+        peek().localScope.addPendingFunction(reference);
+    }
         
     /**
      * Adds the symbol to the {@link Locals}.
@@ -567,6 +575,16 @@ public class BytecodeEmitter {
      */
     private void instrsx(int opcode, int argsx) {
         instr(SET_ARGsx(opcode, argsx));
+    }
+    
+    /**
+     * Outputs an instruction with 1 argument
+     * 
+     * @param opcode
+     * @param arg1
+     */
+    private void instr1(int opcode, int arg1) {
+        instr(SET_ARG1(opcode, arg1));
     }
         
     /**
@@ -704,12 +722,7 @@ public class BytecodeEmitter {
         instrx(STORE_LOCAL, index);
         decrementMaxstackSize();
     }
-    
-    public void storeouter(int index) {
-        instrx(STORE_OUTER, index);
-        decrementMaxstackSize();
-    }
-        
+            
     public void loadnull() {
         instr(LOAD_NULL);
         incrementMaxstackSize();
@@ -733,8 +746,8 @@ public class BytecodeEmitter {
         incrementMaxstackSize();
     }
                         
-    public void tailcall(int numberOfParameters, int expandArrayIndex) {
-        instr2(TAIL_CALL, numberOfParameters, expandArrayIndex);
+    public void tailcall(int numberOfParameters) {
+        instr1(TAIL_CALL, numberOfParameters);
     }
     
     public void jmp(String label) {
@@ -849,6 +862,17 @@ public class BytecodeEmitter {
         instr2(INVOKE, numberOfArgs, bytecodeIndex);          
         decrementMaxstackSize(numberOfArgs-1);
     }
+    
+    public void userinvoke(int numberOfArgs, String functionName) {
+        int index = addConst(TextNode.valueOf(functionName));
+        instr2(USER_INVOKE, numberOfArgs, index);
+        decrementMaxstackSize(numberOfArgs-1);
+    }
+    
+    public void userinvoke(int numberOfArgs, int functionNameConstIndex) {        
+        instr2(USER_INVOKE, numberOfArgs, functionNameConstIndex);
+        decrementMaxstackSize(numberOfArgs-1);
+    }
        
         
     /* arithmetic operators */
@@ -920,6 +944,8 @@ public class BytecodeEmitter {
      * @return the {@link Bytecode} object
      */
     public Bytecode compile() {
+        localScope.reconcilePendingFunctions();
+        
         int[] code = localScope.getRawInstructions();
         Bytecode bytecode = new Bytecode(code);
                     
@@ -928,7 +954,7 @@ public class BytecodeEmitter {
         if(this.localScope.hasOuters()) {
             Outers outers = this.localScope.getOuters();
             bytecode.numOuters = outers.getNumberOfOuters();
-            bytecode.outers = new Outer[bytecode.numOuters];
+            bytecode.outers = new JsonNode[bytecode.numOuters];
         }
         
         
@@ -976,6 +1002,9 @@ public class BytecodeEmitter {
         bytecode.inner = new Bytecode[bytecode.numInners];
         for(int i = 0; i < bytecode.inner.length; i++) {
             bytecode.inner[i] = this.innerEmmitters.get(i).compile();
+            if(this.localScope == this.scopes.getGlobalScope()) {                
+                bytecode.inner[i].setGlobalBytecode(bytecode);
+            }
         }
                 
         return bytecode;        

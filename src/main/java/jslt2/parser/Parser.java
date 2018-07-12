@@ -247,7 +247,13 @@ public class Parser {
     private Expr functionCall() {
         Expr expr = primary();
         while(true) {
-            if(match(LEFT_PAREN)) {
+            if(check(LEFT_PAREN)) {
+                if(!(expr instanceof IdentifierExpr)) {
+                    return expr;
+                }
+                
+                advance();
+                
                 expr = finishFunctionCall(expr);
             }
             else if(check(LEFT_BRACKET)) {
@@ -256,7 +262,9 @@ public class Parser {
                 // expressions
                 if(!(expr instanceof FuncCallExpr ||
                    expr instanceof VariableExpr || 
-                   expr instanceof DotExpr)) {
+                   expr instanceof DotExpr ||
+                   expr instanceof ArraySliceExpr ||
+                   expr instanceof ArrayIndexExpr)) {
                     return expr;
                 }
                 

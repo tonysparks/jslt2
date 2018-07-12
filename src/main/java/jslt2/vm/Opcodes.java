@@ -207,11 +207,7 @@ public class Opcodes {
             case STORE_LOCAL: {
                 op = "STORE_LOCAL";
                 break;
-            }
-            case STORE_OUTER: {
-                op = "STORE_OUTER";
-                break;
-            }            
+            }         
                         
             case xLOAD_OUTER: {
                 op = "xLOAD_OUTER";
@@ -220,7 +216,7 @@ public class Opcodes {
             case xLOAD_LOCAL: {
                 op = "xLOAD_LOCAL";
                 break;
-            }            
+            }
             
             case JMP:    {
                 op = "JMP";                
@@ -398,11 +394,10 @@ public class Opcodes {
         
         /* storage of values */
         STORE_LOCAL = 12,             /* ARGx */
-        STORE_OUTER = 13,             /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER = 14,             /* ARGx */
-        xLOAD_LOCAL = 15,             /* ARGx */
+        xLOAD_OUTER  = 14,             /* ARGx */
+        xLOAD_LOCAL  = 15,             /* ARGx */
                 
         /* jump instructions */
         JMP = 16,                     /* ARGsx */
@@ -476,10 +471,9 @@ public class Opcodes {
         opcodes.put("LOAD_INPUT", LOAD_INPUT);
         
         opcodes.put("STORE_LOCAL", STORE_LOCAL);
-        opcodes.put("STORE_OUTER", STORE_OUTER);
                         
         opcodes.put("xLOAD_OUTER", xLOAD_OUTER);
-        opcodes.put("xLOAD_LOCAL", xLOAD_LOCAL);        
+        opcodes.put("xLOAD_LOCAL", xLOAD_LOCAL);
 
         opcodes.put("JMP", JMP);
         opcodes.put("IFEQ", IFEQ);

@@ -23,7 +23,7 @@ public class Main {
             System.out.println("<usage> jslt2 [options] ");
         }
         
-        Jslt2 runtime = new Jslt2();
+        Jslt2 runtime = Jslt2.builder().enableDebugMode(true).build();
         JsonNode input = runtime.getObjectMapper().readTree(new FileReader(new File(args[1])));
         
         Template template = runtime.compile(new FileReader(new File(args[0])));

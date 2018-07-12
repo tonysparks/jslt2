@@ -9,6 +9,7 @@ import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.ast.*;
 import jslt2.parser.tokens.TokenType;
+import jslt2.util.Stack;
 import jslt2.util.Tuple;
 import jslt2.vm.compiler.EmitterScope.ScopeType;
 
@@ -21,18 +22,25 @@ import jslt2.vm.compiler.EmitterScope.ScopeType;
  */
 public class BytecodeGeneratorVisitor implements NodeVisitor {
 
+    private Jslt2 runtime;
+    
     /**
      * The assembler
      */
     private BytecodeEmitter asm;
+    
+    private Stack<String> recursiveCalls;
         
     /**
      * @param runtime
      * @param symbols
      */
     public BytecodeGeneratorVisitor(Jslt2 runtime, EmitterScopes symbols) {
+        this.runtime = runtime;
         this.asm = new BytecodeEmitter(symbols);
         this.asm.setDebug(runtime.isDebugMode());
+        
+        this.recursiveCalls = new Stack<>();
     }
         
     /**
@@ -194,55 +202,89 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.fordef();                        
+        asm.fordef();
+            asm.markLexicalScope();
             expr.getLets().forEach(let -> let.visit(this));
             
             Expr value = expr.getValueExpr();
             value.visit(this);
             asm.addelement();
+            asm.unmarkLexicalScope();
         asm.end();
     }
 
     @Override
     public void visit(LetExpr expr) {
         asm.line(expr.getLineNumber());
+        
+        String localVarName = "$" + expr.getIdentifier(); 
+        int index = asm.addLocal(localVarName);
         expr.getValue().visit(this);
-        asm.addAndstorelocal("$"+expr.getIdentifier());
+        asm.storelocal(index);
     }
 
     @Override
     public void visit(DefExpr expr) {
         asm.line(expr.getLineNumber());
         
-        asm.addFunction(expr.getIdentifier(), asm.getBytecodeIndex());
+        String functionName = expr.getIdentifier();
+        recursiveCalls.push(functionName);
+        
+        asm.addFunction(functionName, asm.getBytecodeIndex());
         
         List<String> parameters = expr.getParameters();
         asm.funcdef(parameters.size());        
-            expr.getLets().forEach(let -> let.visit(this));
             for(String param : parameters) {
                 asm.addLocal("$"+param);
             }
+            expr.getLets().forEach(let -> let.visit(this));
             
             expr.getExpr().visit(this);
         asm.end();
+        
+        recursiveCalls.pop();
     }
 
     @Override
     public void visit(FuncCallExpr expr) {
         asm.line(expr.getLineNumber());
-        
-        int bytecodeIndex = -1;
-        Expr identifier = expr.getObject();
-        if(identifier instanceof IdentifierExpr) {
-            String name = ((IdentifierExpr)identifier).getIdentifier();
-            bytecodeIndex = asm.getFunction(name);
-        }
-        
+
         List<Expr> arguments = expr.getArguments();
+        int numberOfArgs = arguments.size();
+        
         for(Expr arg : arguments) {
             arg.visit(this);
         }
-        asm.invoke(arguments.size(), bytecodeIndex);
+        
+        int bytecodeIndex = -1;
+        String functionName = null;
+        
+        Expr identifier = expr.getObject();
+        if(identifier instanceof IdentifierExpr) {
+            functionName = ((IdentifierExpr)identifier).getIdentifier();
+            bytecodeIndex = asm.getFunction(functionName);
+            if(!this.runtime.hasFunction(functionName)) {
+                asm.addPendingFunction(functionName);
+                bytecodeIndex = 999;
+            }
+        }
+
+        if(bytecodeIndex < 0) {
+            asm.userinvoke(numberOfArgs, functionName);
+        }        
+        else {
+            if(functionName != null) {
+                if(!recursiveCalls.isEmpty()) {
+                    String currentFunctionDefinition = recursiveCalls.peek();
+                    if(currentFunctionDefinition.equals(functionName)) {
+                        //asm.tailcall(numberOfArgs);
+                        //return;
+                    }
+                }
+            }
+            
+            asm.invoke(numberOfArgs, bytecodeIndex);
+        }
     }
 
     @Override
@@ -255,7 +297,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     public void visit(VariableExpr expr) {
         asm.line(expr.getLineNumber());
         if(!asm.load(expr.getVariable())) {
-            throw new Jslt2Exception(expr.getVariable() + " not defined");
+            throw new Jslt2Exception(expr.getVariable() + " not defined at line: " + expr.getLineNumber());
         }
     }
 

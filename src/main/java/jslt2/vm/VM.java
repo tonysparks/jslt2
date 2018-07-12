@@ -22,8 +22,7 @@ import jslt2.Jslt2Exception;
 import jslt2.Jslt2Function;
 import jslt2.util.Jslt2Util;
 import jslt2.util.Stack;
-import jslt2.vm.compiler.Outer;
-import jslt2.vm.compiler.Outer.StackValue;
+
 
 /**
  * @author Tony
@@ -47,40 +46,14 @@ public class VM {
     /*thread stack
      */
     private JsonNode[] stack;
-    
 
-    /* list of open outers, if this function goes out of scope (i.e., the stack) then the outers
-     * are closed (i.e., the value contained on the stack is transferred used instead of the indexed value
-     */
-    private Outer[] openouters;
     private int top;
 
     /**
      * The maximum stack size
      */
     private final int maxStackSize;
-    
-    
-    /**
-     * The stack value accounts for closures requesting a value off
-     * of the stack and when the are finally 'closed' over.
-     * 
-     * We can't just use the VM.stack variable when closing over
-     * the Outer because the VM.stack variable may be replaced
-     * when the stack grows.
-     */
-    private StackValue vmStackValue = new StackValue() {        
-        @Override
-        public JsonNode getStackValue(int index) {
-            return stack[index];
-        }
         
-        @Override
-        public void setStackValue(int index, JsonNode value) {         
-            stack[index] = value;
-        }
-    };
-    
     /**
      * 
      */
@@ -96,7 +69,6 @@ public class VM {
         this.arrayStack  = new Stack<>();
         
         this.stack = new JsonNode[stackSize];
-        this.openouters = new Outer[stackSize];
         this.top = 0;        
     }
 
@@ -184,13 +156,11 @@ public class VM {
         final JsonNode[] constants = code.constants;
         final Bytecode[] inner = code.inner;
         
-        final Outer[] calleeouters = code.outers;
+        final JsonNode[] calleeouters = code.outers;
         
         final int topStack = base + code.numLocals;
         top = topStack;
         
-        boolean closeOuters = false;
-
         int lineNumber = -1;
         
         try {
@@ -258,7 +228,7 @@ public class VM {
                     }
                     case LOAD_OUTER: {
                         int iname = ARGx(i);
-                        stack[top++] = calleeouters[iname].getValue();
+                        stack[top++] = calleeouters[iname];
                         break;
                     }
                     case LOAD_NULL: {
@@ -282,11 +252,6 @@ public class VM {
                         stack[base + iname] = stack[--top];
                         break;
                     }
-                    case STORE_OUTER: {
-                        int iname = ARGx(i);
-                        calleeouters[iname].setValue(stack[--top]);
-                        break;
-                    }
 
                     /* stack operators */
                     case POP:    {
@@ -305,7 +270,7 @@ public class VM {
                     }
                     case IFEQ:    {
                         JsonNode cond = stack[--top];
-                        if (!cond.asBoolean()) {
+                        if (!Jslt2Util.isTrue(cond)) {
                             int pos = ARGsx(i);
                             pc += pos;
                         }
@@ -341,15 +306,13 @@ public class VM {
                     }
                     case FOR_DEF: {                        
                         int bytecodeIndex = ARGx(i);
-                        Bytecode forCode = inner[bytecodeIndex];
+                        Bytecode forCode = inner[bytecodeIndex].clone();
                         
-                        Outer[] outers = forCode.outers;                            
-                        if (assignOuters(outers, calleeouters, openouters, forCode.numOuters, base, pc, code)) {
-                            closeOuters = true;
-                        }
+                        JsonNode[] outers = forCode.outers;                            
+                        assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
                         pc += forCode.numOuters;
                         
-                        JsonNode object = stack[top-1];
+                        JsonNode object = stack[--top];
                         if(object.isNull()) {
                             JsonNode current = NullNode.instance;
                             execute(forCode, current);
@@ -371,7 +334,7 @@ public class VM {
                             while(it.hasNext()) {
                                 JsonNode current = it.next();
                                 execute(forCode, current);                                
-                            }
+                            }                            
                         }
                         else {
                             throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
@@ -379,11 +342,77 @@ public class VM {
                         
                         break;
                     }
+                    case TAIL_CALL: {                            
+                        pc = 0;    /* return to the beginning of the function call, with the
+                                   stack persevered */                                                        
+                        int nargs = ARG1(i);
+                        switch(nargs) {
+                            case 0: {
+                                break;
+                            }
+                            case 1: {
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                break;
+                            }
+                            case 2: {
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                break;
+                            }
+                            case 3: {
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                break;
+                            }
+                            case 4: {
+                                JsonNode arg4 = stack[--top];
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                stack[base + 3] = arg4;
+                                break;
+                            }
+                            case 5: {
+                                JsonNode arg5 = stack[--top];
+                                JsonNode arg4 = stack[--top];
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                stack[base + 3] = arg4;
+                                stack[base + 4] = arg5;
+                                break;
+                            }
+                            default: {
+                                JsonNode[] args = readArrayFromStack(nargs, stack);
+                                System.arraycopy(args, 0, stack, base, nargs);
+                            }
+                        }
+                        
+                        break;
+                    }
                     case INVOKE:    {
                         int nargs = ARG1(i);
                         int bytecodeIndex = ARG2(i);
-                                                                                           
-                        Bytecode funCode = inner[bytecodeIndex];                        
+                        
+                        final int globalFlag = (1 << (Opcodes.ARG1_SIZE-1));
+                        
+                        Bytecode funCode = (bytecodeIndex&globalFlag) > 0 ?
+                                code.global.inner[bytecodeIndex & ~globalFlag] :
+                                inner[bytecodeIndex];             
+                                
                         JsonNode c = null;
 
                         switch(nargs) {
@@ -443,6 +472,10 @@ public class VM {
                         
                         JsonNode[] args = readArrayFromStack(nargs, stack);
                         Jslt2Function function = this.runtime.getFunction(name.asText());
+                        if(function == null) {
+                            error("No function defined with the name '" + name.asText() + "'");
+                        }
+                        
                         JsonNode c = function.execute(input, args);
                         
                         stack[top++] = c;
@@ -450,12 +483,10 @@ public class VM {
                     }
                     case FUNC_DEF: {
                         int innerIndex = ARGx(i);
-                        Bytecode bytecode = inner[innerIndex];
+                        Bytecode bytecode = inner[innerIndex].clone();
                         
-                        Outer[] outers = bytecode.outers;                            
-                        if (assignOuters(outers, calleeouters, openouters, bytecode.numOuters, base, pc, code)) {
-                            closeOuters = true;
-                        }
+                        JsonNode[] outers = bytecode.outers;                            
+                        assignOuters(outers, calleeouters, bytecode.numOuters, base, pc, code);
                         pc += bytecode.numOuters;
 
                         break;
@@ -472,6 +503,9 @@ public class VM {
                         }
                         else if(obj.isObject()) {
                             value = obj.get(index.asText());
+                        }
+                        else if(obj.isTextual()) {
+                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
                         }
                         else {
                             error(obj + " is not an indexable object");
@@ -491,6 +525,9 @@ public class VM {
                         else if(obj.isObject()) {
                             value = obj.get(index.asText());
                         }
+                        else if(obj.isTextual()) {
+                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
+                        }
                         else {
                             error(obj + " is not an indexable object");
                         }
@@ -503,27 +540,44 @@ public class VM {
                         JsonNode start = stack[--top];
                         JsonNode array = stack[--top];
                         
-                        if(!array.isArray()) {
-                            error(array + " is not an array");
-                        }
-                        
-                        ArrayNode a = (ArrayNode)array;
-                        
                         int startIndex = start.asInt();
                         int endIndex = end.asInt();
-                        if(endIndex < 0) {
-                            endIndex = a.size(); 
-                        }
                         
-                        if(endIndex < startIndex) {
-                            error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                        if(array.isArray()) {
+                            ArrayNode a = (ArrayNode)array;
+                            
+                            if(endIndex < 0) {
+                                endIndex = a.size(); 
+                            }
+                            
+                            if(endIndex < startIndex) {
+                                error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                            }
+                            
+                            ArrayNode slice = this.runtime.newArrayNode(endIndex - startIndex);
+                            for(int j = startIndex; j < endIndex; j++) {
+                                slice.add(a.get(j));
+                            }
+                            
+                            stack[top++] = slice;                        
                         }
-                        
-                        ArrayNode slice = this.runtime.newArrayNode(endIndex - startIndex);
-                        for(int j = startIndex; j < endIndex; j++) {
-                            slice.add(a.get(j));
+                        else if(array.isTextual()) {
+                            TextNode a = (TextNode)array;
+                            String text = a.asText();
+                            
+                            if(endIndex < 0) {
+                                endIndex = text.length(); 
+                            }
+                            
+                            if(endIndex < startIndex) {
+                                error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                            }
+                                                                                    
+                            stack[top++] = TextNode.valueOf(text.substring(startIndex, endIndex));
                         }
-                        stack[top++] = slice;                        
+                        else {
+                            error(array + " is not an array indexable object");
+                        }
                         break;
                     }
                     /* arithmetic operators */
@@ -705,11 +759,10 @@ public class VM {
         catch(Exception e) {            
             buildStackTrace(code, lineNumber, e);
         }
-        
-        result = stack[--top];   
-        
-        exitCall(code, closeOuters, base, pc, len);
                     
+        result = stack[--top];
+        
+        exitCall(code, base);        
         return result;
     }
     
@@ -717,24 +770,12 @@ public class VM {
         error(String.format("RuntimeError: '%s' at line %d stack trace: %s", code.getSourceFileName(), lineNumber, e));
     }
     
-    private void exitCall(Bytecode code, boolean closeOuters, int base, int pc, int len) {
+    private void exitCall(Bytecode code, int base) {
         final int stackSize = Math.min(stack.length, base+code.maxstacksize);
-        /* close the outers for this function call */
-        if (closeOuters) {
-            for(int j=base;j<stackSize;j++) {
-                if(openouters[j]!=null) {
-                    openouters[j].close();
-                    openouters[j] = null;
-                }
 
-                stack[j] = null;
-            }
-        }
-        else {
-            for(int j=base;j<stackSize;j++) {
-                stack[j] = null;
-            }                
-        }
+        for(int j=base;j<stackSize;j++) {
+            stack[j] = null;
+        }                
 
         top = base;            
     }
@@ -754,11 +795,7 @@ public class VM {
             final int newStackSize = Math.min( stack.length + ((requiredStackSize-stack.length) << 1), this.maxStackSize);
             JsonNode[] newStack = new JsonNode[newStackSize];
             System.arraycopy(stack, 0, newStack, 0, top);
-            this.stack = newStack;
-            
-            Outer[] newOuters = new Outer[newStack.length];
-            System.arraycopy(openouters, 0, newOuters, 0, top);
-            this.openouters = newOuters;
+            this.stack = newStack;            
         }  
     }
     
@@ -820,26 +857,12 @@ public class VM {
         throw new Jslt2Exception("ExecutionError: " + errorMsg);
     }
 
-    /**
-     * Close over the outer variables for closures.
-     * 
-     * @param outers
-     * @param calleeouters
-     * @param openouters
-     * @param numOuters
-     * @param base
-     * @param pc
-     * @param code
-     * @return true if there where Outers created that should be closed over once we leave the function
-     * scope
-     */
-    private boolean assignOuters(Outer[] outers, Outer[] calleeouters, Outer[] openouters, 
+    private void assignOuters(JsonNode[] outers, JsonNode[] calleeouters, 
                         int numOuters, 
                         int base, 
                         int pc, 
                         Bytecode code) {
         
-        boolean closeOuters = false;
         for(int j = 0; j < numOuters; j++) {
             int i = code.instr[pc++];
 
@@ -848,24 +871,18 @@ public class VM {
 
             switch(opCode) {
                 case xLOAD_OUTER: {
-                    outers[j] = calleeouters[index];
+                    outers[j] = calleeouters[index];                    
                     break;
                 }
                 case xLOAD_LOCAL: {
-                    int bindex = base + index;
-                    outers[j] = openouters[bindex] != null ?
-                                openouters[bindex] :
-                                (openouters[bindex] = new Outer(vmStackValue, bindex));
-                    closeOuters = true;
+                    outers[j] = stack[base + index];
                     break;
-                }
+                }                
                 default: {
                     error("Outer opcode '" + opCode +"' is invalid");
                 }
             }
         }
-
-        return closeOuters;
     }
     
     

@@ -3,6 +3,12 @@
  */
 package jslt2;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -10,9 +16,11 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.schibsted.spt.data.jslt.Expression;
+import com.schibsted.spt.data.jslt.Function;
 import com.schibsted.spt.data.jslt.Parser;
 
 import static org.junit.Assert.*;
@@ -180,6 +188,54 @@ public class Jslt2Test {
         input.set("name", TextNode.valueOf("tony"));
         
         Expression jslt = Parser.compileString("let x = [2] [$x[0]]");
+        JsonNode result = jslt.apply(input);
+        System.out.println(result);
+    }
+    
+    @Test
+    public void testJsltByFile() throws Exception {
+        ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
+        input.set("name", TextNode.valueOf("tony"));
+        
+        Function print = new Function() {
+            
+            @Override
+            public String getName() {
+                return "print";
+            }
+            
+            @Override
+            public int getMinArguments() {
+                return 1;
+            }
+            
+            @Override
+            public int getMaxArguments() {
+                return 10;
+            }
+            
+            @Override
+            public JsonNode call(JsonNode input, JsonNode[] args) {
+                if(args == null || args.length < 1) return NullNode.instance;
+                JsonNode node = args[0];
+                
+                StringBuilder sb = new StringBuilder();
+                for(int i = 0; i < args.length; i++) {
+                    if(i > 0) sb.append(" ");
+                    sb.append(args[i]);
+                }
+                
+                System.out.println(sb);
+                
+                return node;
+            }
+        };
+        
+        List<Function> functions = new ArrayList<>();
+        functions.add(print);
+        
+        String script = new String(Files.readAllBytes(new File("./examples/tests.json").toPath()));
+        Expression jslt = Parser.compileString(script, functions);
         JsonNode result = jslt.apply(input);
         System.out.println(result);
     }
