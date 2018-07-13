@@ -379,7 +379,7 @@ public class EmitterScope {
      * @return the constants
      */
     public Constants getConstants() {
-        if ( constants == null ) {
+        if (constants == null) {
             constants = new Constants();
         }
         return constants;
@@ -396,7 +396,7 @@ public class EmitterScope {
      * @return the globals
      */
     public Outers getOuters() {
-        if ( outers == null ) {
+        if (outers == null) {
             outers = new Outers();
         }
         return outers;
@@ -420,7 +420,7 @@ public class EmitterScope {
      * @return the locals
      */
     public Locals getLocals() {
-        if ( locals == null ) {
+        if (locals == null) {
             locals = new Locals();
         }
         return locals;

@@ -21,7 +21,7 @@ public class EmitterScopes {
     public EmitterScopes() {
         this.globalScope = pushScope(ScopeType.OBJECT_SCOPE);
     }
-    
+        
     /**
      * @return the current active {@link EmitterScope}
      */
@@ -52,7 +52,7 @@ public class EmitterScopes {
      * @return the popped {@link EmitterScope}
      */
     public EmitterScope popScope() {
-        if ( this.currentScope == null ) {
+        if (this.currentScope == null) {
             this.currentScope = peek(); /* default to global scope */
         }
         

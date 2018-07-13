@@ -56,7 +56,7 @@ public class Locals {
         
         int index = -1;
         for(int i = 0; i < this.index; i++) {
-            if ( this.pool[i].equals(reference) ) {
+            if (this.pool[i].equals(reference)) {
                 index = i;
                 break;
             }
@@ -72,7 +72,7 @@ public class Locals {
      * @param index
      */
     private void putInPool(String reference, int index) {
-        if ( index >= this.pool.length ) {
+        if (index >= this.pool.length) {
             this.pool = ArrayUtil.resize(pool, pool.length  << 1 );
         }
         
@@ -86,7 +86,7 @@ public class Locals {
      * @param size
      */
     public void allocate(int size) {
-        if ( this.pool == null ) {    
+        if (this.pool == null) {    
             this.pool = new String[size];
         }                
         this.index = 0;
@@ -108,7 +108,7 @@ public class Locals {
          * the values array
          */
         
-        if ( index < 0 ) {            
+        if (index < 0) {            
             putInPool(reference, this.index);                    
         }                                    
         else {
@@ -181,7 +181,7 @@ public class Locals {
         Locals clone = new Locals();
         clone.index = this.index;
 
-        if ( this.pool != null ) {
+        if (this.pool != null) {
             clone.pool = new String[this.pool.length];
             System.arraycopy(this.pool, 0, clone.pool, 0, this.pool.length);
         }

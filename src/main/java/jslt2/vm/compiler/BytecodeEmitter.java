@@ -250,12 +250,10 @@ public class BytecodeEmitter {
         
         reconcileOuters(peek());
         
-        reconcileFunctions();
-        
         this.scopes.popScope();
         
         BytecodeEmitter asm = this;
-        if ( !this.innerEmitterStack.isEmpty() ) {
+        if (!this.innerEmitterStack.isEmpty()) {
             asm = this.innerEmitterStack.pop();
         }
         
@@ -268,11 +266,7 @@ public class BytecodeEmitter {
     private void reconcileLabels() {
         peek().localScope.reconcileLabels();        
     }
-    
-    private void reconcileFunctions() {
-    //    peek().localScope.reconcilePendingFunctions();
-    }
-    
+        
     /**
      * Reconciles the outer variables
      * 
@@ -941,7 +935,6 @@ public class BytecodeEmitter {
         instr(LTE);
         decrementMaxstackSize();
     }
-
     
     /**
      * Compiles the assembler into {@link Bytecode}.

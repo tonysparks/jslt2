@@ -46,7 +46,7 @@ public class Constants {
      * @return the storage
      */
     private List<JsonNode> lazystorage() {
-        if ( this.storage == null ) {
+        if (this.storage == null) {
             this.storage = new ArrayList<>();
         }
         return storage;
@@ -79,7 +79,7 @@ public class Constants {
      * @return the constant index of where it's stored
      */
     public int store(JsonNode obj) {
-        if ( this.lazystorage().contains(obj) ) {
+        if (this.lazystorage().contains(obj)) {
             return this.storage.indexOf(obj);
         }
         

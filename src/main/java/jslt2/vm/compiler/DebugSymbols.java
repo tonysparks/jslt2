@@ -125,7 +125,7 @@ public class DebugSymbols {
     public int store(String reference, int startpc) {
         /* Expand the array if we have reached our local limit
          */
-        if ( index >= this.locvars.length ) {            
+        if (index >= this.locvars.length) {            
             LocalVar[] newarray = new LocalVar[locvars.length  << 1];
             System.arraycopy(this.locvars, 0, newarray, 0, this.locvars.length);
             this.locvars = newarray;
