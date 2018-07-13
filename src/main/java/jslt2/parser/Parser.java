@@ -4,6 +4,9 @@ package jslt2.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+
 import static jslt2.parser.tokens.TokenType.*;
 
 import jslt2.ast.*;
@@ -118,17 +121,25 @@ public class Parser {
     
     
     private IfExpr ifExpr() {
+        List<LetExpr> lets = letDeclarations();
+        
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
         Expr condition = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
         
         Expr thenBranch = expression();
-        Expr elseBranch = null;
+        ElseExpr elseBranch = null;
         if (match(ELSE)) {
-            elseBranch = expression();
+            elseBranch = elseExpr();
         }
         
-        return node(new IfExpr(condition, thenBranch, elseBranch));
+        return node(new IfExpr(lets, condition, thenBranch, elseBranch));
+    }
+    
+    private ElseExpr elseExpr() {
+        List<LetExpr> lets = letDeclarations();
+        Expr expr = expression();
+        return new ElseExpr(lets, expr);
     }
     
     private DotExpr dotExpr() {
@@ -155,7 +166,7 @@ public class Parser {
     private Expr or() {
         Expr expr = and();
         
-        while(match(LOGICAL_OR)) {
+        while(match(OR)) {
             Token operator = previous();
             Expr right = and();
             expr = node(new BinaryExpr(expr, operator.getType(), right));
@@ -167,7 +178,7 @@ public class Parser {
     private Expr and() {
         Expr expr = equality();
         
-        while(match(LOGICAL_AND)) {
+        while(match(AND)) {
             Token operator = previous();
             Expr right = equality();
             expr = node(new BinaryExpr(expr, operator.getType(), right));
@@ -236,29 +247,55 @@ public class Parser {
     private Expr functionCall() {
         Expr expr = primary();
         while(true) {
-            if(match(LEFT_PAREN)) {
-                expr = finishFunctionCall(expr);
-            }
-            else if(check(LEFT_BRACKET)) {
-                if(lookahead(1).getType().equals(FOR)) {
-                    break;
+            if(check(LEFT_PAREN)) {
+                if(!(expr instanceof IdentifierExpr)) {
+                    return expr;
                 }
                 
                 advance();
                 
-                Expr startIndexExpr = expression();
+                expr = finishFunctionCall(expr);
+            }
+            else if(check(LEFT_BRACKET)) {
+                // following spec - but this is still broken 
+                // if we allow variables to be referenced in other let/def
+                // expressions
+                if(!(expr instanceof FuncCallExpr ||
+                   expr instanceof VariableExpr || 
+                   expr instanceof DotExpr ||
+                   expr instanceof ArraySliceExpr ||
+                   expr instanceof ArrayIndexExpr)) {
+                    return expr;
+                }
+                
+                advance();
+                
+                Expr startIndexExpr = null;
                 Expr endIndexExpr = null;
+                
+                if(!check(COLON)) {
+                    startIndexExpr = expression();
+                }
+                
                 if(match(COLON)) {
                     if(!check(TokenType.RIGHT_BRACKET)) {
                         endIndexExpr = expression();
                     }
                     else {
-                        endIndexExpr = new NumberExpr(-1);
+                        endIndexExpr = new NumberExpr(IntNode.valueOf(-1));
                     }
+                    
+                    if(startIndexExpr == null) {
+                        startIndexExpr = new NumberExpr(IntNode.valueOf(0));
+                    }
+                    
+                    consume(RIGHT_BRACKET, ErrorCode.MISSING_RIGHT_BRACKET);                
+                    expr = node(new ArraySliceExpr(expr, startIndexExpr, endIndexExpr));
                 }
-                consume(RIGHT_BRACKET, ErrorCode.MISSING_RIGHT_BRACKET);                
-                expr = node(new ArraySliceExpr(expr, startIndexExpr, endIndexExpr));
-                
+                else {                    
+                    consume(RIGHT_BRACKET, ErrorCode.MISSING_RIGHT_BRACKET);                
+                    expr = node(new ArrayIndexExpr(expr, startIndexExpr));
+                }
             }
             else if(match(DOT)) {
                 Token name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
@@ -291,7 +328,7 @@ public class Parser {
         if(match(FALSE)) return node(new BooleanExpr(false));
         if(match(NULL))  return node(new NullExpr());
         
-        if(match(NUMBER))  return node(new NumberExpr((double)previous().getValue()));
+        if(match(NUMBER))  return node(new NumberExpr((JsonNode)previous().getValue()));        
         if(match(STRING))  return node(new StringExpr(previous().getValue().toString()));
         
         if(match(IDENTIFIER)) return node(new IdentifierExpr(previous().getText()));
@@ -317,7 +354,7 @@ public class Parser {
     private Expr groupExpr() {
         Expr expr = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
-        return expr;
+        return new GroupExpr(expr);
     }
     
     private ForArrayExpr forArrayExpr() {
@@ -571,16 +608,7 @@ public class Parser {
     private Token peek() {
         return this.tokens.get(current);
     }
-    
-    private Token lookahead(int amount) {
-        int index = current + amount;
-        if(index < this.tokens.size()) {
-            return this.tokens.get(index);
-        }
         
-        return this.tokens.get(this.tokens.size() - 1);
-    }
-    
     /**
      * If we've reached the end of the file
      * 

@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2Exception;
 import jslt2.vm.compiler.DebugSymbols;
-import jslt2.vm.compiler.Outer;
 
 
 /**
@@ -61,9 +60,10 @@ public class Bytecode {
             
     public int maxstacksize;
     
-    public Outer[] outers;
+    public JsonNode[] outers;
     
     public Bytecode[] inner;    
+    public Bytecode global;
         
     /**
      * @param instructions
@@ -82,7 +82,16 @@ public class Bytecode {
         this.pc = pc;
         this.len = len;        
     }
-            
+    
+    public void setGlobalBytecode(Bytecode global) {
+        this.global = global;
+        if(this.inner != null) {
+            for(int i = 0; i < this.inner.length; i++) {
+                this.inner[i].setGlobalBytecode(global);
+            }
+        }
+    }
+    
     /**
      * denotes that this byte code contains debug information
      */
@@ -157,7 +166,13 @@ public class Bytecode {
         clone.numLocals = this.numLocals;
         clone.numOuters = this.numOuters;
         clone.paramNames = this.paramNames;
-                
+        
+        clone.global = this.global;
+        if(this.numOuters > 0) {
+            clone.outers = new JsonNode[this.numOuters];
+            clone.numOuters = this.numOuters;
+        }
+        
         return clone;
     }
     

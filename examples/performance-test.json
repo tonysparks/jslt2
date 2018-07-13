@@ -13,8 +13,12 @@ def div(array)
 //def mod(array)
 //    [for ($array) . % 2]    
 
+def objects(obj)
+    {for ($obj) "key " + .key : "value " + .value} 
+
 {
     "input" : .,
+    "object" : objects(.),
     "add"  : add(.),
     "sub"  : sub(.),
     "mult" : mult(.),

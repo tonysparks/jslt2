@@ -38,7 +38,7 @@ public class PerformanceTest {
 
     @Ignore
     private String query() throws Exception {
-        String query = new String(Files.readAllBytes(new File("./examples/functions2.json").toPath()));
+        String query = new String(Files.readAllBytes(new File("./examples/performance-test.json").toPath()));
         return query;
     }
     
@@ -110,8 +110,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result.getFirst();
         }
         
-        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     
@@ -164,8 +164,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result;
         }
         
-        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -208,6 +208,52 @@ public class PerformanceTest {
             jslt2Sum += time;
         }
         
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
+    
+    @Test
+    public void testFunctionCallsAstWalkerNoValidation() throws Exception {
+        String query = query();
+        
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(false)
+                .build();
+                
+        Expression expr = Parser.compileString(query);
+     
+        int capacity = 1000;//1024 * 1024;
+        ArrayNode array = runtime.newArrayNode(capacity);
+        for(int i = 0; i < capacity; i++) {
+            array.add((double)i);
+        }
+        
+        List<Long> jsltResults = new ArrayList<>();
+        
+        Random rand = new Random();
+        
+        final int numberOfIterations = 1000;
+        
+        int iterations = numberOfIterations;
+        while(iterations --> 0) {
+            
+            Tuple<Long, JsonNode> jsltResult = runJslt(array, expr);
+            jsltResults.add(jsltResult.getFirst());                        
+                        
+            for(int i = 0; i < capacity; i++) {    
+                array.set(rand.nextInt(capacity), DoubleNode.valueOf(rand.nextInt(Integer.MAX_VALUE)));
+            }
+        }
+        
+        long jsltSum = 0L;
+        
+        for(int i = 0; i < jsltResults.size(); i++) {
+            long jsltResult = jsltResults.get(i);
+            
+            jsltSum  += jsltResult;
+        }
+        
+        System.out.printf("Total JSLT-AST   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+    }
+    
 }
+

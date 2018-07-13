@@ -3,11 +3,14 @@
  */
 package jslt2.vm.compiler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
 import jslt2.Jslt2Exception;
+import jslt2.vm.Opcodes;
 
 /**
  * Used to keep track of the current scope while compiling/emitting bytecode.
@@ -48,6 +51,7 @@ public class EmitterScope {
      * Function indexes
      */
     private Map<String, Integer> functions;
+    private Map<String, List<Integer>> pendingFunctions;
     
     
     /**
@@ -218,6 +222,46 @@ public class EmitterScope {
         return locals.store(reference);
     }
     
+    /**
+     * Functions may be used before they are declared, this keeps track of those declarations
+     * so that the bytecode can be updated with the proper function indexes once they are resolved.
+     * 
+     * @param functionName
+     * @param pc
+     */
+    public void addPendingFunction(String functionName) {
+        if(this.pendingFunctions == null) {
+            this.pendingFunctions = new HashMap<>();
+        }
+        
+        if(!this.pendingFunctions.containsKey(functionName)) {
+            this.pendingFunctions.putIfAbsent(functionName, new ArrayList<>());
+        }
+        
+        this.pendingFunctions.get(functionName).add(this.instructions.getCount());
+    }
+    
+    public void reconcilePendingFunctions() {
+        if(this.pendingFunctions == null) {
+            return;
+        }
+        
+        this.pendingFunctions.entrySet().forEach( entry -> {
+            String functionName = entry.getKey();
+            List<Integer> pcs = entry.getValue();
+            
+            int bytecodeIndex = getFunction(functionName);
+            if(bytecodeIndex < 0) {
+                throw new Jslt2Exception("Undefined function: '" + functionName + "'");
+            }
+            
+            pcs.forEach( pc -> {
+                int instr = instructions.get(pc);
+                instructions.set(pc, Opcodes.SET_ARG2(instr, bytecodeIndex));
+            });
+        }); 
+    }
+    
     public Map<String, Integer> getFunctions() {
         if(this.functions == null) {
             this.functions = new HashMap<>();
@@ -231,7 +275,21 @@ public class EmitterScope {
     }
     
     public int getFunction(String reference) {
-        return getFunctions().get(reference);
+        Integer result = getFunctions().get(reference);
+        if(result == null) {
+            if(parent != null) {
+                result = parent.getFunction(reference);
+                if(result != null) {
+                    if(result > -1) {
+                        return (1 << (Opcodes.ARG1_SIZE-1)) | result;
+                    }
+                }
+            }
+            
+            return -1;
+        }
+        
+        return result;
     }
     
     /**
@@ -393,7 +451,7 @@ public class EmitterScope {
             if(scope.hasLocals()) {
                 Locals locals = scope.getLocals();
                 int index = locals.get(reference);
-                if ( index > -1) {
+                if(index > -1) {
                     upvalue = new OuterDesc(index, up);             
                     break;
                 }

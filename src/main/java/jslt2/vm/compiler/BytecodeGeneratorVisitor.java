@@ -9,6 +9,7 @@ import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.ast.*;
 import jslt2.parser.tokens.TokenType;
+import jslt2.util.Stack;
 import jslt2.util.Tuple;
 import jslt2.vm.compiler.EmitterScope.ScopeType;
 
@@ -21,18 +22,25 @@ import jslt2.vm.compiler.EmitterScope.ScopeType;
  */
 public class BytecodeGeneratorVisitor implements NodeVisitor {
 
+    private Jslt2 runtime;
+    
     /**
      * The assembler
      */
     private BytecodeEmitter asm;
+    
+    private Stack<String> recursiveCalls;
         
     /**
      * @param runtime
      * @param symbols
      */
     public BytecodeGeneratorVisitor(Jslt2 runtime, EmitterScopes symbols) {
+        this.runtime = runtime;
         this.asm = new BytecodeEmitter(symbols);
         this.asm.setDebug(runtime.isDebugMode());
+        
+        this.recursiveCalls = new Stack<>();
     }
         
     /**
@@ -65,8 +73,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     @Override
     public void visit(NumberExpr expr) {
         asm.line(expr.getLineNumber());
-        asm.addAndloadconst(expr.getNumber());
-        
+        asm.addAndloadconst(expr.getNumber());        
     }
 
     @Override
@@ -79,7 +86,6 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     public void visit(ObjectExpr expr) {
         asm.line(expr.getLineNumber());
         
-        asm.newobj();
         
         expr.getLets().forEach(field -> field.visit(this));
         
@@ -88,6 +94,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             forExpr.visit(this);
         }
         else {
+            asm.newobj();
             for(Tuple<Expr, Expr> field : expr.getFields()) {
                 field.getSecond().visit(this);
                 
@@ -105,41 +112,47 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                     throw new Jslt2Exception("Invalid field expression: " + fieldName);
                 }
             }
+            asm.sealobj();
         }
         
-        asm.sealobj();
     }
 
     @Override
     public void visit(ArrayExpr expr) {
         asm.line(expr.getLineNumber());
-        asm.newarray();
         
         ForArrayExpr arrayExpr = expr.getForExpr();
         if(arrayExpr != null) {
             arrayExpr.visit(this);
         }
         else {
+            asm.newarray();
             List<Expr> elements = expr.getElements();
             for(Expr e : elements) {
                 e.visit(this);
                 asm.addelement();
             }
+            asm.sealarray();
         }
-        asm.sealarray();
     }
 
     @Override
     public void visit(IfExpr expr) {
         asm.line(expr.getLineNumber());
         
+        
         Expr cond = expr.getCondition();
         cond.visit(this);
+        
+        asm.markLexicalScope();
+        expr.getLets().forEach(field -> field.visit(this));
         
         String elseLabel = asm.ifeq();
         Expr then = expr.getThenExpr();
         then.visit(this);
         String endif = asm.jmp();
+        
+        asm.unmarkLexicalScope();
         
         asm.label(elseLabel);
         Expr elseExpr = expr.getElseExpr();
@@ -152,6 +165,16 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.label(endif);
         
     }
+    
+    @Override
+    public void visit(ElseExpr expr) {
+        asm.line(expr.getLineNumber());
+        
+        asm.markLexicalScope();
+        expr.getLets().forEach(field -> field.visit(this));
+        expr.getExpr().visit(this);
+        asm.unmarkLexicalScope();
+    }
 
     
     @Override
@@ -160,7 +183,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.fordef();                
+        asm.forobjdef();                
             expr.getLets().forEach(let -> let.visit(this));
             
             Expr key = expr.getKeyExpr();
@@ -168,8 +191,6 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             
             Expr value = expr.getValueExpr();
             value.visit(this);
-            
-            asm.addfield();        
         asm.end();
     }
 
@@ -179,55 +200,86 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.fordef();                        
+        asm.forarraydef();
             expr.getLets().forEach(let -> let.visit(this));
             
             Expr value = expr.getValueExpr();
             value.visit(this);
-            asm.addelement();
         asm.end();
     }
 
     @Override
     public void visit(LetExpr expr) {
         asm.line(expr.getLineNumber());
+        
+        String localVarName = "$" + expr.getIdentifier(); 
+        int index = asm.addLocal(localVarName);
         expr.getValue().visit(this);
-        asm.addAndstorelocal("$"+expr.getIdentifier());
+        asm.storelocal(index);
     }
 
     @Override
     public void visit(DefExpr expr) {
         asm.line(expr.getLineNumber());
         
-        asm.addFunction(expr.getIdentifier(), asm.getBytecodeIndex());
+        String functionName = expr.getIdentifier();
+        recursiveCalls.push(functionName);
+        
+        asm.addFunction(functionName, asm.getBytecodeIndex());
         
         List<String> parameters = expr.getParameters();
         asm.funcdef(parameters.size());        
-            expr.getLets().forEach(let -> let.visit(this));
             for(String param : parameters) {
                 asm.addLocal("$"+param);
             }
+            expr.getLets().forEach(let -> let.visit(this));
             
             expr.getExpr().visit(this);
         asm.end();
+        
+        recursiveCalls.pop();
     }
 
     @Override
     public void visit(FuncCallExpr expr) {
         asm.line(expr.getLineNumber());
-        
-        int bytecodeIndex = -1;
-        Expr identifier = expr.getObject();
-        if(identifier instanceof IdentifierExpr) {
-            String name = ((IdentifierExpr)identifier).getIdentifier();
-            bytecodeIndex = asm.getFunction(name);
-        }
-        
+
         List<Expr> arguments = expr.getArguments();
+        int numberOfArgs = arguments.size();
+        
         for(Expr arg : arguments) {
             arg.visit(this);
         }
-        asm.invoke(arguments.size(), bytecodeIndex);
+        
+        int bytecodeIndex = -1;
+        String functionName = null;
+        
+        Expr identifier = expr.getObject();
+        if(identifier instanceof IdentifierExpr) {
+            functionName = ((IdentifierExpr)identifier).getIdentifier();
+            bytecodeIndex = asm.getFunction(functionName);
+            if(!this.runtime.hasFunction(functionName)) {
+                asm.addPendingFunction(functionName);
+                bytecodeIndex = 999;
+            }
+        }
+
+        if(bytecodeIndex < 0) {
+            asm.userinvoke(numberOfArgs, functionName);
+        }        
+        else {
+            if(functionName != null) {
+                if(!recursiveCalls.isEmpty()) {
+                    String currentFunctionDefinition = recursiveCalls.peek();
+                    if(currentFunctionDefinition.equals(functionName)) {
+                        //asm.tailcall(numberOfArgs);
+                        //return;
+                    }
+                }
+            }
+            
+            asm.invoke(numberOfArgs, bytecodeIndex);
+        }
     }
 
     @Override
@@ -240,7 +292,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     public void visit(VariableExpr expr) {
         asm.line(expr.getLineNumber());
         if(!asm.load(expr.getVariable())) {
-            throw new Jslt2Exception(expr.getVariable() + " not defined");
+            throw new Jslt2Exception(expr.getVariable() + " not defined at line: " + expr.getLineNumber());
         }
     }
 
@@ -253,6 +305,14 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.arrayslice();
     }
 
+
+    @Override
+    public void visit(ArrayIndexExpr expr) {
+        expr.getArray().visit(this);
+        expr.getIndex().visit(this);
+        asm.getfield();        
+    }
+    
     @Override
     public void visit(GetExpr expr) {
         asm.line(expr.getLineNumber());
@@ -261,6 +321,12 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         asm.getfieldk(expr.getIdentifier());        
     }
 
+    @Override
+    public void visit(GroupExpr expr) {
+        asm.line(expr.getLineNumber());
+        expr.getExpr().visit(this);        
+    }
+    
     /* (non-Javadoc)
      * @see jslt2.ast.NodeVisitor#visit(jslt2.ast.ImportGetExpr)
      */
@@ -314,7 +380,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
 
         TokenType operator = expr.getOperator();
         switch(operator) {
-            case LOGICAL_AND: {
+            case AND: {
                 expr.getLeft().visit(this);
                 String escape = asm.ifeq();
                 
@@ -325,7 +391,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                 asm.label(endif);
                 break;
             }
-            case LOGICAL_OR: {
+            case OR: {
                 expr.getLeft().visit(this);
                 String secondConditional = asm.ifeq();
                 String skip = asm.jmp();
@@ -364,8 +430,8 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             case MOD:   asm.mod(); break;
             
             // comparisons
-            case LOGICAL_AND:     asm.and();  break;
-            case LOGICAL_OR:      asm.or();   break;
+            case AND:             asm.and();  break;
+            case OR:              asm.or();   break;
             case NOT_EQUALS:      asm.neq();  break;
             case GREATER_THAN:    asm.gt();   break;
             case GREATER_EQUALS:  asm.gte();  break;

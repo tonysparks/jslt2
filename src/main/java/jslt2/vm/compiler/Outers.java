@@ -83,15 +83,15 @@ public class Outers {
         /* first check and see if this outer exists already */
         for(int i = 0; i < this.size; i++) {
             OuterDesc v = this.outers[i];
-            if(v!=null) {
-                if(v.getIndex()==value.getIndex() &&
+            if(v != null) {
+                if(v.getIndex() == value.getIndex() &&
                    v.getUp() == value.getUp()) {
                     return i;
                 }
             }
         }
         
-        if ( this.size >= lazyouters().length) {
+        if (this.size >= lazyouters().length) {
             outers = ArrayUtil.resize(outers, outers.length << 1);
         }                
         

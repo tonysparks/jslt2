@@ -7,7 +7,6 @@ import static jslt2.vm.Opcodes.*;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Stack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -20,9 +19,10 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
+import jslt2.Jslt2Function;
 import jslt2.util.Jslt2Util;
-import jslt2.vm.compiler.Outer;
-import jslt2.vm.compiler.Outer.StackValue;
+import jslt2.util.Stack;
+
 
 /**
  * @author Tony
@@ -46,40 +46,14 @@ public class VM {
     /*thread stack
      */
     private JsonNode[] stack;
-    
 
-    /* list of open outers, if this function goes out of scope (i.e., the stack) then the outers
-     * are closed (i.e., the value contained on the stack is transferred used instead of the indexed value
-     */
-    private Outer[] openouters;
     private int top;
 
     /**
      * The maximum stack size
      */
     private final int maxStackSize;
-    
-    
-    /**
-     * The stack value accounts for closures requesting a value off
-     * of the stack and when the are finally 'closed' over.
-     * 
-     * We can't just use the VM.stack variable when closing over
-     * the Outer because the VM.stack variable may be replaced
-     * when the stack grows.
-     */
-    private StackValue vmStackValue = new StackValue() {        
-        @Override
-        public JsonNode getStackValue(int index) {
-            return stack[index];
-        }
         
-        @Override
-        public void setStackValue(int index, JsonNode value) {         
-            stack[index] = value;
-        }
-    };
-    
     /**
      * 
      */
@@ -95,7 +69,6 @@ public class VM {
         this.arrayStack  = new Stack<>();
         
         this.stack = new JsonNode[stackSize];
-        this.openouters = new Outer[stackSize];
         this.top = 0;        
     }
 
@@ -173,23 +146,27 @@ public class VM {
     }
     
     private JsonNode executeStackFrame(Bytecode code, int base, JsonNode input) throws Jslt2Exception {
-        JsonNode result = NullNode.instance;
+        executeBytecode(code, base, input);
         
+        JsonNode result = stack[--top];
+        
+        exitCall(code, base);        
+        return result;
+    }
+    
+    private void executeBytecode(Bytecode code, int base, JsonNode input) throws Jslt2Exception {
         final int[] instr = code.instr;
         final int len = code.len;
         int pc = code.pc;
 
-
         final JsonNode[] constants = code.constants;
         final Bytecode[] inner = code.inner;
         
-        final Outer[] calleeouters = code.outers;
+        final JsonNode[] calleeouters = code.outers;
         
         final int topStack = base + code.numLocals;
         top = topStack;
         
-        boolean closeOuters = false;
-
         int lineNumber = -1;
         
         try {
@@ -257,7 +234,7 @@ public class VM {
                     }
                     case LOAD_OUTER: {
                         int iname = ARGx(i);
-                        stack[top++] = calleeouters[iname].getValue();
+                        stack[top++] = calleeouters[iname];
                         break;
                     }
                     case LOAD_NULL: {
@@ -281,11 +258,6 @@ public class VM {
                         stack[base + iname] = stack[--top];
                         break;
                     }
-                    case STORE_OUTER: {
-                        int iname = ARGx(i);
-                        calleeouters[iname].setValue(stack[--top]);
-                        break;
-                    }
 
                     /* stack operators */
                     case POP:    {
@@ -304,7 +276,7 @@ public class VM {
                     }
                     case IFEQ:    {
                         JsonNode cond = stack[--top];
-                        if (!cond.asBoolean()) {
+                        if (!Jslt2Util.isTrue(cond)) {
                             int pos = ARGsx(i);
                             pc += pos;
                         }
@@ -318,7 +290,7 @@ public class VM {
                         
                         JsonNode inputNode = input;                        
                         if(!inputNode.isObject()) {
-                            error(inputNode + " is not an object.");
+                            continue;
                         }
                         
                         ObjectNode inputObj = (ObjectNode)inputNode;
@@ -338,20 +310,22 @@ public class VM {
                         
                         break;
                     }
-                    case FOR_DEF: {                        
+                    case FOR_ARRAY_DEF: {                        
                         int bytecodeIndex = ARGx(i);
-                        Bytecode forCode = inner[bytecodeIndex];
+                        Bytecode forCode = inner[bytecodeIndex].clone();
                         
-                        Outer[] outers = forCode.outers;                            
-                        if (assignOuters(outers, calleeouters, openouters, forCode.numOuters, base, pc, code)) {
-                            closeOuters = true;
-                        }
+                        JsonNode[] outers = forCode.outers;                            
+                        assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
                         pc += forCode.numOuters;
                         
-                        JsonNode object = stack[top-1];
+                        ArrayNode array = this.runtime.newArrayNode(16);
+                        
+                        JsonNode object = stack[--top];
                         if(object.isNull()) {
                             JsonNode current = NullNode.instance;
-                            execute(forCode, current);
+                            
+                            JsonNode n = execute(forCode, current);
+                            array.add(n);
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
@@ -362,18 +336,141 @@ public class VM {
                                 current.set("key", TextNode.valueOf(key));
                                 current.set("value", object.get(key));
                                 
-                                execute(forCode, current); 
+                                JsonNode n = execute(forCode, current);
+                                array.add(n);
                             }
                         }
                         else if(object.isArray()) {            
                             Iterator<JsonNode> it = object.elements();           
                             while(it.hasNext()) {
                                 JsonNode current = it.next();
-                                execute(forCode, current);
-                            }
+                                
+                                JsonNode n = execute(forCode, current);
+                                array.add(n);
+                            }                            
                         }
                         else {
                             throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
+                        }
+                        
+                        stack[top++] = array;
+                        
+                        break;
+                    }
+                    case FOR_OBJ_DEF: {                        
+                        int bytecodeIndex = ARGx(i);
+                        Bytecode forCode = inner[bytecodeIndex].clone();
+                        
+                        JsonNode[] outers = forCode.outers;                            
+                        assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
+                        pc += forCode.numOuters;
+                        
+                        ObjectNode obj = this.runtime.newObjectNode();
+                        
+                        JsonNode object = stack[--top];
+                        if(object.isNull()) {
+                            JsonNode current = NullNode.instance;
+                            
+                            executeBytecode(forCode, top, current); 
+                            JsonNode v = stack[--top];
+                            JsonNode k = stack[--top];
+                            
+                            obj.set(k.asText(), v);
+                        }
+                        else if(object.isObject()) {
+                            Iterator<String> it = ((ObjectNode)object).fieldNames();            
+                            while(it.hasNext()) {
+                                String key = it.next();
+                                
+                                ObjectNode current = runtime.newObjectNode();
+                                current.set("key", TextNode.valueOf(key));
+                                current.set("value", object.get(key));
+                                
+                                executeBytecode(forCode, top, current); 
+                                JsonNode v = stack[--top];
+                                JsonNode k = stack[--top];
+                                
+                                obj.set(k.asText(), v);
+                            }                                                        
+                        }
+                        else if(object.isArray()) {            
+                            Iterator<JsonNode> it = object.elements();           
+                            while(it.hasNext()) {
+                                JsonNode current = it.next();
+                                executeBytecode(forCode, top, current); 
+                                JsonNode v = stack[--top];
+                                JsonNode k = stack[--top];
+                                
+                                obj.set(k.asText(), v);                                
+                            }                            
+                        }
+                        else {
+                            throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
+                        }
+                        
+                        stack[top++] = obj;
+                        
+                        exitCall(forCode, top); // ensure stack is cleared for forCode calls
+                        
+                        break;
+                    }
+                    case TAIL_CALL: {                            
+                        pc = 0;    /* return to the beginning of the function call, with the
+                                   stack persevered */                                                        
+                        int nargs = ARG1(i);
+                        switch(nargs) {
+                            case 0: {
+                                break;
+                            }
+                            case 1: {
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                break;
+                            }
+                            case 2: {
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                break;
+                            }
+                            case 3: {
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                break;
+                            }
+                            case 4: {
+                                JsonNode arg4 = stack[--top];
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                stack[base + 3] = arg4;
+                                break;
+                            }
+                            case 5: {
+                                JsonNode arg5 = stack[--top];
+                                JsonNode arg4 = stack[--top];
+                                JsonNode arg3 = stack[--top];
+                                JsonNode arg2 = stack[--top];
+                                JsonNode arg1 = stack[--top];
+                                stack[base + 0] = arg1;
+                                stack[base + 1] = arg2;
+                                stack[base + 2] = arg3;
+                                stack[base + 3] = arg4;
+                                stack[base + 4] = arg5;
+                                break;
+                            }
+                            default: {
+                                JsonNode[] args = readArrayFromStack(nargs, stack);
+                                System.arraycopy(args, 0, stack, base, nargs);
+                            }
                         }
                         
                         break;
@@ -381,8 +478,13 @@ public class VM {
                     case INVOKE:    {
                         int nargs = ARG1(i);
                         int bytecodeIndex = ARG2(i);
-                                                                                           
-                        Bytecode funCode = inner[bytecodeIndex];                        
+                        
+                        final int globalFlag = (1 << (Opcodes.ARG1_SIZE-1));
+                        
+                        Bytecode funCode = (bytecodeIndex&globalFlag) > 0 ?
+                                code.global.inner[bytecodeIndex & ~globalFlag] :
+                                inner[bytecodeIndex];             
+                                
                         JsonNode c = null;
 
                         switch(nargs) {
@@ -434,14 +536,29 @@ public class VM {
                         stack[top++] = c;    
                         break;
                     }
+                    case USER_INVOKE: {
+                        int nargs = ARG1(i);
+                        int constIndex = ARG2(i);
+                        
+                        JsonNode name = constants[constIndex];
+                        
+                        JsonNode[] args = readArrayFromStack(nargs, stack);
+                        Jslt2Function function = this.runtime.getFunction(name.asText());
+                        if(function == null) {
+                            error("No function defined with the name '" + name.asText() + "'");
+                        }
+                        
+                        JsonNode c = function.execute(input, args);
+                        
+                        stack[top++] = c;
+                        break;
+                    }
                     case FUNC_DEF: {
                         int innerIndex = ARGx(i);
-                        Bytecode bytecode = inner[innerIndex];
+                        Bytecode bytecode = inner[innerIndex].clone();
                         
-                        Outer[] outers = bytecode.outers;                            
-                        if (assignOuters(outers, calleeouters, openouters, bytecode.numOuters, base, pc, code)) {
-                            closeOuters = true;
-                        }
+                        JsonNode[] outers = bytecode.outers;                            
+                        assignOuters(outers, calleeouters, bytecode.numOuters, base, pc, code);
                         pc += bytecode.numOuters;
 
                         break;
@@ -459,39 +576,80 @@ public class VM {
                         else if(obj.isObject()) {
                             value = obj.get(index.asText());
                         }
+                        else if(obj.isTextual()) {
+                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
+                        }
                         else {
-                            error(obj + " is not an indexable object");
+                            value = NullNode.instance;
                         }
                         
                         stack[top++] = value;
                         break;
-                    }                    
+                    }     
+                    case GET_FIELD: {                                     
+                        JsonNode index = stack[--top];
+                        JsonNode obj = stack[--top];
+
+                        JsonNode value = null;
+                        if(obj.isArray()) {
+                            value = obj.get(index.asInt());
+                        }
+                        else if(obj.isObject()) {
+                            value = obj.get(index.asText());
+                        }
+                        else if(obj.isTextual()) {
+                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
+                        }
+                        else {
+                            value = NullNode.instance;
+                        }
+                        
+                        stack[top++] = value;
+                        break;
+                    } 
                     case ARRAY_SLICE: {
                         JsonNode end = stack[--top];
                         JsonNode start = stack[--top];
                         JsonNode array = stack[--top];
                         
-                        if(!array.isArray()) {
-                            error(array + " is not an array");
-                        }
-                        
-                        ArrayNode a = (ArrayNode)array;
-                        
                         int startIndex = start.asInt();
                         int endIndex = end.asInt();
-                        if(endIndex < 0) {
-                            endIndex = a.size(); 
-                        }
                         
-                        if(endIndex < startIndex) {
-                            error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                        if(array.isArray()) {
+                            ArrayNode a = (ArrayNode)array;
+                            
+                            if(endIndex < 0) {
+                                endIndex = a.size(); 
+                            }
+                            
+                            if(endIndex < startIndex) {
+                                error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                            }
+                            
+                            ArrayNode slice = this.runtime.newArrayNode(endIndex - startIndex);
+                            for(int j = startIndex; j < endIndex; j++) {
+                                slice.add(a.get(j));
+                            }
+                            
+                            stack[top++] = slice;                        
                         }
-                        
-                        ArrayNode slice = this.runtime.newArrayNode(endIndex - startIndex);
-                        for(int j = startIndex; j < endIndex; j++) {
-                            slice.add(a.get(j));
+                        else if(array.isTextual()) {
+                            TextNode a = (TextNode)array;
+                            String text = a.asText();
+                            
+                            if(endIndex < 0) {
+                                endIndex = text.length(); 
+                            }
+                            
+                            if(endIndex < startIndex) {
+                                error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
+                            }
+                                                                                    
+                            stack[top++] = TextNode.valueOf(text.substring(startIndex, endIndex));
                         }
-                        stack[top++] = slice;                        
+                        else {
+                            stack[top++] = NullNode.instance;
+                        }
                         break;
                     }
                     /* arithmetic operators */
@@ -672,61 +830,30 @@ public class VM {
         }
         catch(Exception e) {            
             buildStackTrace(code, lineNumber, e);
-        }
-        
-        result = stack[--top];   
-        
-        exitCall(code, closeOuters, base, pc, len);
-                    
-        return result;
+        }        
     }
     
     private void buildStackTrace(Bytecode code, int lineNumber, Exception e) {
         error(String.format("RuntimeError: '%s' at line %d stack trace: %s", code.getSourceFileName(), lineNumber, e));
     }
     
-    private void exitCall(Bytecode code, boolean closeOuters, int base, int pc, int len) {
+    private void exitCall(Bytecode code, int base) {
         final int stackSize = Math.min(stack.length, base+code.maxstacksize);
-        /* close the outers for this function call */
-        if (closeOuters) {
-            for(int j=base;j<stackSize;j++) {
-                if(openouters[j]!=null) {
-                    openouters[j].close();
-                    openouters[j] = null;
-                }
 
-                stack[j] = null;
-            }
-        }
-        else {
-            for(int j=base;j<stackSize;j++) {
-                stack[j] = null;
-            }                
-        }
+        for(int j=base;j<stackSize;j++) {
+            stack[j] = null;
+        }                
 
         top = base;            
     }
     
     /**
-     * Prepares the stack by assigning NULL to all of the bytecode's
-     * arguments.
+     * Checks to see if we should grow the stack
      * 
      * @param code
      */
     private void prepareStack(Bytecode code) {        
-        growStackIfRequired(stack, top, code.maxstacksize);        
-    }
-
-    /**
-     * Checks to see if we should grow the stack
-     * 
-     * @param stack
-     * @param base
-     * @param neededSize
-     * @return the new stack (if no growth was required, the supplied stack is returned).
-     */
-    private void growStackIfRequired(JsonNode[] stack, int base, int neededSize) {
-        final int requiredStackSize = base + neededSize;
+        final int requiredStackSize = top + code.maxstacksize;
         if(requiredStackSize > stack.length) {
             if (requiredStackSize > this.maxStackSize) {
                 error("Stack overflow, required stack size over maxStackSize '" + this.maxStackSize + "'");
@@ -734,13 +861,9 @@ public class VM {
             
             final int newStackSize = Math.min( stack.length + ((requiredStackSize-stack.length) << 1), this.maxStackSize);
             JsonNode[] newStack = new JsonNode[newStackSize];
-            System.arraycopy(stack, 0, newStack, 0, base);
-            this.stack = newStack;
-            
-            Outer[] newOuters = new Outer[newStack.length];
-            System.arraycopy(openouters, 0, newOuters, 0, base);
-            this.openouters = newOuters;
-        }        
+            System.arraycopy(stack, 0, newStack, 0, top);
+            this.stack = newStack;            
+        }  
     }
     
     /**
@@ -801,26 +924,12 @@ public class VM {
         throw new Jslt2Exception("ExecutionError: " + errorMsg);
     }
 
-    /**
-     * Close over the outer variables for closures.
-     * 
-     * @param outers
-     * @param calleeouters
-     * @param openouters
-     * @param numOuters
-     * @param base
-     * @param pc
-     * @param code
-     * @return true if there where Outers created that should be closed over once we leave the function
-     * scope
-     */
-    private boolean assignOuters(Outer[] outers, Outer[] calleeouters, Outer[] openouters, 
+    private void assignOuters(JsonNode[] outers, JsonNode[] calleeouters, 
                         int numOuters, 
                         int base, 
                         int pc, 
                         Bytecode code) {
         
-        boolean closeOuters = false;
         for(int j = 0; j < numOuters; j++) {
             int i = code.instr[pc++];
 
@@ -829,24 +938,18 @@ public class VM {
 
             switch(opCode) {
                 case xLOAD_OUTER: {
-                    outers[j] = calleeouters[index];
+                    outers[j] = calleeouters[index];                    
                     break;
                 }
                 case xLOAD_LOCAL: {
-                    int bindex = base + index;
-                    outers[j] = openouters[bindex] != null ?
-                                openouters[bindex] :
-                                (openouters[bindex] = new Outer(vmStackValue, bindex));
-                    closeOuters = true;
+                    outers[j] = stack[base + index];
                     break;
-                }
+                }                
                 default: {
                     error("Outer opcode '" + opCode +"' is invalid");
                 }
             }
         }
-
-        return closeOuters;
     }
     
     

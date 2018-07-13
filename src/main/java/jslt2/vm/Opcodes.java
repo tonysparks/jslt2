@@ -207,11 +207,7 @@ public class Opcodes {
             case STORE_LOCAL: {
                 op = "STORE_LOCAL";
                 break;
-            }
-            case STORE_OUTER: {
-                op = "STORE_OUTER";
-                break;
-            }            
+            }         
                         
             case xLOAD_OUTER: {
                 op = "xLOAD_OUTER";
@@ -220,7 +216,7 @@ public class Opcodes {
             case xLOAD_LOCAL: {
                 op = "xLOAD_LOCAL";
                 break;
-            }            
+            }
             
             case JMP:    {
                 op = "JMP";                
@@ -253,6 +249,11 @@ public class Opcodes {
                 op = "GET_FIELDK";
                 break;
             }
+            case GET_FIELD: {
+                op = "GET_FIELD";
+                break;
+            }
+            
             
             case ADD_FIELD: {
                 op = "ADD_FIELD";
@@ -266,7 +267,19 @@ public class Opcodes {
                 op = "ADD_ELEMENT";
                 break;
             }
-            
+
+            case ARRAY_SLICE:    {
+                op = "ARRAY_SLICE";
+                break;
+            }
+            case FOR_ARRAY_DEF: {
+                op = "FOR_DEF";
+                break;
+            }
+            case FOR_OBJ_DEF: {
+                op = "FOR_OBJ_DEF";
+                break;
+            }
             case FUNC_DEF: {
                 op = "FUNC_DEF";
                 break;
@@ -282,6 +295,10 @@ public class Opcodes {
             }
             case TAIL_CALL: {
                 op = "TAIL_CALL";
+                break;
+            }
+            case USER_INVOKE: {
+                op = "USER_INVOKE";
                 break;
             }
 
@@ -348,14 +365,6 @@ public class Opcodes {
                 break;
             }
 
-            case ARRAY_SLICE:    {
-                op = "ARRAY_SLICE";
-                break;
-            }
-            case FOR_DEF: {
-                op = "FOR_DEF";
-                break;
-            }
             case LINE: {
                 op = "LINE";
                 break;
@@ -382,52 +391,51 @@ public class Opcodes {
         LOAD_LOCAL = 5,               /* ARGx */
         LOAD_OUTER = 6,               /* ARGx */
         
-        LOAD_NULL = 7,                /*      */
-        LOAD_TRUE = 8,                /*      */
-        LOAD_FALSE = 9,               /*      */
-        
+        LOAD_NULL  = 7,               /*      */
+        LOAD_TRUE  = 8,               /*      */
+        LOAD_FALSE = 9,               /*      */        
         LOAD_INPUT = 10,              /*      */
         
         /* storage of values */
         STORE_LOCAL = 12,             /* ARGx */
-        STORE_OUTER = 13,             /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER = 14,             /* ARGx */
-        xLOAD_LOCAL = 15,             /* ARGx */
+        xLOAD_OUTER  = 13,             /* ARGx */
+        xLOAD_LOCAL  = 14,             /* ARGx */
                 
         /* jump instructions */
-        JMP = 16,                     /* ARGsx */
-        IFEQ = 17,                    /* ARGsx */
+        JMP = 15,                     /* ARGsx */
+        IFEQ = 16,                    /* ARGsx */
         
         
         /* value creation */
-        NEW_ARRAY  = 18,              /*       */
-        SEAL_ARRAY = 19,
-        NEW_OBJ    = 20,              /*       */
-        SEAL_OBJ   = 21,
+        NEW_ARRAY  = 17,              /*       */
+        SEAL_ARRAY = 18,
+        NEW_OBJ    = 19,              /*       */
+        SEAL_OBJ   = 20,
         
-        ADD_FIELDK   = 22,
-        ADD_FIELD    = 23,
-        ADD_ELEMENT  = 24,
+        ADD_FIELDK   = 21,            /* ARGx  */
+        ADD_FIELD    = 22,
+        ADD_ELEMENT  = 23,
         
         /* type declarations */
-        FUNC_DEF = 25,                /* ARGx */        
-
-        MATCHER  = 27,                /* ARGx */   
+        FUNC_DEF       = 24,          /* ARGx  */        
+        FOR_ARRAY_DEF  = 25,          /* ARGx  */
+        FOR_OBJ_DEF    = 26,          /* ARGx  */
+        
+        MATCHER   = 27,               /* ARGx  */   
         
         /* method invocation */
-        INVOKE = 28,                  /* ARG1, ARG2 */          
-        TAIL_CALL = 29,               /* ARG1, ARG2 */
+        INVOKE      = 28,             /* ARG1, ARG2 */          
+        TAIL_CALL   = 29,             /* ARG1, ARG2 */
+        USER_INVOKE = 30,             /* ARG1, ARG2 */
         
         /* member access */   
-        GET_FIELDK = 33,                    /* ARGx */
+        GET_FIELDK = 33,              /* ARGx */
+        GET_FIELD  = 34,              /*      */
         
         ARRAY_SLICE  = 40,            /*      */
 
-
-        FOR_DEF    = 41,            /*      */
-        
         /* arithmetic operators */
         ADD = 44,                     /*      */
         SUB = 45,                     /*      */
@@ -469,10 +477,9 @@ public class Opcodes {
         opcodes.put("LOAD_INPUT", LOAD_INPUT);
         
         opcodes.put("STORE_LOCAL", STORE_LOCAL);
-        opcodes.put("STORE_OUTER", STORE_OUTER);
                         
         opcodes.put("xLOAD_OUTER", xLOAD_OUTER);
-        opcodes.put("xLOAD_LOCAL", xLOAD_LOCAL);        
+        opcodes.put("xLOAD_LOCAL", xLOAD_LOCAL);
 
         opcodes.put("JMP", JMP);
         opcodes.put("IFEQ", IFEQ);
@@ -484,18 +491,22 @@ public class Opcodes {
         opcodes.put("SEAL_OBJ", SEAL_OBJ);
 
         opcodes.put("GET_FIELDK", GET_FIELDK);
+        opcodes.put("GET_FIELD", GET_FIELD);
+        
         opcodes.put("ADD_FIELD", ADD_FIELD);
         opcodes.put("ADD_FIELDK", ADD_FIELDK);
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
+        
+        opcodes.put("ARRAY_SLICE", ARRAY_SLICE);
+        opcodes.put("FOR_ARRAY_DEF", FOR_ARRAY_DEF);
+        opcodes.put("FOR_OBJ_DEF", FOR_OBJ_DEF);
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
         opcodes.put("MATCHER", MATCHER);
                         
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("TAIL_CALL", TAIL_CALL);        
-        
-
-        opcodes.put("FOR_DEF", FOR_DEF);
+        opcodes.put("USER_INVOKE", USER_INVOKE);
         
         /* arithmetic operators */
         opcodes.put("ADD", ADD);
@@ -515,8 +526,6 @@ public class Opcodes {
         opcodes.put("GTE", GTE);
         opcodes.put("LT", LT);
         opcodes.put("LTE", LTE);
-        
-        opcodes.put("ARRAY_SLICE", ARRAY_SLICE);
         
         opcodes.put("LINE", LINE);    
     }

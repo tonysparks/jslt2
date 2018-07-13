@@ -3,7 +3,6 @@
  */
 package jslt2.util;
 
-import jslt2.vm.compiler.Outer;
 import jslt2.vm.compiler.OuterDesc;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,7 +14,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 public final class ArrayUtil {
 
     public static final JsonNode[] EMPTY_NODES = {};
-    public static final Outer[] EMPTY_OUTERS = {};
     
     public static String[] resize(String[] array, int len) {
         if ( array.length > len) {
@@ -47,20 +45,6 @@ public final class ArrayUtil {
         return newarray;
     }
 
-    public static Outer[] resize(Outer[] array, int len) {
-        if ( array.length > len) {
-            throw new IllegalArgumentException("Original array length is greater than: " + len);
-        }
-        
-        Outer[] newarray = new Outer[len];
-        System.arraycopy(array, 0, newarray, 0, array.length);
-        return newarray;
-    }
-    
-    public static Outer[] newOuterArray() {
-        return new Outer[10];
-    }
-    
     public static OuterDesc[] newOuterDescArray() {
         return new OuterDesc[10];
     }
