@@ -4,8 +4,11 @@
 package jslt2.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
 
+import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 
 /**
@@ -14,6 +17,45 @@ import jslt2.Jslt2Exception;
  */
 public class Jslt2Util {
 
+    public static JsonNode toJson(Jslt2 runtime, String[] array) {
+        ArrayNode node = runtime.newArrayNode(array.length);
+        for (int ix = 0; ix < array.length; ix++)
+            node.add(array[ix]);
+        return node;
+    }
+    
+    
+    public static JsonNode toJson(boolean value) {
+        if (value)
+            return BooleanNode.TRUE;
+        else
+            return BooleanNode.FALSE;
+    }
+
+    public static JsonNode toJson(double value) {
+        return new DoubleNode(value);
+    }
+    
+    /**
+     * nullok => return Java null for Json null
+     * 
+     * @param value
+     * @param nullok
+     * @return
+     */
+    public static String toString(JsonNode value, boolean nullok) {
+        // JSLT logic for toString..
+        
+        // check what type this is
+        if (value.isTextual())
+            return value.asText();
+        else if (value.isNull() && nullok)
+            return null;
+
+
+        return value.toString();
+    }
+    
     /**
      * Does JSLT logic for true
      * 
