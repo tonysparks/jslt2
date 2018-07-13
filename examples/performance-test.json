@@ -1,0 +1,60 @@
+def add(array)
+    [for ($array) . + 2]
+
+def sub(array)
+    [for ($array) . - (2 + 2 * 16 * 2 - 54)]
+    
+def mult(array)
+    [for ($array) . * 2]
+    
+def div(array)
+    [for ($array) . / 2]
+    
+//def mod(array)
+//    [for ($array) . % 2]    
+
+def objects(obj)
+    {for ($obj) "key " + .key : "value " + .value} 
+
+{
+    "input" : .,
+    "object" : objects(.),
+    "add"  : add(.),
+    "sub"  : sub(.),
+    "mult" : mult(.),
+    "div"  : div(.)
+    //"mod"  : mod(.)
+    
+    ,"sub1"  : sub(.),
+    "sub2"  : sub(.),
+    "sub3"  : sub(.),
+    "sub4"  : sub(.),
+    "sub5"  : sub(.),
+    "sub6"  : sub(.),
+    "sub7"  : sub(.),
+    "sub8"  : sub(.),
+    "sub9"  : sub(.),
+    "sub0"  : sub(.),
+    "sub11"  : sub(.),
+    "sub12"  : sub(.),
+    "sub13"  : sub(.),
+    "sub14"  : sub(.),
+    "sub15"  : sub(.),
+    "sub16"  : sub(.),
+    "sub17"  : sub(.),
+    "sub18"  : sub(.),
+    "sub19"  : sub(.),
+    "sub20"  : sub(.),
+    "sub21"  : sub(.),
+    "sub22"  : sub(.),
+    "sub23"  : sub(.),
+    "sub24"  : sub(.),
+    "sub25"  : sub(.),
+    "sub26"  : sub(.),
+    "sub27"  : sub(.),
+    "sub28"  : sub(.),
+    "sub29"  : sub(.),
+    "sub30"  : sub(.),
+    "sub31"  : sub(.),
+    "sub32"  : sub(.)
+}     

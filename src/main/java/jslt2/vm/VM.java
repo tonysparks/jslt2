@@ -284,7 +284,7 @@ public class VM {
                         
                         JsonNode inputNode = input;                        
                         if(!inputNode.isObject()) {
-                            error(inputNode + " is not an object.");
+                            continue;
                         }
                         
                         ObjectNode inputObj = (ObjectNode)inputNode;
@@ -508,7 +508,7 @@ public class VM {
                             value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
                         }
                         else {
-                            error(obj + " is not an indexable object");
+                            value = NullNode.instance;
                         }
                         
                         stack[top++] = value;
@@ -529,7 +529,7 @@ public class VM {
                             value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
                         }
                         else {
-                            error(obj + " is not an indexable object");
+                            value = NullNode.instance;
                         }
                         
                         stack[top++] = value;
@@ -576,7 +576,7 @@ public class VM {
                             stack[top++] = TextNode.valueOf(text.substring(startIndex, endIndex));
                         }
                         else {
-                            error(array + " is not an array indexable object");
+                            stack[top++] = NullNode.instance;
                         }
                         break;
                     }

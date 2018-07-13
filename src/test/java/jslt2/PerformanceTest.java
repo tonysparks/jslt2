@@ -38,7 +38,7 @@ public class PerformanceTest {
 
     @Ignore
     private String query() throws Exception {
-        String query = new String(Files.readAllBytes(new File("./examples/functions2.json").toPath()));
+        String query = new String(Files.readAllBytes(new File("./examples/performance-test.json").toPath()));
         return query;
     }
     
@@ -110,8 +110,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result.getFirst();
         }
         
-        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     
@@ -164,8 +164,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result;
         }
         
-        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -208,7 +208,7 @@ public class PerformanceTest {
             jslt2Sum += time;
         }
         
-        System.out.printf("Total JSLT2  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -252,7 +252,7 @@ public class PerformanceTest {
             jsltSum  += jsltResult;
         }
         
-        System.out.printf("Total JSLT   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
     }
     
 }
