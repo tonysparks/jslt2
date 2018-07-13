@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import jslt2.ast.Node;
 import jslt2.ast.ProgramExpr;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;

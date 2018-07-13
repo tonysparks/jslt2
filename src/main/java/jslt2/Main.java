@@ -19,6 +19,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) throws Exception {
+        // TODO: Implement proper command line arguments
         if(args.length == 0) {
             System.out.println("<usage> jslt2 [options] ");
         }

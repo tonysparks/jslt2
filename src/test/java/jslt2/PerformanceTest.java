@@ -70,7 +70,7 @@ public class PerformanceTest {
         Template template = runtime.compile(query);
         Expression expr = Parser.compileString(query);
      
-        int capacity = 1000;//1024 * 1024;
+        int capacity = 10;//1024 * 1024;
         ArrayNode array = runtime.newArrayNode(capacity);
         for(int i = 0; i < capacity; i++) {
             array.add((double)i);
@@ -81,7 +81,7 @@ public class PerformanceTest {
         
         Random rand = new Random();
         
-        final int numberOfIterations = 1000;
+        final int numberOfIterations = 100;
         
         int iterations = numberOfIterations;
         while(iterations --> 0) {
