@@ -86,7 +86,6 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
     public void visit(ObjectExpr expr) {
         asm.line(expr.getLineNumber());
         
-        asm.newobj();
         
         expr.getLets().forEach(field -> field.visit(this));
         
@@ -95,6 +94,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             forExpr.visit(this);
         }
         else {
+            asm.newobj();
             for(Tuple<Expr, Expr> field : expr.getFields()) {
                 field.getSecond().visit(this);
                 
@@ -112,28 +112,28 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
                     throw new Jslt2Exception("Invalid field expression: " + fieldName);
                 }
             }
+            asm.sealobj();
         }
         
-        asm.sealobj();
     }
 
     @Override
     public void visit(ArrayExpr expr) {
         asm.line(expr.getLineNumber());
-        asm.newarray();
         
         ForArrayExpr arrayExpr = expr.getForExpr();
         if(arrayExpr != null) {
             arrayExpr.visit(this);
         }
         else {
+            asm.newarray();
             List<Expr> elements = expr.getElements();
             for(Expr e : elements) {
                 e.visit(this);
                 asm.addelement();
             }
+            asm.sealarray();
         }
-        asm.sealarray();
     }
 
     @Override
@@ -183,7 +183,7 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.fordef();                
+        asm.forobjdef();                
             expr.getLets().forEach(let -> let.visit(this));
             
             Expr key = expr.getKeyExpr();
@@ -191,8 +191,6 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
             
             Expr value = expr.getValueExpr();
             value.visit(this);
-            
-            asm.addfield();        
         asm.end();
     }
 
@@ -202,14 +200,11 @@ public class BytecodeGeneratorVisitor implements NodeVisitor {
         
         Expr cond = expr.getCondition();
         cond.visit(this);
-        asm.fordef();
-            asm.markLexicalScope();
+        asm.forarraydef();
             expr.getLets().forEach(let -> let.visit(this));
             
             Expr value = expr.getValueExpr();
             value.visit(this);
-            asm.addelement();
-            asm.unmarkLexicalScope();
         asm.end();
     }
 

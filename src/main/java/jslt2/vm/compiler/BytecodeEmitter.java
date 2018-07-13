@@ -812,8 +812,13 @@ public class BytecodeEmitter {
         incrementMaxstackSize();
     }
     
-    public void fordef() {
-        instrx(FOR_DEF, getBytecodeIndex());        
+    public void forarraydef() {
+        instrx(FOR_ARRAY_DEF, getBytecodeIndex());        
+        newLocalScopeEmitter(0);
+    }
+    
+    public void forobjdef() {
+        instrx(FOR_OBJ_DEF, getBytecodeIndex());        
         newLocalScopeEmitter(0);
     }
         

@@ -146,12 +146,18 @@ public class VM {
     }
     
     private JsonNode executeStackFrame(Bytecode code, int base, JsonNode input) throws Jslt2Exception {
-        JsonNode result = NullNode.instance;
+        executeBytecode(code, base, input);
         
+        JsonNode result = stack[--top];
+        
+        exitCall(code, base);        
+        return result;
+    }
+    
+    private void executeBytecode(Bytecode code, int base, JsonNode input) throws Jslt2Exception {
         final int[] instr = code.instr;
         final int len = code.len;
         int pc = code.pc;
-
 
         final JsonNode[] constants = code.constants;
         final Bytecode[] inner = code.inner;
@@ -304,7 +310,7 @@ public class VM {
                         
                         break;
                     }
-                    case FOR_DEF: {                        
+                    case FOR_ARRAY_DEF: {                        
                         int bytecodeIndex = ARGx(i);
                         Bytecode forCode = inner[bytecodeIndex].clone();
                         
@@ -312,10 +318,14 @@ public class VM {
                         assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
                         pc += forCode.numOuters;
                         
+                        ArrayNode array = this.runtime.newArrayNode(16);
+                        
                         JsonNode object = stack[--top];
                         if(object.isNull()) {
                             JsonNode current = NullNode.instance;
-                            execute(forCode, current);
+                            
+                            JsonNode n = execute(forCode, current);
+                            array.add(n);
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
@@ -326,19 +336,81 @@ public class VM {
                                 current.set("key", TextNode.valueOf(key));
                                 current.set("value", object.get(key));
                                 
-                                execute(forCode, current); 
+                                JsonNode n = execute(forCode, current);
+                                array.add(n);
                             }
                         }
                         else if(object.isArray()) {            
                             Iterator<JsonNode> it = object.elements();           
                             while(it.hasNext()) {
                                 JsonNode current = it.next();
-                                execute(forCode, current);                                
+                                
+                                JsonNode n = execute(forCode, current);
+                                array.add(n);
                             }                            
                         }
                         else {
                             throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
                         }
+                        
+                        stack[top++] = array;
+                        
+                        break;
+                    }
+                    case FOR_OBJ_DEF: {                        
+                        int bytecodeIndex = ARGx(i);
+                        Bytecode forCode = inner[bytecodeIndex].clone();
+                        
+                        JsonNode[] outers = forCode.outers;                            
+                        assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
+                        pc += forCode.numOuters;
+                        
+                        ObjectNode obj = this.runtime.newObjectNode();
+                        
+                        JsonNode object = stack[--top];
+                        if(object.isNull()) {
+                            JsonNode current = NullNode.instance;
+                            
+                            executeBytecode(forCode, top, current); 
+                            JsonNode v = stack[--top];
+                            JsonNode k = stack[--top];
+                            
+                            obj.set(k.asText(), v);
+                        }
+                        else if(object.isObject()) {
+                            Iterator<String> it = ((ObjectNode)object).fieldNames();            
+                            while(it.hasNext()) {
+                                String key = it.next();
+                                
+                                ObjectNode current = runtime.newObjectNode();
+                                current.set("key", TextNode.valueOf(key));
+                                current.set("value", object.get(key));
+                                
+                                executeBytecode(forCode, top, current); 
+                                JsonNode v = stack[--top];
+                                JsonNode k = stack[--top];
+                                
+                                obj.set(k.asText(), v);
+                            }                                                        
+                        }
+                        else if(object.isArray()) {            
+                            Iterator<JsonNode> it = object.elements();           
+                            while(it.hasNext()) {
+                                JsonNode current = it.next();
+                                executeBytecode(forCode, top, current); 
+                                JsonNode v = stack[--top];
+                                JsonNode k = stack[--top];
+                                
+                                obj.set(k.asText(), v);                                
+                            }                            
+                        }
+                        else {
+                            throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
+                        }
+                        
+                        stack[top++] = obj;
+                        
+                        exitCall(forCode, top); // ensure stack is cleared for forCode calls
                         
                         break;
                     }
@@ -758,12 +830,7 @@ public class VM {
         }
         catch(Exception e) {            
             buildStackTrace(code, lineNumber, e);
-        }
-                    
-        result = stack[--top];
-        
-        exitCall(code, base);        
-        return result;
+        }        
     }
     
     private void buildStackTrace(Bytecode code, int lineNumber, Exception e) {

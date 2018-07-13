@@ -193,6 +193,15 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testQueens() throws Exception {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        testAgainstSpec(input, new String(Files.readAllBytes(new File("./examples/queens.json").toPath())));
+    }
+    
+    @Test
     public void testJsltByFile() throws Exception {
         ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
         input.set("name", TextNode.valueOf("tony"));

@@ -272,8 +272,12 @@ public class Opcodes {
                 op = "ARRAY_SLICE";
                 break;
             }
-            case FOR_DEF: {
+            case FOR_ARRAY_DEF: {
                 op = "FOR_DEF";
+                break;
+            }
+            case FOR_OBJ_DEF: {
+                op = "FOR_OBJ_DEF";
                 break;
             }
             case FUNC_DEF: {
@@ -396,33 +400,35 @@ public class Opcodes {
         STORE_LOCAL = 12,             /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER  = 14,             /* ARGx */
-        xLOAD_LOCAL  = 15,             /* ARGx */
+        xLOAD_OUTER  = 13,             /* ARGx */
+        xLOAD_LOCAL  = 14,             /* ARGx */
                 
         /* jump instructions */
-        JMP = 16,                     /* ARGsx */
-        IFEQ = 17,                    /* ARGsx */
+        JMP = 15,                     /* ARGsx */
+        IFEQ = 16,                    /* ARGsx */
         
         
         /* value creation */
-        NEW_ARRAY  = 18,              /*       */
-        SEAL_ARRAY = 19,
-        NEW_OBJ    = 20,              /*       */
-        SEAL_OBJ   = 21,
+        NEW_ARRAY  = 17,              /*       */
+        SEAL_ARRAY = 18,
+        NEW_OBJ    = 19,              /*       */
+        SEAL_OBJ   = 20,
         
-        ADD_FIELDK   = 22,
-        ADD_FIELD    = 23,
-        ADD_ELEMENT  = 24,
+        ADD_FIELDK   = 21,            /* ARGx  */
+        ADD_FIELD    = 22,
+        ADD_ELEMENT  = 23,
         
         /* type declarations */
-        FUNC_DEF  = 25,                /* ARGx */        
-        FOR_DEF   = 26,                /*      */
-        MATCHER   = 27,                /* ARGx */   
+        FUNC_DEF       = 24,          /* ARGx  */        
+        FOR_ARRAY_DEF  = 25,          /* ARGx  */
+        FOR_OBJ_DEF    = 26,          /* ARGx  */
+        
+        MATCHER   = 27,               /* ARGx  */   
         
         /* method invocation */
-        INVOKE      = 28,              /* ARG1, ARG2 */          
-        TAIL_CALL   = 29,              /* ARG1, ARG2 */
-        USER_INVOKE = 30,              /* ARG1, ARG2 */
+        INVOKE      = 28,             /* ARG1, ARG2 */          
+        TAIL_CALL   = 29,             /* ARG1, ARG2 */
+        USER_INVOKE = 30,             /* ARG1, ARG2 */
         
         /* member access */   
         GET_FIELDK = 33,              /* ARGx */
@@ -492,7 +498,8 @@ public class Opcodes {
         opcodes.put("ADD_ELEMENT", ADD_ELEMENT);
         
         opcodes.put("ARRAY_SLICE", ARRAY_SLICE);
-        opcodes.put("FOR_DEF", FOR_DEF);
+        opcodes.put("FOR_ARRAY_DEF", FOR_ARRAY_DEF);
+        opcodes.put("FOR_OBJ_DEF", FOR_OBJ_DEF);
         
         opcodes.put("FUNC_DEF", FUNC_DEF);
         opcodes.put("MATCHER", MATCHER);
