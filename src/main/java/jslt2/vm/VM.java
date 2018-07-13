@@ -170,7 +170,7 @@ public class VM {
         int lineNumber = -1;
         
         try {
-            while( pc < len ) {
+            while(pc < len) {
                 int i = instr[pc++];
                 int opcode =  i & 255; //OPCODE(i);
 

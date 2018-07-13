@@ -48,14 +48,14 @@ public class Instructions {
      * add
      */
     private void ensureCapacity(int additional) {
-        if( (count + additional) < 0) {
+        if((count + additional) < 0) {
             throw new IllegalArgumentException("Integer overflow, too big of an array");
         }
         
         /* if we need to expand the array, let's go
          * ahead and do so.
          */
-        if( count + additional > instructions.length ) {
+        if(count + additional > instructions.length) {
             int desiredSize = count + additional;
             int newLength = instructions.length;
             while(desiredSize > newLength) {

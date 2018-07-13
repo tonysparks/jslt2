@@ -32,7 +32,7 @@ public class Outers {
      * @return the {@link OuterDesc} array
      */
     private OuterDesc[] lazyouters() {
-        if ( this.outers == null ) {
+        if (this.outers == null) {
             this.outers = ArrayUtil.newOuterDescArray();    
         }
         
@@ -46,11 +46,11 @@ public class Outers {
      * @param size the number of entries to allocate for
      */
     public void allocate(int size) {
-        if ( this.outers == null ) {
+        if (this.outers == null) {
             this.outers = new OuterDesc[size];
         }
         
-        if ( size > this.outers.length ) {
+        if (size > this.outers.length) {
             this.outers = ArrayUtil.resize(outers, size );
         }
     }
