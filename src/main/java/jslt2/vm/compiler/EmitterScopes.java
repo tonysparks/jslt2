@@ -19,7 +19,7 @@ public class EmitterScopes {
     /**
      */
     public EmitterScopes() {
-        this.globalScope = pushScope(ScopeType.OBJECT_SCOPE);
+        this.globalScope = pushScope(ScopeType.GLOBAL_SCOPE);
     }
         
     /**

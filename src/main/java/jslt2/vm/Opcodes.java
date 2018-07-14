@@ -164,17 +164,6 @@ public class Opcodes {
     public static final String op2str(int opcode) {
         String op = "";
         switch(opcode) {
-            /* stack operators */            
-            case POP:   {
-                op = "POP";                 
-                break;
-            }  
-            case DUP: {
-                op = "DUP";
-                break;
-            } 
-        
-            /* Store operations */
             case LOAD_CONST: {
                 op = "LOAD_CONST";
                 break;
@@ -381,10 +370,6 @@ public class Opcodes {
      * The opcode is in the range of 0-255 
      */
     public static final int
-    
-        /* stack operators */            
-        POP = 1,                      /*      */
-        DUP = 2,                      /*      */
                 
         /* loading of values */
         LOAD_CONST = 4,               /* ARGx */
@@ -461,12 +446,7 @@ public class Opcodes {
     
     
     private static final Map<String, Integer> opcodes = new HashMap<String, Integer>();
-    static {        
-
-        /* stack operators */
-        opcodes.put("POP", POP);        
-        opcodes.put("DUP", DUP);
-                
+    static {                        
         opcodes.put("LOAD_CONST", LOAD_CONST);
         opcodes.put("LOAD_LOCAL", LOAD_LOCAL);
         opcodes.put("LOAD_OUTER", LOAD_OUTER);        

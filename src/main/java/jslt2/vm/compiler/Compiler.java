@@ -7,36 +7,8 @@ import java.util.List;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
-import jslt2.ast.ArrayExpr;
-import jslt2.ast.ArrayIndexExpr;
-import jslt2.ast.ArraySliceExpr;
-import jslt2.ast.BinaryExpr;
-import jslt2.ast.BooleanExpr;
-import jslt2.ast.DefExpr;
-import jslt2.ast.DotExpr;
-import jslt2.ast.ElseExpr;
-import jslt2.ast.Expr;
-import jslt2.ast.ForArrayExpr;
-import jslt2.ast.ForObjectExpr;
-import jslt2.ast.FuncCallExpr;
-import jslt2.ast.GetExpr;
-import jslt2.ast.GroupExpr;
-import jslt2.ast.IdentifierExpr;
-import jslt2.ast.IfExpr;
-import jslt2.ast.ImportExpr;
-import jslt2.ast.ImportGetExpr;
-import jslt2.ast.LetExpr;
-import jslt2.ast.MatchExpr;
-import jslt2.ast.NodeVisitor;
-import jslt2.ast.NullExpr;
-import jslt2.ast.NumberExpr;
-import jslt2.ast.ObjectExpr;
-import jslt2.ast.ProgramExpr;
-import jslt2.ast.StringExpr;
-import jslt2.ast.UnaryExpr;
-import jslt2.ast.VariableExpr;
+import jslt2.ast.*;
 import jslt2.parser.tokens.TokenType;
-import jslt2.util.Stack;
 import jslt2.util.Tuple;
 import jslt2.vm.Bytecode;
 import jslt2.vm.compiler.EmitterScope.ScopeType;
@@ -68,13 +40,10 @@ public class Compiler {
     
     private class BytecodeEmitterNodeVisitor implements NodeVisitor {
         private BytecodeEmitter asm;
-        private Stack<String> recursiveCalls;
-        
     
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
             this.asm.setDebug(runtime.isDebugMode());
-            this.recursiveCalls = new Stack<>();
         }
         
         public Bytecode compile(ProgramExpr program) {
@@ -253,8 +222,6 @@ public class Compiler {
             asm.line(expr.getLineNumber());
             
             String functionName = expr.getIdentifier();
-            recursiveCalls.push(functionName);
-            
             asm.addFunction(functionName, asm.getBytecodeIndex());
             
             List<String> parameters = expr.getParameters();
@@ -266,8 +233,6 @@ public class Compiler {
                 
                 expr.getExpr().visit(this);
             asm.end();
-            
-            recursiveCalls.pop();
         }
     
         @Override
@@ -298,16 +263,6 @@ public class Compiler {
                 asm.userinvoke(numberOfArgs, functionName);
             }        
             else {
-                if(functionName != null) {
-                    if(!recursiveCalls.isEmpty()) {
-                        String currentFunctionDefinition = recursiveCalls.peek();
-                        if(currentFunctionDefinition.equals(functionName)) {
-                            //asm.tailcall(numberOfArgs);
-                            //return;
-                        }
-                    }
-                }
-                
                 asm.invoke(numberOfArgs, bytecodeIndex);
             }
         }

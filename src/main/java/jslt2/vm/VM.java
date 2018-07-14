@@ -377,16 +377,6 @@ public class VM {
                         break;
                     }
 
-                    /* stack operators */
-                    case POP:    {
-                        stack[--top] = null;                            
-                        break;
-                    }
-                    case DUP: {
-                        JsonNode obj = stack[top-1];
-                        stack[top++] = obj;
-                        break;
-                    }
                     case JMP:    {
                         int pos = ARGsx(i);
                         pc += pos;
@@ -523,67 +513,6 @@ public class VM {
                         break;
                     }
                     
-                    case TAIL_CALL: {                            
-                        pc = 0;    /* return to the beginning of the function call, with the
-                                   stack persevered */                                                        
-                        int nargs = ARG1(i);
-                        switch(nargs) {
-                            case 0: {
-                                break;
-                            }
-                            case 1: {
-                                JsonNode arg1 = stack[--top];
-                                stack[base + 0] = arg1;
-                                break;
-                            }
-                            case 2: {
-                                JsonNode arg2 = stack[--top];
-                                JsonNode arg1 = stack[--top];
-                                stack[base + 0] = arg1;
-                                stack[base + 1] = arg2;
-                                break;
-                            }
-                            case 3: {
-                                JsonNode arg3 = stack[--top];
-                                JsonNode arg2 = stack[--top];
-                                JsonNode arg1 = stack[--top];
-                                stack[base + 0] = arg1;
-                                stack[base + 1] = arg2;
-                                stack[base + 2] = arg3;
-                                break;
-                            }
-                            case 4: {
-                                JsonNode arg4 = stack[--top];
-                                JsonNode arg3 = stack[--top];
-                                JsonNode arg2 = stack[--top];
-                                JsonNode arg1 = stack[--top];
-                                stack[base + 0] = arg1;
-                                stack[base + 1] = arg2;
-                                stack[base + 2] = arg3;
-                                stack[base + 3] = arg4;
-                                break;
-                            }
-                            case 5: {
-                                JsonNode arg5 = stack[--top];
-                                JsonNode arg4 = stack[--top];
-                                JsonNode arg3 = stack[--top];
-                                JsonNode arg2 = stack[--top];
-                                JsonNode arg1 = stack[--top];
-                                stack[base + 0] = arg1;
-                                stack[base + 1] = arg2;
-                                stack[base + 2] = arg3;
-                                stack[base + 3] = arg4;
-                                stack[base + 4] = arg5;
-                                break;
-                            }
-                            default: {
-                                JsonNode[] args = readArrayFromStack(nargs, stack);
-                                System.arraycopy(args, 0, stack, base, nargs);
-                            }
-                        }
-                        
-                        break;
-                    }
                     case INVOKE:    {
                         int nargs = ARG1(i);
                         int bytecodeIndex = ARG2(i);

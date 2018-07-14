@@ -299,9 +299,6 @@ public class Bytecode {
                     break;
                 }            
                 
-                case Opcodes.POP:
-                case Opcodes.DUP:
-                                
                 case Opcodes.LOAD_NULL:
                 case Opcodes.LOAD_TRUE:
                 case Opcodes.LOAD_FALSE:

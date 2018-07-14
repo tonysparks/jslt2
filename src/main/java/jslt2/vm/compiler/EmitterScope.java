@@ -28,7 +28,6 @@ public class EmitterScope {
      */
     public static enum ScopeType {
         LOCAL_SCOPE,
-        OBJECT_SCOPE,
         GLOBAL_SCOPE
         ;
     }
@@ -59,12 +58,6 @@ public class EmitterScope {
      * Max stack space needed for this scope
      */
     private int maxstacksize;
-    
-    /**
-     * The type of scope this is
-     */
-    private ScopeType scopeType;
-    
     
     /**
      * Parent Scope
@@ -103,7 +96,6 @@ public class EmitterScope {
      */
     public EmitterScope(EmitterScope parent, ScopeType scopeType) {
         this.parent = parent;
-        this.scopeType = scopeType;
         this.maxstacksize = 2; /* always leave room for binary operations */
         
         this.usesLocals = false;
@@ -177,14 +169,7 @@ public class EmitterScope {
     public EmitterScope getParent() {
         return parent;
     }
-    
-    /**
-     * @return the scopeType
-     */
-    public ScopeType getScopeType() {
-        return scopeType;
-    }
-    
+        
     /**
      * @return the debug
      */
