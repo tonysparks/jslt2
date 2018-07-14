@@ -250,7 +250,6 @@ public class Bytecode {
             
             for(int t = 0; t < numTabs; t++) sb.append(Indent);
             switch(iopcode) {
-                case Opcodes.TAIL_CALL:
                 case Opcodes.NEW_OBJ: 
                 case Opcodes.INVOKE: {
                     String arg1 = Integer.toString(Opcodes.ARG1(code));

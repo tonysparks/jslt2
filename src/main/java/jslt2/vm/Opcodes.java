@@ -282,10 +282,6 @@ public class Opcodes {
                 op = "INVOKE";
                 break;
             }
-            case TAIL_CALL: {
-                op = "TAIL_CALL";
-                break;
-            }
             case USER_INVOKE: {
                 op = "USER_INVOKE";
                 break;
@@ -372,76 +368,75 @@ public class Opcodes {
     public static final int
                 
         /* loading of values */
-        LOAD_CONST = 4,               /* ARGx */
-        LOAD_LOCAL = 5,               /* ARGx */
-        LOAD_OUTER = 6,               /* ARGx */
+        LOAD_CONST = 1,               /* ARGx */
+        LOAD_LOCAL = 2,               /* ARGx */
+        LOAD_OUTER = 3,               /* ARGx */
         
-        LOAD_NULL  = 7,               /*      */
-        LOAD_TRUE  = 8,               /*      */
-        LOAD_FALSE = 9,               /*      */        
-        LOAD_INPUT = 10,              /*      */
+        LOAD_NULL  = 4,               /*      */
+        LOAD_TRUE  = 5,               /*      */
+        LOAD_FALSE = 6,               /*      */        
+        LOAD_INPUT = 7,               /*      */
         
         /* storage of values */
-        STORE_LOCAL = 12,             /* ARGx */
+        STORE_LOCAL = 8,              /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER  = 13,             /* ARGx */
-        xLOAD_LOCAL  = 14,             /* ARGx */
+        xLOAD_OUTER  = 9,             /* ARGx */
+        xLOAD_LOCAL  = 10,            /* ARGx */
                 
         /* jump instructions */
-        JMP = 15,                     /* ARGsx */
-        IFEQ = 16,                    /* ARGsx */
+        JMP  = 11,                    /* ARGsx */
+        IFEQ = 12,                    /* ARGsx */
         
         
         /* value creation */
-        NEW_ARRAY  = 17,              /*       */
-        SEAL_ARRAY = 18,
-        NEW_OBJ    = 19,              /*       */
-        SEAL_OBJ   = 20,
+        NEW_ARRAY  = 13,              /*       */
+        SEAL_ARRAY = 14,
+        NEW_OBJ    = 15,              /*       */
+        SEAL_OBJ   = 16,
         
-        ADD_FIELDK   = 21,            /* ARGx  */
-        ADD_FIELD    = 22,
-        ADD_ELEMENT  = 23,
+        ADD_FIELDK   = 17,            /* ARGx  */
+        ADD_FIELD    = 18,            /*       */
+        ADD_ELEMENT  = 19,            /*       */
+
+        /* member access */   
+        GET_FIELDK = 20,              /* ARGx */
+        GET_FIELD  = 21,              /*      */
         
         /* type declarations */
-        FUNC_DEF       = 24,          /* ARGx  */        
-        FOR_ARRAY_DEF  = 25,          /* ARGx  */
-        FOR_OBJ_DEF    = 26,          /* ARGx  */
+        FUNC_DEF       = 22,          /* ARGx  */        
+        FOR_ARRAY_DEF  = 23,          /* ARGx  */
+        FOR_OBJ_DEF    = 24,          /* ARGx  */
         
-        MATCHER   = 27,               /* ARGx  */   
+        MATCHER      = 25,            /* ARGx  */
+        ARRAY_SLICE  = 26,            /*      */
         
         /* method invocation */
-        INVOKE      = 28,             /* ARG1, ARG2 */          
-        TAIL_CALL   = 29,             /* ARG1, ARG2 */
-        USER_INVOKE = 30,             /* ARG1, ARG2 */
+        INVOKE      = 27,             /* ARG1, ARG2 */          
+        USER_INVOKE = 28,             /* ARG1, ARG2 */
         
-        /* member access */   
-        GET_FIELDK = 33,              /* ARGx */
-        GET_FIELD  = 34,              /*      */
-        
-        ARRAY_SLICE  = 40,            /*      */
 
         /* arithmetic operators */
-        ADD = 44,                     /*      */
-        SUB = 45,                     /*      */
-        MUL = 46,                     /*      */
-        DIV = 47,                     /*      */
-        MOD = 48,                     /*      */
-        NEG = 49,                     /*      */
+        ADD = 29,                     /*      */
+        SUB = 30,                     /*      */
+        MUL = 31,                     /*      */
+        DIV = 32,                     /*      */
+        MOD = 33,                     /*      */
+        NEG = 34,                     /*      */
             
-        OR = 56,                      /*      */
-        AND = 57,                     /*      */
-        NOT = 58,                     /*      */
+        OR  = 35,                     /*      */
+        AND = 36,                     /*      */
+        NOT = 37,                     /*      */
         
-        EQ = 61,                      /*      */
-        NEQ = 62,                     /*      */
-        GT = 63,                      /*      */
-        GTE = 64,                     /*      */
-        LT = 65,                      /*      */
-        LTE = 66,                     /*      */
+        EQ  = 38,                     /*      */
+        NEQ = 39,                     /*      */
+        GT  = 40,                     /*      */
+        GTE = 41,                     /*      */
+        LT  = 42,                     /*      */
+        LTE = 43,                     /*      */
         
         /* debug */
-        LINE = 67                     /* ARGx */
+        LINE = 44                     /* ARGx */
         ;
     
     
@@ -485,7 +480,6 @@ public class Opcodes {
         opcodes.put("MATCHER", MATCHER);
                         
         opcodes.put("INVOKE", INVOKE);
-        opcodes.put("TAIL_CALL", TAIL_CALL);        
         opcodes.put("USER_INVOKE", USER_INVOKE);
         
         /* arithmetic operators */
