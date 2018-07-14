@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import jslt2.Jslt2Exception;
+import jslt2.vm.Bytecode;
 import jslt2.vm.Opcodes;
 
 /**
@@ -281,7 +282,7 @@ public class EmitterScope {
                 result = parent.getFunction(reference);
                 if(result != null) {
                     if(result > -1) {
-                        return (1 << (Opcodes.ARG1_SIZE-1)) | result;
+                        return Bytecode.GLOBAL_FLAG | result;
                     }
                 }
             }

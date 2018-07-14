@@ -38,6 +38,12 @@ public class Bytecode {
     public static final int FL_VARARGS     = (1<<2);
     public static final int FL_PARAMS_IDX  = (1<<3);
     
+
+    /**
+     * If a bytecode is in the global scope (or current scope) flag
+     */
+    public static final int GLOBAL_FLAG    = (1 << (Opcodes.ARG1_SIZE-1));
+    
     
     public int flags;
     
