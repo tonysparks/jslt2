@@ -415,8 +415,6 @@ public class Compiler {
                 case MOD:   asm.mod(); break;
                 
                 // comparisons
-                case AND:             asm.and();  break;
-                case OR:              asm.or();   break;
                 case NOT_EQUALS:      asm.neq();  break;
                 case GREATER_THAN:    asm.gt();   break;
                 case GREATER_EQUALS:  asm.gte();  break;

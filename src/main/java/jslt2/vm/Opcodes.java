@@ -312,15 +312,7 @@ public class Opcodes {
                 op = "NEG";
                 break;
             }
-                        
-            case OR:    {
-                op = "OR";
-                break;
-            }
-            case AND:    {
-                op = "AND";
-                break;
-            }
+             
             case NOT:    {
                 op = "NOT";
                 break;
@@ -424,19 +416,17 @@ public class Opcodes {
         MOD = 33,                     /*      */
         NEG = 34,                     /*      */
             
-        OR  = 35,                     /*      */
-        AND = 36,                     /*      */
-        NOT = 37,                     /*      */
+        NOT = 35,                     /*      */
         
-        EQ  = 38,                     /*      */
-        NEQ = 39,                     /*      */
-        GT  = 40,                     /*      */
-        GTE = 41,                     /*      */
-        LT  = 42,                     /*      */
-        LTE = 43,                     /*      */
+        EQ  = 36,                     /*      */
+        NEQ = 37,                     /*      */
+        GT  = 38,                     /*      */
+        GTE = 39,                     /*      */
+        LT  = 40,                     /*      */
+        LTE = 41,                     /*      */
         
         /* debug */
-        LINE = 44                     /* ARGx */
+        LINE = 42                     /* ARGx */
         ;
     
     
@@ -490,8 +480,6 @@ public class Opcodes {
         opcodes.put("MOD", MOD);
         opcodes.put("NEG", NEG);
         
-        opcodes.put("OR", OR);
-        opcodes.put("AND", AND);
         opcodes.put("NOT", NOT);
         
         opcodes.put("EQ", EQ);

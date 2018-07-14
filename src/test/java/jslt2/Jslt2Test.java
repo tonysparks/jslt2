@@ -78,6 +78,24 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testAnd() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        testAgainstSpec(input, "{ \"x\": if (.name == \"tony\" and .name != \"t\") true else false }");
+        testAgainstSpec(input, "{ \"x\": if ((.name == \"x\" or .name == \"y\") and false) true else false }");        
+    }
+    
+    @Test
+    public void testOr() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        testAgainstSpec(input, "{ \"x\": if (.name == \"tony\" or .name != \"t\") true else false }");
+        testAgainstSpec(input, "{ \"x\": if ((.name == \"x\" and .name == \"y\") or true) true else false }");        
+    }
+    
+    @Test
     public void testDef() {
         ObjectNode input = runtime.newObjectNode();
         input.set("name", TextNode.valueOf("tony"));

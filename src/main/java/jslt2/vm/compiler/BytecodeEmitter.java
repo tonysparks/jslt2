@@ -874,14 +874,6 @@ public class BytecodeEmitter {
         instr(NEG);
     }
         
-    public void or() {
-        instr(OR);
-        decrementMaxstackSize();
-    }
-    public void and() {
-        instr(AND);
-        decrementMaxstackSize();
-    }
     public void not() {
         instr(NOT);
     }

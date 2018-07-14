@@ -309,8 +309,6 @@ public class Bytecode {
                 case Opcodes.MOD:
                 case Opcodes.NEG:
                 
-                case Opcodes.OR:
-                case Opcodes.AND:
                 case Opcodes.NOT:
                     
                 case Opcodes.EQ:

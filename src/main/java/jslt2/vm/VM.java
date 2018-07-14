@@ -649,20 +649,6 @@ public class VM {
                         break;
                     }
                     
-                    case OR:    {
-                        JsonNode r = stack[--top];
-                        JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(Jslt2Util.isTrue(l) || Jslt2Util.isTrue(r));
-                        stack[top++] = c;
-                        break;
-                    }
-                    case AND:    {
-                        JsonNode r = stack[--top];
-                        JsonNode l = stack[--top];
-                        JsonNode c = BooleanNode.valueOf(Jslt2Util.isTrue(l) && Jslt2Util.isTrue(r));
-                        stack[top++] = c;
-                        break;
-                    }
                     case NOT:    {
                         JsonNode l = stack[--top];
                         JsonNode c = BooleanNode.valueOf(!Jslt2Util.isTrue(l));
