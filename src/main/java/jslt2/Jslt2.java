@@ -33,6 +33,24 @@ import jslt2.vm.compiler.Compiler;
 public class Jslt2 {
 
     /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        // TODO: Implement proper command line arguments
+        if(args.length == 0) {
+            System.out.println("<usage> jslt2 [options] ");
+        }
+        
+        Jslt2 runtime = Jslt2.builder().enableDebugMode(true).build();
+        JsonNode input = runtime.getObjectMapper().readTree(new FileReader(new File(args[1])));
+        
+        Template template = runtime.compile(new FileReader(new File(args[0])));
+        JsonNode result = template.eval(input);
+        
+        System.out.println(result);        
+    }
+    
+    /**
      * @return a new {@link Builder} instance
      */
     public static Builder builder() {
