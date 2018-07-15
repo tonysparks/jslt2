@@ -398,11 +398,12 @@ public class VM {
                         JsonNode[] outers = forCode.outers;                            
                         pc += assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
                         
-                        ArrayNode array = this.runtime.newArrayNode(16);
                         
                         prepareStack(forCode);
                         
                         JsonNode object = stack[--top];
+                        ArrayNode array = this.runtime.newArrayNode(object.size());
+                        
                         if(object.isNull()) {
                             JsonNode current = NullNode.instance;
                             

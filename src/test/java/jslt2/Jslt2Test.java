@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -197,6 +198,35 @@ public class Jslt2Test {
         input.set("name", TextNode.valueOf("tony"));
         
         testAgainstSpec(input, "let x = 10 def f() 10 [f(), f(), 20, $x]");        
+    }
+    
+    @Test
+    public void testDot() {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        ArrayNode array = runtime.newArrayNode(12);
+        for(int i = 0; i < 10; i++) {
+            array.add(i);
+        }
+        
+        input.set("array", array);
+        
+        testAgainstSpec(input, "{ \".name\" : .\"name\" } ");
+        testAgainstSpec(input, "{ \".name\" : .name } ");
+        testAgainstSpec(input, "{ \"array\" : .array[0] } ");    
+    }
+    
+    @Test
+    public void testDotArray() {        
+        ArrayNode input = runtime.newArrayNode(12);
+        for(int i = 0; i < 10; i++) {
+            input.add(i);
+        }
+                        
+        testAgainstSpec(input, "{ \"array\" : .[0] } ");
+        testAgainstSpec(input, "{ \"array\" : . } ");
+        testAgainstSpec(input, "{ \"array\" : [for (.) . + 1] }");
     }
     
     @Test

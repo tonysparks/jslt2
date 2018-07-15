@@ -102,7 +102,7 @@ public class Compiler {
                     if(fieldName instanceof IdentifierExpr) {
                         asm.addfieldk(((IdentifierExpr)fieldName).getIdentifier());
                     }
-                    else if(fieldName instanceof StringExpr) {
+                    else if(fieldName instanceof StringExpr) {                        
                         asm.addfieldk(((StringExpr)fieldName).getString());
                     }
                     else if(fieldName instanceof MatchExpr) {
@@ -435,8 +435,17 @@ public class Compiler {
             
             asm.loadinput();        
             Expr field = expr.getField();
-            if(field != null) {            
-                field.visit(this);
+            if(field != null) {   
+                if(field instanceof StringExpr) {
+                    String fieldName = ((StringExpr)field).getString();
+                    if(fieldName.startsWith("\"") && fieldName.endsWith("\"") && fieldName.length() > 2) {
+                        fieldName = fieldName.substring(1, fieldName.length() - 1);
+                    }
+                    asm.getfieldk(fieldName);
+                }
+                else {
+                    field.visit(this);
+                }
             }        
         }
     
