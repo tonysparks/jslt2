@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
@@ -118,5 +120,42 @@ public class Jslt2Util {
         }
         
         throw new Jslt2Exception("Can't compare " + l + " and " + r);
-    }    
+    } 
+    
+    public static JsonNode number(JsonNode value, boolean strict, JsonNode fallback) {
+        // check what type this is
+        if (value.isNumber() || value.isNull()) {
+            return value;
+        }
+        else if (!value.isTextual()) {
+            if (strict) {
+                throw new Jslt2Exception("Can't convert " + value + " to number");
+            }
+            
+            if(fallback != null) {
+                return fallback;
+            }
+            
+            return NullNode.instance;
+            
+        }
+
+        // let's look at this number
+        String number = value.asText();
+        try {
+            if (number.indexOf('.') != -1) {
+                return new DoubleNode(Double.parseDouble(number));
+            }
+            else {
+                return IntNode.valueOf(Integer.parseInt(number));
+            }
+        } 
+        catch (NumberFormatException e) {        
+            if(fallback != null) {
+                return fallback;
+            }
+            
+            throw new Jslt2Exception("number(" + number + ") failed: not a number");
+        }
+    }
 }

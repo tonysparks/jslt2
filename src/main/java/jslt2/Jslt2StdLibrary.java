@@ -3,8 +3,11 @@
  */
 package jslt2;
 
+import java.util.Random;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
@@ -17,6 +20,9 @@ import jslt2.util.Jslt2Util;
  */
 public class Jslt2StdLibrary {
     public Jslt2StdLibrary(final Jslt2 runtime) {
+        
+        // General
+        
         runtime.addFunction("contains", (input, arguments) -> {
             if (arguments[1].isNull())
                 return BooleanNode.FALSE; // nothing is contained in null
@@ -70,21 +76,59 @@ public class Jslt2StdLibrary {
             throw new Jslt2Exception("error: " + msg);
         });
         
+        
+        
+        
+        // Numeric
+        
         runtime.addFunction("is-number", (input, arguments) -> {
             return Jslt2Util.toJson(arguments[0].isNumber());
         });
-        
-        
+        runtime.addFunction("number", (input, arguments) -> {
+            if (arguments.length == 1) {
+                return Jslt2Util.number(arguments[0], true, null);
+            }
+            
+            return Jslt2Util.number(arguments[0], true, arguments[1]);
+            
+        });
         runtime.addFunction("round", (input, arguments) -> {
             JsonNode number = arguments[0];
-            if (number.isNull())
+            if (number.isNull()) {
                 return NullNode.instance;
-            else if (!number.isNumber())
+            }
+            else if (!number.isNumber()) {
                 throw new Jslt2Exception("round() cannot round a non-number: " + number);
+            }
 
-            return new LongNode(Math.round(number.doubleValue()));
+            return LongNode.valueOf(Math.round(number.doubleValue()));
+        });
+        runtime.addFunction("floor", (input, arguments) -> {
+            JsonNode number = arguments[0];
+            if (number.isNull())
+              return NullNode.instance;
+            else if (!number.isNumber())
+              throw new Jslt2Exception("floor() cannot round a non-number: " + number);
+
+            return LongNode.valueOf((long) Math.floor(number.doubleValue()));
+        });
+        runtime.addFunction("ceiling", (input, arguments) -> {
+            JsonNode number = arguments[0];
+            if (number.isNull())
+              return NullNode.instance;
+            else if (!number.isNumber())
+              throw new Jslt2Exception("ceiling() cannot round a non-number: " + number);
+
+            return LongNode.valueOf((long) Math.ceil(number.doubleValue()));
+        });
+        final Random random = new Random();
+        runtime.addFunction("random", (input, arguments) -> {            
+            return DoubleNode.valueOf(random.nextDouble());
         });
         
+        
+
+        // Boolean
         
         runtime.addFunction("not", (input, args) -> {
             if(args == null || args.length < 1) return BooleanNode.TRUE;
@@ -92,7 +136,16 @@ public class Jslt2StdLibrary {
             
             return BooleanNode.valueOf(!Jslt2Util.isTrue(node));
         });
+        runtime.addFunction("boolean", (input, arguments) -> {            
+            return Jslt2Util.toJson(Jslt2Util.isTrue(arguments[0]));
+        });
+        runtime.addFunction("is-boolean", (input, arguments) -> {            
+            return Jslt2Util.toJson(arguments[0].isBoolean());
+        });
         
+        
+        
+        // Aux
         
         runtime.addFunction("print", (input, args) -> {
             if(args == null || args.length < 1) return NullNode.instance;
