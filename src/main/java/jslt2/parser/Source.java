@@ -208,8 +208,6 @@ public class Source implements AutoCloseable {
      */
     @Override
     public void close() {
-        this.lines.clear();
-        
         if (reader != null) {
             try {
                 reader.close();

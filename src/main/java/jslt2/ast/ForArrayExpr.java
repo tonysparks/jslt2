@@ -23,9 +23,9 @@ public class ForArrayExpr extends Expr {
      * @param valueExpr
      */
     public ForArrayExpr(Expr condition, List<LetExpr> lets, Expr valueExpr) {
-        this.condition = condition;
-        this.lets = lets;
-        this.valueExpr = valueExpr;
+        this.condition = becomeParentOf(condition);
+        this.lets = becomeParentOf(lets);
+        this.valueExpr = becomeParentOf(valueExpr);
     }
 
     /**

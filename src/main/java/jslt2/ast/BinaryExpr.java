@@ -19,9 +19,9 @@ public class BinaryExpr extends Expr {
      * 
      */
     public BinaryExpr(Expr left, TokenType operator, Expr right) {
-        this.left = left;
+        this.left = becomeParentOf(left);
         this.operator = operator;
-        this.right = right;
+        this.right = becomeParentOf(right);
     }
     
     /**

@@ -17,9 +17,9 @@ public class ArraySliceExpr extends Expr {
      * 
      */
     public ArraySliceExpr(Expr array, Expr startExpr, Expr endExpr) {
-        this.array = array;
-        this.startExpr = startExpr;
-        this.endExpr = endExpr;
+        this.array = becomeParentOf(array);
+        this.startExpr = becomeParentOf(startExpr);
+        this.endExpr = becomeParentOf(endExpr);
     }
     
     /**

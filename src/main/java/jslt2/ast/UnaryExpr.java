@@ -19,7 +19,7 @@ public class UnaryExpr extends Expr {
      */
     public UnaryExpr(TokenType operator, Expr expr) {
         this.operator = operator;
-        this.expr = expr;
+        this.expr = becomeParentOf(expr);
     }
     
     /**

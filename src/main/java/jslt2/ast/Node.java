@@ -3,6 +3,10 @@
  */
 package jslt2.ast;
 
+import java.util.List;
+
+import jslt2.util.Tuple;
+
 /**
  * Abstract Syntax Tree Node
  * 
@@ -14,14 +18,7 @@ public abstract class Node {
     private Node parentNode;
     private int lineNumber;
     private String sourceLine;
-    
-    /**
-     * 
-     */
-    public Node() {
-        // TODO Auto-generated constructor stub
-    }
-    
+        
     public abstract void visit(NodeVisitor v);
     
     /**
@@ -66,4 +63,30 @@ public abstract class Node {
         return parentNode;
     }
 
+    protected <T extends Node> T becomeParentOf(T node) {
+        if(node != null) {
+            node.setParentNode(this);
+        }
+        return node;
+    }
+    
+    protected <T extends Node> List<T> becomeParentOf(List<T> nodes) {
+        if(nodes != null) {
+            for(int i = 0; i < nodes.size(); i++) {
+                becomeParentOf(nodes.get(i));
+            }
+        }
+        return nodes;
+    }
+    
+    protected <T extends Node, Y extends Node> List<Tuple<T, Y>> becomeParentOfByTuples(List<Tuple<T, Y>> nodes) {
+        if(nodes != null) {
+            for(int i = 0; i < nodes.size(); i++) {
+                Tuple<T, Y> tuple = nodes.get(i);
+                becomeParentOf(tuple.getFirst());
+                becomeParentOf(tuple.getSecond());
+            }
+        }
+        return nodes;
+    }
 }

@@ -16,7 +16,7 @@ public class GetExpr extends Expr {
      * 
      */
     public GetExpr(Expr object, String identifier) {
-        this.object = object;
+        this.object = becomeParentOf(object);
         this.identifier = identifier;
     }
 

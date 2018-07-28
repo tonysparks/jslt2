@@ -15,7 +15,7 @@ public class DotExpr extends Expr {
      * 
      */
     public DotExpr(Expr field) {
-        this.field = field;
+        this.field = becomeParentOf(field);
     }
 
     /**

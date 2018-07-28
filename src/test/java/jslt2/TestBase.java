@@ -11,7 +11,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.JsltException;
+
 
 import static org.junit.Assert.*;
 
@@ -45,11 +47,21 @@ public class TestBase {
         try {
             JsonNode context = mapper.readTree(input);
 
-//            Expression expr = Parser.compileString(query, functions);
-//            JsonNode actual = expr.apply(variables, context);
-            Jslt2 runtime = new Jslt2().addFunctions(functions);
-            JsonNode actual = runtime.eval(query, context);
+            try {
+                Expression expr2 = com.schibsted.spt.data.jslt.Parser.compileString(query);
+                JsonNode actual2 = expr2.apply(variables, context);
+                System.out.println("AST: " + actual2);
+            }
+            catch(Exception e) {
+                System.out.println("AST Error: " + e);
+            }
+            Jslt2 runtime = Jslt2.builder()
+                                    .objectMapper(mapper)
+                                    .build()
+                                    .addFunctions(functions);
             
+            JsonNode actual = runtime.eval(query, context);
+            System.out.println("VM: " + actual);
             if (actual == null)
                 throw new JsltException("Returned Java null");
 
@@ -85,7 +97,8 @@ public class TestBase {
             JsonNode context = mapper.readTree(input);
 
             Jslt2 runtime = new Jslt2();
-            runtime.eval(query, context);
+            JsonNode r = runtime.eval(query, context);
+            System.out.println("Should not have output: " + r);
             fail("JSTL did not detect error");
         } catch (JsltException|Jslt2Exception e) {
             assertTrue("incorrect error message: '" + e.getMessage() + "'", e.getMessage().indexOf(result) != -1);

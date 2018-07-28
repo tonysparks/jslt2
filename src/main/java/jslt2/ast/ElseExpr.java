@@ -18,8 +18,8 @@ public class ElseExpr extends Expr {
      * 
      */
     public ElseExpr(List<LetExpr> lets, Expr expr) {
-        this.lets = lets;
-        this.expr = expr;
+        this.lets = becomeParentOf(lets);
+        this.expr = becomeParentOf(expr);
     }
     
     /**

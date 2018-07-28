@@ -150,13 +150,12 @@ public class Parser {
     }
     
     
-    private IfExpr ifExpr() {
-        List<LetExpr> lets = letDeclarations();
-        
+    private IfExpr ifExpr() {        
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
         Expr condition = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
         
+        List<LetExpr> lets = letDeclarations();
         Expr thenBranch = expression();
         ElseExpr elseBranch = null;
         if (match(ELSE)) {
@@ -328,7 +327,13 @@ public class Parser {
                 }
             }
             else if(match(DOT)) {
-                Token name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
+                Token name = null;
+                if(check(STRING)) {
+                    name = consume(STRING, ErrorCode.MISSING_IDENTIFIER);
+                }
+                else {
+                    name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
+                }
                 expr = node(new GetExpr(expr, name.getText()));
             }/* TODO - Modules
             else if(match(COLON)) {

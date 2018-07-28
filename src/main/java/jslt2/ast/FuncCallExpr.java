@@ -18,8 +18,8 @@ public class FuncCallExpr extends Expr {
      * 
      */
     public FuncCallExpr(Expr object, List<Expr> arguments) {
-        this.object = object;
-        this.arguments = arguments;
+        this.object = becomeParentOf(object);
+        this.arguments = becomeParentOf(arguments);
     }
     
     /**

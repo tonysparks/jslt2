@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
+import jslt2.util.Jslt2Util;
 import jslt2.vm.Bytecode;
 import jslt2.vm.VM;
 import jslt2.vm.compiler.Compiler;
@@ -66,6 +67,8 @@ public class Jslt2 {
      */
     public static class Builder {
         private boolean isDebugMode = false;
+        private boolean includeNulls = false;
+        
         private int minStackSize = 1024;
         private int maxStackSize = Integer.MAX_VALUE;
         
@@ -74,6 +77,11 @@ public class Jslt2 {
         
         public Builder enableDebugMode(boolean enableDebugMode) {
             this.isDebugMode = enableDebugMode;
+            return this;
+        }
+        
+        public Builder includeNulls(boolean includeNulls) {
+            this.includeNulls = includeNulls;
             return this;
         }
         
@@ -102,12 +110,15 @@ public class Jslt2 {
                                 ? this.objectMapper : new ObjectMapper(), 
                              this.resolver,
                              this.isDebugMode, 
+                             this.includeNulls,
                              this.minStackSize, 
                              this.maxStackSize);
         }
     }
     
     private boolean isDebugMode;
+    private boolean includeNulls;
+    
     private int minStackSize;
     private int maxStackSize;
     
@@ -125,7 +136,8 @@ public class Jslt2 {
      */
     public Jslt2(ObjectMapper objectMapper, 
                  ResourceResolver resolver,
-                 boolean debugMode, 
+                 boolean debugMode,
+                 boolean includeNulls,
                  int minStackSize, 
                  int maxStackSize) {
         
@@ -133,6 +145,8 @@ public class Jslt2 {
         this.resolver = resolver;
         
         this.isDebugMode = debugMode;
+        this.includeNulls = includeNulls;
+        
         this.minStackSize = minStackSize;
         this.maxStackSize = maxStackSize;
         
@@ -148,6 +162,7 @@ public class Jslt2 {
         this(new ObjectMapper(), 
              ResourceResolvers.newClassPathResolver(), 
              false, 
+             false,
              1024, 
              Integer.MAX_VALUE);
     }
@@ -254,7 +269,12 @@ public class Jslt2 {
             System.out.println(bytecode.dump());
         }
         
-        return this.vm.execute(bytecode, input);
+        JsonNode result = this.vm.execute(bytecode, input);
+        if(!this.includeNulls) {
+            result = Jslt2Util.removeNullNodes(result);
+        }
+        
+        return result;
     }
     
 
@@ -313,6 +333,13 @@ public class Jslt2 {
      */
     public boolean isDebugMode() {
         return isDebugMode;
+    }
+    
+    /**
+     * @return the includeNulls
+     */
+    public boolean includeNulls() {
+        return includeNulls;
     }
     
     /**

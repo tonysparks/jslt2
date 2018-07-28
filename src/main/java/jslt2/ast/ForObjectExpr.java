@@ -25,10 +25,10 @@ public class ForObjectExpr extends Expr {
      * @param valueExpr
      */
     public ForObjectExpr(Expr condition, List<LetExpr> lets, Expr keyExpr, Expr valueExpr) {
-        this.condition = condition;
-        this.lets = lets;
-        this.keyExpr = keyExpr;
-        this.valueExpr = valueExpr;
+        this.condition = becomeParentOf(condition);
+        this.lets = becomeParentOf(lets);
+        this.keyExpr = becomeParentOf(keyExpr);
+        this.valueExpr = becomeParentOf(valueExpr);
     }
 
     /**

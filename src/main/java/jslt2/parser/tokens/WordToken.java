@@ -24,8 +24,7 @@ public class WordToken extends Token {
         if ( !isValid ) {
             switch(c) {
             case '$':
-            case '_':
-            case ':':
+            case '_':            
             case '-':
                 isValid = true;
                 break;
@@ -76,6 +75,15 @@ public class WordToken extends Token {
         while (isValidIdentifierCharacter(currentChar)) {
             textBuffer.append(currentChar);
             currentChar = nextChar();
+            if(currentChar == ':') {
+                if(isValidIdentifierCharacter(peekChar())) {
+                    textBuffer.append(currentChar);
+                    currentChar = nextChar();        
+                }
+                else {
+                    break;
+                }
+            }
         }
 
         text = textBuffer.toString();

@@ -192,6 +192,8 @@ public class Jslt2Test {
         input.set("qb", person);
         
         testAgainstSpec(input, "{ \"team\": \"Green Bay\", * - name: .}");
+        
+        testAgainstSpec(input, "{ \"team\": \"Green Bay\", * - name: . + \"x\" }");
     }
     
     @Test
@@ -333,4 +335,5 @@ public class Jslt2Test {
         JsonNode result = jslt.apply(input);
         System.out.println(result);
     }
+    
 }
