@@ -143,7 +143,17 @@ public class Jslt2StdLibrary {
             return Jslt2Util.toJson(arguments[0].isBoolean());
         });
         
+        // Object
         
+        runtime.addFunction("is-object", (input, arguments) -> {            
+            return Jslt2Util.toJson(arguments[0].isObject());
+        });
+        
+        // Array
+        
+        runtime.addFunction("is-array", (input, arguments) -> {            
+            return Jslt2Util.toJson(arguments[0].isArray());
+        });
         
         // Aux
         

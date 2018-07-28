@@ -59,7 +59,12 @@ public class Parser {
             else                 break;
         }
         
-        return node(new ModuleExpr(imports, lets, defs));
+        Expr expr = null;
+        if(!isAtEnd()) {
+            expr = expression();
+        }
+        
+        return node(new ModuleExpr(imports, lets, defs, expr));
     }
 
     

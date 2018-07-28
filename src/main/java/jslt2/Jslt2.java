@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -152,13 +153,28 @@ public class Jslt2 {
     }
     
     /**
+     * Add the functions to this runtime
+     * 
+     * @param functions
+     */
+    public Jslt2 addFunctions(Collection<Jslt2Function> functions) {
+        for(Jslt2Function f : functions) {
+            addFunction(f.name(), f);
+        }
+        
+        return this;
+    }
+    
+    /**
      * Register a user defined {@link Jslt2Function}
      * 
      * @param name
      * @param function
      */
-    public void addFunction(String name, Jslt2Function function) {
+    public Jslt2 addFunction(String name, Jslt2Function function) {        
         this.userFunctions.put(name, function);
+        
+        return this;
     }
     
     /**

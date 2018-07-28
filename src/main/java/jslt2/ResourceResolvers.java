@@ -27,12 +27,17 @@ public class ResourceResolvers {
             
             @Override
             public Reader resolve(String jsltFile) {
-                InputStream iStream = ResourceResolvers.class.getResourceAsStream(jsltFile);
-                if(iStream == null) {
-                    throw new Jslt2Exception("Could not find: '" + jsltFile + "' on the classpath.");
+                try {
+                    InputStream iStream = getClass().getClassLoader().getResourceAsStream(jsltFile);
+                    if(iStream == null) {
+                        throw new Jslt2Exception("Could not find: '" + jsltFile + "' on the classpath.");
+                    }
+                    
+                    return new InputStreamReader(iStream, "utf-8");
                 }
-                
-                return new InputStreamReader(iStream);
+                catch(Exception e) {
+                    throw new Jslt2Exception("Could not load: '" + jsltFile + "' on the classpath.", e);
+                }
             }
         };
     }

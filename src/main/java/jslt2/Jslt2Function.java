@@ -13,6 +13,10 @@ import com.fasterxml.jackson.databind.JsonNode;
  */
 public interface Jslt2Function {
 
+    default public String name() {
+        return "<unknown>";
+    }
+    
     /**
      * Executes the user defined function
      * 

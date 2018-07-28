@@ -14,17 +14,20 @@ public class ModuleExpr extends Expr {
     private List<ImportExpr> imports;
     private List<LetExpr> lets;
     private List<DefExpr> defs;
-    
+
+    private Expr expr;
 
     /**
      * @param imports
      * @param lets
      * @param defs
      */
-    public ModuleExpr(List<ImportExpr> imports, List<LetExpr> lets, List<DefExpr> defs) {
+    public ModuleExpr(List<ImportExpr> imports, List<LetExpr> lets, List<DefExpr> defs, Expr expr) {
         this.imports = imports;
         this.lets = lets;
         this.defs = defs;
+        
+        this.expr = expr;
     }
 
     /**
@@ -48,6 +51,13 @@ public class ModuleExpr extends Expr {
         return defs;
     }
 
+    /**
+     * @return the expr
+     */
+    public Expr getExpr() {
+        return expr;
+    }
+    
     @Override
     public void visit(NodeVisitor v) {
         v.visit(this);

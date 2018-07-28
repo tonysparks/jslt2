@@ -3,6 +3,7 @@
  */
 package jslt2.vm.compiler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jslt2.Jslt2;
@@ -44,12 +45,14 @@ public class Compiler {
     private class BytecodeEmitterNodeVisitor implements NodeVisitor {
         private BytecodeEmitter asm;
         private Stack<String> moduleStack;
+        private Stack<String> libraryStack;
     
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
             this.asm.setDebug(runtime.isDebugMode());
             
             this.moduleStack = new Stack<>();
+            this.libraryStack = new Stack<>();
         }
         
         public Bytecode compile(ProgramExpr program) {
@@ -330,13 +333,19 @@ public class Compiler {
             String fileName = expr.getLibrary();
             fileName = fileName.substring(1, fileName.length() - 1);
             
+            if(this.libraryStack.contains(fileName)) {
+                throw new Jslt2Exception("'" + fileName + "' is already imported");
+            }
+            
             try {
                 Scanner scanner = new Scanner(new Source(runtime.getResolver().resolve(fileName)));
                 Parser parser = new Parser(scanner);
                 
+                this.libraryStack.push(fileName);
                 this.moduleStack.push(expr.getAlias());
                 parser.parseModule().visit(this);
                 this.moduleStack.pop();
+                this.libraryStack.pop();
             }
             catch(Exception e) {
                 throw new Jslt2Exception(e);
@@ -360,7 +369,13 @@ public class Compiler {
             asm.line(expr.getLineNumber());
             expr.getImports().forEach(imp -> imp.visit(this));
             expr.getLets().forEach(let -> let.visit(this));
-            expr.getDefs().forEach(def -> def.visit(this));             
+            expr.getDefs().forEach(def -> def.visit(this));   
+            
+            Expr funcExpr = expr.getExpr();
+            if(funcExpr != null) {
+                DefExpr defExpr = new DefExpr(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
+                defExpr.visit(this);
+            }
         }
     
         @Override
