@@ -73,79 +73,21 @@ public class VM {
         this.top = 0;        
     }
 
+    /**
+     * Executes the supplied {@link Bytecode} with the {@link JsonNode} input
+     * 
+     * @param code the bytecode to execute
+     * @param input the json input
+     * @return the json output
+     * @throws Jslt2Exception
+     */
     public JsonNode execute(Bytecode code, JsonNode input) throws Jslt2Exception {
         final int base = top;
         prepareStack(code);        
         
         return executeStackFrame(code, base, input);        
     }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode arg1) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
         
-        stack[base + 0] = arg1;
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode arg1, JsonNode arg2) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
-        
-        stack[base + 0] = arg1;
-        stack[base + 1] = arg2;
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode arg1, JsonNode arg2, JsonNode arg3) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
-        
-        stack[base + 0] = arg1;
-        stack[base + 1] = arg2;
-        stack[base + 2] = arg3;
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode arg1, JsonNode arg2, JsonNode arg3, JsonNode arg4) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
-        
-        stack[base + 0] = arg1;
-        stack[base + 1] = arg2;
-        stack[base + 2] = arg3;
-        stack[base + 3] = arg4;
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode arg1, JsonNode arg2, JsonNode arg3, JsonNode arg4, JsonNode arg5) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
-        
-        stack[base + 0] = arg1;
-        stack[base + 1] = arg2;
-        stack[base + 2] = arg3;
-        stack[base + 3] = arg4;
-        stack[base + 4] = arg5;
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
-    public JsonNode execute(Bytecode code, JsonNode input, JsonNode[] args) throws Jslt2Exception {
-        final int base = top;
-        prepareStack(code);        
-        
-        if (args != null) {
-            System.arraycopy(args, 0, stack, base, args.length);
-        }
-        
-        return executeStackFrame(code, base, input);        
-    }
-    
     private JsonNode executeStackFrame(Bytecode code, int base, JsonNode input) throws Jslt2Exception {
         executeBytecode(code, base, input);
         
@@ -203,8 +145,8 @@ public class VM {
                         
                         int iname = ARGx(i);
                         JsonNode fieldName = constants[iname];
-                        obj.set(fieldName.asText(), stack[--top]);
                         
+                        obj.set(fieldName.asText(), stack[--top]);                        
                         break;
                     }
                     case ADD_FIELD: {
