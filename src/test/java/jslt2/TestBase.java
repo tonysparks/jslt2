@@ -11,7 +11,10 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.JsltException;
+
+import jslt2.parser.Parser;
 
 import static org.junit.Assert.*;
 
@@ -45,11 +48,17 @@ public class TestBase {
         try {
             JsonNode context = mapper.readTree(input);
 
-//            Expression expr = Parser.compileString(query, functions);
-//            JsonNode actual = expr.apply(variables, context);
-            Jslt2 runtime = new Jslt2().addFunctions(functions);
-            JsonNode actual = runtime.eval(query, context);
+            Expression expr2 = com.schibsted.spt.data.jslt.Parser.compileString(query);
+            JsonNode actual2 = expr2.apply(variables, context);
+            System.out.println("AST: " + actual2);
             
+            Jslt2 runtime = Jslt2.builder()
+                                    .objectMapper(mapper)
+                                    .build()
+                                    .addFunctions(functions);
+            
+            JsonNode actual = runtime.eval(query, context);
+            System.out.println("VM: " + actual);
             if (actual == null)
                 throw new JsltException("Returned Java null");
 

@@ -793,10 +793,11 @@ public class BytecodeEmitter {
         instrx(FOR_OBJ_DEF, getBytecodeIndex());        
         newLocalScopeEmitter(0);
     }
-        
+    
     public void matcher(int numOfOmittedFields) {
-        instrx(MATCHER, numOfOmittedFields);
+        instr2(MATCHER, numOfOmittedFields, getBytecodeIndex());
         decrementMaxstackSize(numOfOmittedFields);
+        newLocalScopeEmitter(0);
     }
     
     public void getfieldk(int constIndex) {

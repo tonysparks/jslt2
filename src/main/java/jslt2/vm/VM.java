@@ -312,15 +312,28 @@ public class VM {
                     }
                     
                     case MATCHER: {
+                        //
+                        // TODO: Must walk inputObj to the current context
+                        // of what we're building in compared to the input
+                        //
+                        
                         ObjectNode outputObj = this.objectStack.peek();
                                                 
-                        int n = ARGx(i);
+                        int n = ARG1(i);
                         JsonNode[] omittedFields = readArrayFromStack(n, stack);
                         
                         JsonNode inputNode = input;                        
                         if(!inputNode.isObject()) {
                             continue;
                         }
+                        
+                        int bytecodeIndex = ARG2(i);
+                        Bytecode valueCode = inner[bytecodeIndex].clone();
+                        
+                        JsonNode[] outers = valueCode.outers;                            
+                        pc += assignOuters(outers, calleeouters, valueCode.numOuters, base, pc, code);
+                        
+                        prepareStack(valueCode);
                         
                         ObjectNode inputObj = (ObjectNode)inputNode;
                         Iterator<Map.Entry<String, JsonNode>> it = inputObj.fields();
@@ -333,7 +346,10 @@ public class VM {
                                     continue;
                                 }
                                 
-                                outputObj.set(key, next.getValue());
+                                executeBytecode(valueCode, top, next.getValue());
+                                JsonNode value = stack[--top];
+                                
+                                outputObj.set(key, value);
                             }
                         }
                         
@@ -397,7 +413,6 @@ public class VM {
                         
                         JsonNode[] outers = forCode.outers;                            
                         pc += assignOuters(outers, calleeouters, forCode.numOuters, base, pc, code);
-                        
                         
                         prepareStack(forCode);
                         
@@ -478,7 +493,7 @@ public class VM {
                                 executeBytecode(forCode, top, current); 
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
-                                
+
                                 obj.set(k.asText(), v);
                             }                                                        
                         }
@@ -553,7 +568,8 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isTextual() || r.isTextual()) {
-                            c = TextNode.valueOf(l.asText() + r.asText()); 
+                            c = TextNode.valueOf(Jslt2Util.toString(l, false) + 
+                                                 Jslt2Util.toString(r, false)); 
                         }
                         else if(l.isArray() && r.isArray()) {
                             ArrayNode a = (ArrayNode)l;
@@ -783,7 +799,16 @@ public class VM {
     private boolean isOmittedField(JsonNode[] omittedFields, String key) {
         if(omittedFields != null) {
             for(int j = 0; j < omittedFields.length; j++) {
-                if(omittedFields[j].asText().equals(key)) {
+                String field = omittedFields[j].asText(); 
+                
+                // check identifier
+                if(field.equals(key)) {
+                    return true;
+                }
+                
+                // check string
+                if(field.startsWith("\"") && field.endsWith("\"") &&
+                  (field.length() > 2 && field.substring(1, field.length()-1).equals(key))) {
                     return true;
                 }
             }

@@ -105,17 +105,23 @@ public class Compiler {
             else {
                 asm.newobj();
                 for(Tuple<Expr, Expr> field : expr.getFields()) {
-                    field.getSecond().visit(this);
+                    
                     
                     Expr fieldName = field.getFirst();
                     if(fieldName instanceof IdentifierExpr) {
+                        field.getSecond().visit(this);
                         asm.addfieldk(((IdentifierExpr)fieldName).getIdentifier());
                     }
-                    else if(fieldName instanceof StringExpr) {                        
+                    else if(fieldName instanceof StringExpr) {
+                        field.getSecond().visit(this);
                         asm.addfieldk(((StringExpr)fieldName).getString());
                     }
                     else if(fieldName instanceof MatchExpr) {
                         fieldName.visit(this);
+                        // this is the body of the matcher function
+                        field.getSecond().visit(this);
+                        
+                        asm.end();
                     }
                     else {
                         throw new Jslt2Exception("Invalid field expression: " + fieldName);

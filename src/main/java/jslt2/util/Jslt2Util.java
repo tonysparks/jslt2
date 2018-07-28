@@ -73,6 +73,12 @@ public class Jslt2Util {
               !value.isNull();
     }
     
+    public static boolean isValue(JsonNode value) {
+        return !value.isNull() && 
+               !(value.isObject() && value.size() == 0) && 
+               !(value.isArray()  && value.size() == 0);
+    }
+    
     /**
      * Does JSLT logic for equals
      * 

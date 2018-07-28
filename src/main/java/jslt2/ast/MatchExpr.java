@@ -11,11 +11,8 @@ import java.util.List;
  */
 public class MatchExpr extends Expr {
 
-    private List<Expr> fields;
-    
-    /**
-     * 
-     */
+    private List<Expr> fields;    
+
     public MatchExpr(List<Expr> fields) {
         this.fields = fields;
     }
