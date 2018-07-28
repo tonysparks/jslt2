@@ -27,6 +27,7 @@ import jslt2.util.Tuple;
  * @author Tony
  *
  */
+@Ignore
 public class PerformanceTest {
 
     /**

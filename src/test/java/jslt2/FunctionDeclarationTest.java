@@ -57,6 +57,9 @@ public class FunctionDeclarationTest extends TestBase {
             "a(5)", "-1");
     }
 
+    /**
+     * TODO: Currently no number of argument checks in VM
+     */
     @Test
     public void testTooManyParameters() {
       error("def a() " +

@@ -25,12 +25,19 @@ public class ImportTest  extends TestBase {
                   "m(5) ", "27");
     }
 
+    /**
+     * TODO: No method body returns a "Undefined function 'm'" in VM
+     */
     @Test
     public void testModuleNoBodyFunction() {
       error("import \"module.jstl\" as m " +
             "m(5) ", "body");
     }
 
+    /**
+     * I think this should fail, as 
+     * c calls b-1 b(.) as a function, but b has not Body!
+     */
     @Test
     public void testImportGraph() {
       // we import A -> B, A -> C -> B, and this should be fine
