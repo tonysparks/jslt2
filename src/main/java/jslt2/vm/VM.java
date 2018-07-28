@@ -229,10 +229,19 @@ public class VM {
 
                         JsonNode value = null;
                         if(obj.isArray()) {
-                            value = obj.get(index.asInt());
+                            if(index.isNumber()) {
+                                value = obj.get(index.asInt());
+                            }
+                            
+                            if(value == null) {
+                                value = NullNode.instance;
+                            }
                         }
                         else if(obj.isObject()) {
                             value = obj.get(index.asText());
+                            if(value == null) {
+                                value = NullNode.instance;
+                            }
                         }
                         else if(obj.isTextual()) {
                             value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
@@ -250,10 +259,19 @@ public class VM {
 
                         JsonNode value = null;
                         if(obj.isArray()) {
-                            value = obj.get(index.asInt());
+                            if(index.isNumber()) {
+                                value = obj.get(index.asInt());
+                            }
+                            
+                            if(value == null) {
+                                value = NullNode.instance;
+                            }
                         }
                         else if(obj.isObject()) {
                             value = obj.get(index.asText());
+                            if(value == null) {
+                                value = NullNode.instance;
+                            }
                         }
                         else if(obj.isTextual()) {
                             value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
@@ -350,6 +368,8 @@ public class VM {
                                 outputObj.set(key, value);
                             }
                         }
+                        
+                        exitCall(valueCode, top);
                         
                         break;
                     }
