@@ -17,7 +17,7 @@ public class LetExpr extends Expr {
      */
     public LetExpr(String identifier, Expr value) {
         this.identifier = identifier;
-        this.value = value;
+        this.value = becomeParentOf(value);
     }
     
     /**

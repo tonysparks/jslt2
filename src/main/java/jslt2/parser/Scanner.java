@@ -43,9 +43,14 @@ public class Scanner {
         this.source = source;
         this.tokens = new ArrayList<>();
         
-        while(!source.atEof()) {
-            this.tokens.add(this.extractToken());
-        }     
+        try {
+            while(!source.atEof()) {
+                this.tokens.add(this.extractToken());
+            }    
+        }
+        finally {
+            source.close();
+        }
     }
     
     /**

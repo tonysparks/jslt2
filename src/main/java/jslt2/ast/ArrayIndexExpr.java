@@ -16,8 +16,8 @@ public class ArrayIndexExpr extends Expr {
      * 
      */
     public ArrayIndexExpr(Expr array, Expr index) {
-        this.array = array;
-        this.index = index;
+        this.array = becomeParentOf(array);
+        this.index = becomeParentOf(index);
     }
     
     /**

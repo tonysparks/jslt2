@@ -20,10 +20,10 @@ public class IfExpr extends Expr {
      * 
      */
     public IfExpr(List<LetExpr> lets, Expr condition, Expr thenExpr, ElseExpr elseExpr) {
-        this.lets = lets;
-        this.condition = condition;
-        this.thenExpr = thenExpr;
-        this.elseExpr = elseExpr;
+        this.lets = becomeParentOf(lets);
+        this.condition = becomeParentOf(condition);
+        this.thenExpr = becomeParentOf(thenExpr);
+        this.elseExpr = becomeParentOf(elseExpr);
     }
     
     /**

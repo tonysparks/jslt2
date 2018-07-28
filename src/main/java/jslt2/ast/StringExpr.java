@@ -29,4 +29,9 @@ public class StringExpr extends Expr {
     public void visit(NodeVisitor v) {
         v.visit(this);
     }
+    
+    @Override
+    public String toString() {
+        return this.string;
+    }
 }

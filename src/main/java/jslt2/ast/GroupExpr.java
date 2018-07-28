@@ -15,7 +15,7 @@ public class GroupExpr extends Expr {
      * 
      */
     public GroupExpr(Expr expr) {
-        this.expr = expr;
+        this.expr = becomeParentOf(expr);
     }
 
     /**

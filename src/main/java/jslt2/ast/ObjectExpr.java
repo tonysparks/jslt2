@@ -21,9 +21,9 @@ public class ObjectExpr extends Expr {
      * 
      */
     public ObjectExpr(List<LetExpr> lets, ForObjectExpr forObjectExpr, List<Tuple<Expr, Expr>> fields) {
-        this.lets = lets;
-        this.forObjectExpr = forObjectExpr;
-        this.fields = fields;
+        this.lets = becomeParentOf(lets);
+        this.forObjectExpr = becomeParentOf(forObjectExpr);
+        this.fields = becomeParentOfByTuples(fields);
     }
     
     /**

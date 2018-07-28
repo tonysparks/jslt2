@@ -22,8 +22,8 @@ public class DefExpr extends Expr {
     public DefExpr(String identifier, List<String> parameters, List<LetExpr> lets, Expr expr) {
         this.identifier = identifier;
         this.parameters = parameters;
-        this.lets = lets;
-        this.expr = expr;
+        this.lets = becomeParentOf(lets);
+        this.expr = becomeParentOf(expr);
     }
     
     /**

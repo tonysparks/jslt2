@@ -18,8 +18,8 @@ public class ArrayExpr extends Expr {
      * 
      */
     public ArrayExpr(ForArrayExpr forExpr, List<Expr> elements) {
-        this.forExpr = forExpr;
-        this.elements = elements;
+        this.forExpr = becomeParentOf(forExpr);
+        this.elements = becomeParentOf(elements);
     }
     
     

@@ -23,11 +23,11 @@ public class ModuleExpr extends Expr {
      * @param defs
      */
     public ModuleExpr(List<ImportExpr> imports, List<LetExpr> lets, List<DefExpr> defs, Expr expr) {
-        this.imports = imports;
-        this.lets = lets;
-        this.defs = defs;
+        this.imports = becomeParentOf(imports);
+        this.lets = becomeParentOf(lets);
+        this.defs = becomeParentOf(defs);
         
-        this.expr = expr;
+        this.expr = becomeParentOf(expr);
     }
 
     /**

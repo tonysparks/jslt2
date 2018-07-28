@@ -61,6 +61,42 @@ public class Compiler {
             return this.asm.compile();
         }
 
+        /**
+         * Used for matcher expressions, we must determine which
+         * input path to resolve to (i.e., if we're in a chain of
+         * ObjectExpr, we'll want to match the keys of the input)
+         */
+        private void pushInputContext(Expr expr) {
+            StringBuilder sb = new StringBuilder();
+            
+            Node child = expr;
+            Node parent = expr.getParentNode();
+            
+            int count = 0;
+            
+            while(parent != null && count < 2) {
+                if(parent instanceof ObjectExpr) {
+                    ObjectExpr objExpr = (ObjectExpr) parent;
+                    if(objExpr.getForObjectExpr() == null) {
+                        List<Tuple<Expr, Expr>> fields = objExpr.getFields();
+                        for(Tuple<Expr, Expr> field : fields) {
+                            if(field.getSecond() == child) {
+                                sb.append(field.getFirst()).append(":");
+                            }
+                        }
+                    }
+                    
+                    count = 0;
+                }
+                
+                child = parent;
+                parent = parent.getParentNode();
+                count++;
+            }
+            
+            asm.addAndloadconst(sb.toString());
+        }
+        
         @Override
         public void visit(NullExpr expr) {
             asm.line(expr.getLineNumber());
@@ -117,6 +153,7 @@ public class Compiler {
                         asm.addfieldk(((StringExpr)fieldName).getString());
                     }
                     else if(fieldName instanceof MatchExpr) {
+                        pushInputContext(expr);
                         fieldName.visit(this);
                         // this is the body of the matcher function
                         field.getSecond().visit(this);

@@ -3,6 +3,8 @@
  */
 package jslt2.util;
 
+import java.util.Iterator;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
@@ -163,5 +165,26 @@ public class Jslt2Util {
             
             throw new Jslt2Exception("number(" + number + ") failed: not a number");
         }
+    }
+    
+    
+    /**
+     * Removes null nodes
+     * 
+     * @param node
+     */
+    public static JsonNode removeNullNodes(JsonNode node) {
+        Iterator<JsonNode> it = node.iterator();
+        while (it.hasNext()) {
+            JsonNode child = it.next();
+            
+            removeNullNodes(child);
+            
+            if (child.isNull() || ((child.isArray()||child.isObject()) && child.size() == 0)) {
+                it.remove();
+            }
+        }
+        
+        return node;
     }
 }

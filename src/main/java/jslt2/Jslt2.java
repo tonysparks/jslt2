@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
+import jslt2.util.Jslt2Util;
 import jslt2.vm.Bytecode;
 import jslt2.vm.VM;
 import jslt2.vm.compiler.Compiler;
@@ -268,7 +269,12 @@ public class Jslt2 {
             System.out.println(bytecode.dump());
         }
         
-        return this.vm.execute(bytecode, input);
+        JsonNode result = this.vm.execute(bytecode, input);
+        if(!this.includeNulls) {
+            result = Jslt2Util.removeNullNodes(result);
+        }
+        
+        return result;
     }
     
 

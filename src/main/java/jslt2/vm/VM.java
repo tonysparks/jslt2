@@ -312,17 +312,15 @@ public class VM {
                     }
                     
                     case MATCHER: {
-                        //
-                        // TODO: Must walk inputObj to the current context
-                        // of what we're building in compared to the input
-                        //
-                        
                         ObjectNode outputObj = this.objectStack.peek();
-                                                
+                        
                         int n = ARG1(i);
                         JsonNode[] omittedFields = readArrayFromStack(n, stack);
                         
-                        JsonNode inputNode = input;                        
+                        JsonNode contextPath = stack[--top];
+                        JsonNode context = resolveContext(contextPath, input);
+                        
+                        JsonNode inputNode = context;                        
                         if(!inputNode.isObject()) {
                             continue;
                         }
@@ -860,5 +858,25 @@ public class VM {
         return numOuters;
     }
     
-    
+    private JsonNode resolveContext(JsonNode contextPath, JsonNode input) {
+        if(!input.isObject()) {
+            return input;
+        }
+        
+        String[] split = contextPath.asText().split(":");
+        for(int i = split.length - 1; i >= 0; i--) {
+            String fieldName = split[i];
+            if(fieldName.isEmpty()) {
+                continue;
+            }
+            
+            input = input.get(fieldName);
+            
+            if(input == null) {
+                return NullNode.instance;
+            }            
+        }
+        
+        return input;
+    }
 }
