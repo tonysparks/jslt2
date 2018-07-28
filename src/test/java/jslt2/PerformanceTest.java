@@ -152,6 +152,8 @@ public class PerformanceTest {
             for(int i = 0; i < capacity; i++) {    
                 array.set(rand.nextInt(capacity), DoubleNode.valueOf(rand.nextInt(Integer.MAX_VALUE)));
             }
+            
+            System.gc();
         }
         
         long jsltSum = 0L;
