@@ -3,7 +3,11 @@
  */
 package jslt2;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +25,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Function;
+import com.schibsted.spt.data.jslt.JsltException;
 import com.schibsted.spt.data.jslt.Parser;
+import com.schibsted.spt.data.jslt.ResourceResolver;
 
 import static org.junit.Assert.*;
 
@@ -31,7 +37,9 @@ import static org.junit.Assert.*;
  */
 public class Jslt2Test {
 
-    private Jslt2 runtime = new Jslt2();
+    private Jslt2 runtime = Jslt2.builder()
+            .resourceResolver(ResourceResolvers.newFilePathResolver(new File("./examples")))
+            .build();
     
     /**
      * @throws java.lang.Exception
@@ -50,8 +58,28 @@ public class Jslt2Test {
     
     @Ignore
     private void testAgainstSpec(JsonNode input, String query) {
-        Expression jslt = Parser.compileString(query);
-
+        File baseDir = new File("./examples");
+        
+        Expression jslt = new Parser(new StringReader(query))
+                .withResourceResolver(new ResourceResolver() {
+                    
+                    @Override
+                    public Reader resolve(String jsltFile) {
+                        File file = new File(baseDir, jsltFile);
+                        if(!file.exists()) {
+                            throw new JsltException("Could not find: '" + jsltFile + "' in '" + file + "'.");
+                        }
+                        
+                        try {
+                            return new BufferedReader(new FileReader(file));
+                        }
+                        catch(Exception e) {
+                            throw new JsltException("Unable to load '" + jsltFile + "'", e);
+                        }
+                    }
+                })
+                .compile();
+        
         JsonNode jsltResult = jslt.apply(input);
         JsonNode result = runtime.eval(query, input);
         
@@ -59,6 +87,16 @@ public class Jslt2Test {
         System.out.println("Jslt: " + jsltResult);
         
         assertEquals(jsltResult, result);
+    }
+    
+    @Test
+    public void testImport() throws Exception {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        String query = new String(Files.readAllBytes(new File("./examples/import-test.json").toPath()));
+        
+        testAgainstSpec(input, query);        
     }
     
     @Test

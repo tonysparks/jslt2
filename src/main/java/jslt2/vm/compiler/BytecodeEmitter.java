@@ -237,6 +237,9 @@ public class BytecodeEmitter {
         this.innerEmitterStack.push(this);
     }
     
+    public void startGlobal() {
+        start(ScopeType.GLOBAL_SCOPE, 0);
+    }
 
     
     /**

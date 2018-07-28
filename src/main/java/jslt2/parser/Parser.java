@@ -39,6 +39,31 @@ public class Parser {
         this.current = 0;    
     }
 
+
+
+    /**
+     * Parses a module
+     * 
+     * @return the {@link ModuleExpr}
+     */
+    public ModuleExpr parseModule() {
+        
+        List<ImportExpr> imports = new ArrayList<>();
+        List<LetExpr> lets = new ArrayList<>();
+        List<DefExpr> defs = new ArrayList<>();
+        
+        while(!isAtEnd()) {
+            if(match(IMPORT))    imports.add(importDeclaration());
+            else if(match(DEF))  defs.add(defDeclaration());
+            else if(match(LET))  lets.add(letDeclaration());            
+            else                 break;
+        }
+        
+        return node(new ModuleExpr(imports, lets, defs));
+    }
+
+    
+
     /**
      * Parses the program
      * 
@@ -70,7 +95,7 @@ public class Parser {
         
         String aliasName = null;
         
-        Token library = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
+        Token library = consume(STRING, ErrorCode.MISSING_IDENTIFIER);
         if(match(AS)) {
             Token alias = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
             aliasName = alias.getText();

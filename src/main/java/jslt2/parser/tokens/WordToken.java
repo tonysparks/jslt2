@@ -25,6 +25,7 @@ public class WordToken extends Token {
             switch(c) {
             case '$':
             case '_':
+            case ':':
             case '-':
                 isValid = true;
                 break;

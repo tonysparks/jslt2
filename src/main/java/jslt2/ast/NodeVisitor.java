@@ -31,10 +31,10 @@ public interface NodeVisitor {
     void visit(ArraySliceExpr expr);
     void visit(ArrayIndexExpr expr);
     void visit(GetExpr expr);
-    void visit(ImportGetExpr expr);
     
     void visit(ImportExpr expr);
     void visit(ProgramExpr expr);
+    void visit(ModuleExpr expr);
     
     void visit(UnaryExpr expr);
     void visit(BinaryExpr expr);

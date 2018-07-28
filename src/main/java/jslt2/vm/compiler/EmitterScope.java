@@ -89,7 +89,6 @@ public class EmitterScope {
     private int currentLineNumber;
     private int numArgs;
     
-    
     /**
      * @param parent
      * @param scopeType 
@@ -259,10 +258,10 @@ public class EmitterScope {
     public void addFunction(String reference, int bytecodeIndex) {
         getFunctions().put(reference, bytecodeIndex);
     }
-    
+     
     public int getFunction(String reference) {
         Integer result = getFunctions().get(reference);
-        if(result == null) {
+        if(result == null) {            
             if(parent != null) {
                 result = parent.getFunction(reference);
                 if(result != null) {
@@ -273,6 +272,7 @@ public class EmitterScope {
             }
             
             return -1;
+            
         }
         
         return result;

@@ -1,0 +1,17 @@
+import "b.json" as b
+
+def fx()
+    [1,2,3]
+    
+def fy()
+    [4,5,6]    
+    
+def ff()
+    fx() + fy()    
+    
+def fb()
+    b:by() + b:bf()
+        
+let varA = 10
+let varB = $varA + 20
+    

@@ -1,0 +1,8 @@
+import "a.json" as a
+
+{
+    "x" : a:fx(),
+    "y" : a:fy(),
+    "both" : a:ff(),
+    "z": a:fb()
+}

@@ -69,7 +69,8 @@ public class Jslt2 {
         private int maxStackSize = Integer.MAX_VALUE;
         
         private ObjectMapper objectMapper;
-                
+        private ResourceResolver resolver = ResourceResolvers.newClassPathResolver();        
+        
         public Builder enableDebugMode(boolean enableDebugMode) {
             this.isDebugMode = enableDebugMode;
             return this;
@@ -90,9 +91,15 @@ public class Jslt2 {
             return this;
         }
         
+        public Builder resourceResolver(ResourceResolver resolver) {
+            this.resolver = resolver;
+            return this;
+        }
+        
         public Jslt2 build() {
             return new Jslt2(this.objectMapper != null 
                                 ? this.objectMapper : new ObjectMapper(), 
+                             this.resolver,
                              this.isDebugMode, 
                              this.minStackSize, 
                              this.maxStackSize);
@@ -105,6 +112,8 @@ public class Jslt2 {
     
     private ObjectMapper objectMapper;
     
+    private ResourceResolver resolver;
+    
     private Compiler compiler;
     private VM vm;
     
@@ -113,8 +122,14 @@ public class Jslt2 {
     /**
      * @param objectMapper
      */
-    public Jslt2(ObjectMapper objectMapper, boolean debugMode, int minStackSize, int maxStackSize) {
+    public Jslt2(ObjectMapper objectMapper, 
+                 ResourceResolver resolver,
+                 boolean debugMode, 
+                 int minStackSize, 
+                 int maxStackSize) {
+        
         this.objectMapper = objectMapper;
+        this.resolver = resolver;
         
         this.isDebugMode = debugMode;
         this.minStackSize = minStackSize;
@@ -129,7 +144,11 @@ public class Jslt2 {
     }
     
     public Jslt2() {
-        this(new ObjectMapper(), false, 1024, Integer.MAX_VALUE);
+        this(new ObjectMapper(), 
+             ResourceResolvers.newClassPathResolver(), 
+             false, 
+             1024, 
+             Integer.MAX_VALUE);
     }
     
     /**
@@ -168,6 +187,13 @@ public class Jslt2 {
     
     public ArrayNode newArrayNode(int capacity) {
         return new ArrayNode(this.objectMapper.getNodeFactory(), capacity);
+    }
+    
+    /**
+     * @return the resolver
+     */
+    public ResourceResolver getResolver() {
+        return resolver;
     }
     
     public JsonNode eval(File file, JsonNode input) {

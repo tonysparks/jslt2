@@ -8,10 +8,13 @@ import java.util.List;
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.ast.*;
+import jslt2.parser.Parser;
+import jslt2.parser.Scanner;
+import jslt2.parser.Source;
 import jslt2.parser.tokens.TokenType;
+import jslt2.util.Stack;
 import jslt2.util.Tuple;
 import jslt2.vm.Bytecode;
-import jslt2.vm.compiler.EmitterScope.ScopeType;
 
 /**
  * The compiler for Jslt2
@@ -40,10 +43,13 @@ public class Compiler {
     
     private class BytecodeEmitterNodeVisitor implements NodeVisitor {
         private BytecodeEmitter asm;
+        private Stack<String> moduleStack;
     
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
             this.asm.setDebug(runtime.isDebugMode());
+            
+            this.moduleStack = new Stack<>();
         }
         
         public Bytecode compile(ProgramExpr program) {
@@ -222,6 +228,10 @@ public class Compiler {
             asm.line(expr.getLineNumber());
             
             String functionName = expr.getIdentifier();
+            if(!this.moduleStack.isEmpty()) {
+                asm.addFunction(this.moduleStack.peek() + ":" + functionName, asm.getBytecodeIndex());
+            }
+            
             asm.addFunction(functionName, asm.getBytecodeIndex());
             
             List<String> parameters = expr.getParameters();
@@ -312,27 +322,30 @@ public class Compiler {
             expr.getExpr().visit(this);        
         }
         
-        /* (non-Javadoc)
-         * @see jslt2.ast.NodeVisitor#visit(jslt2.ast.ImportGetExpr)
-         */
-        @Override
-        public void visit(ImportGetExpr expr) {
-            asm.line(expr.getLineNumber());
-            // TODO
-        }
     
-        /* (non-Javadoc)
-         * @see jslt2.ast.NodeVisitor#visit(jslt2.ast.ImportExpr)
-         */
         @Override
         public void visit(ImportExpr expr) {
             asm.line(expr.getLineNumber());
-            // TODO
+    
+            String fileName = expr.getLibrary();
+            fileName = fileName.substring(1, fileName.length() - 1);
+            
+            try {
+                Scanner scanner = new Scanner(new Source(runtime.getResolver().resolve(fileName)));
+                Parser parser = new Parser(scanner);
+                
+                this.moduleStack.push(expr.getAlias());
+                parser.parseModule().visit(this);
+                this.moduleStack.pop();
+            }
+            catch(Exception e) {
+                throw new Jslt2Exception(e);
+            }
         }
     
         @Override
         public void visit(ProgramExpr expr) {
-            asm.start(ScopeType.GLOBAL_SCOPE, 0);
+            asm.startGlobal();
                 asm.line(expr.getLineNumber());
                 expr.getImports().forEach(imp -> imp.visit(this));
                 expr.getLets().forEach(let -> let.visit(this));
@@ -340,6 +353,14 @@ public class Compiler {
                 
                 expr.getExpr().visit(this);
             asm.end();
+        }
+        
+        @Override
+        public void visit(ModuleExpr expr) {      
+            asm.line(expr.getLineNumber());
+            expr.getImports().forEach(imp -> imp.visit(this));
+            expr.getLets().forEach(let -> let.visit(this));
+            expr.getDefs().forEach(def -> def.visit(this));             
         }
     
         @Override
