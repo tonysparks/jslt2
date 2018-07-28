@@ -71,6 +71,9 @@ public class Compiler {
             
             Node child = expr;
             Node parent = expr.getParentNode();
+            if(parent instanceof ArrayExpr) {
+                throw new Jslt2Exception("Object matching not allowed in an array");
+            }
             
             int count = 0;
             
