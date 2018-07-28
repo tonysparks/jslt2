@@ -27,7 +27,6 @@ import jslt2.util.Tuple;
  * @author Tony
  *
  */
-@Ignore
 public class PerformanceTest {
 
     /**
@@ -122,6 +121,7 @@ public class PerformanceTest {
         
         Jslt2 runtime = Jslt2.builder()
                 .enableDebugMode(false)
+                .includeNulls(true)
                 .build();
         
         Template template = runtime.compile(query);
