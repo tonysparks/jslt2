@@ -60,6 +60,18 @@ public class Jslt2Util {
         return value.toString();
     }
     
+    public static ArrayNode toArray(JsonNode value, boolean nullok) {
+        // check what type this is
+        if (value.isArray()) {
+            return (ArrayNode) value;
+        }
+        else if (value.isNull() && nullok) {
+            return null;
+        }
+
+        throw new Jslt2Exception("Cannot convert " + value + " to array");
+    }
+    
     /**
      * Does JSLT logic for true
      * 
