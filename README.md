@@ -45,4 +45,5 @@ JsonNode result2 = template.eval(input2);
 Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
 ```
 * Currently no function parameter checks - this is considered a bug in JSLT2 
+* Allows block comments via the `/*` and `*/` syntax
 * Performance has been interesting.  I've tested on AMD Phenom II and Intel i5; on Intel, JSLT2 can be roughly 5% to 10% faster; and on AMD, JSLT2 is consistently 5%-10% *slower*.  To date, depending on the template the original JSLT code will be generally slightly faster than JSLT2 code.
