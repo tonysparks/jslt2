@@ -3,8 +3,15 @@
  */
 package jslt2;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +33,11 @@ import jslt2.util.Jslt2Util;
  *
  */
 public class Jslt2StdLibrary {
+    static Set<String> zonenames = new HashSet<>();
+    static {
+      zonenames.addAll(Arrays.asList(TimeZone.getAvailableIDs()));
+    }
+    
     public Jslt2StdLibrary(final Jslt2 runtime) {
         
         // General
@@ -59,23 +71,19 @@ public class Jslt2StdLibrary {
 
             return BooleanNode.FALSE;
         });
-        
-        runtime.addFunction("size", (input, args) -> {
-            if(args == null || args.length < 1) return IntNode.valueOf(0);
-            JsonNode node = args[0];
-            
-            int result = 0;
-            if(node.isNull()) {
-                return NullNode.instance;
+        runtime.addFunction("size", (input, arguments) -> {
+            if (arguments[0].isArray() || arguments[0].isObject()) {
+                return IntNode.valueOf(arguments[0].size());
             }
-            else if(node.isTextual()) {
-                result = node.asText().length();
+
+            else if (arguments[0].isTextual()) {
+                return IntNode.valueOf(arguments[0].asText().length());
             }
-            else {
-                result = node.size();
+            else if (arguments[0].isNull()) {
+                return arguments[0];
             }
             
-            return IntNode.valueOf(result);
+            throw new Jslt2Exception("Function size() cannot work on " + arguments[0]);
         });
         
         runtime.addFunction("error", (input, arguments) -> {
@@ -222,7 +230,68 @@ public class Jslt2StdLibrary {
                 
                 buf.append(Jslt2Util.toString(array.get(ix), false));
             }
-            return new TextNode(buf.toString());
+            return TextNode.valueOf(buf.toString());
+        });
+        runtime.addFunction("lowercase", (input, arguments) -> {
+            // if input string is missing then we're doing nothing
+            if (arguments[0].isNull()) {
+                return arguments[0]; // null
+            }
+            
+            String string = Jslt2Util.toString(arguments[0], false);
+            return TextNode.valueOf(string.toLowerCase());
+        });
+        runtime.addFunction("uppercase", (input, arguments) -> {
+            // if input string is missing then we're doing nothing
+            if (arguments[0].isNull()) {
+                return arguments[0]; // null
+            }
+            
+            String string = Jslt2Util.toString(arguments[0], false);
+            return TextNode.valueOf(string.toUpperCase());
+        });
+        runtime.addFunction("starts-with", (input, arguments) -> {
+            String string = Jslt2Util.toString(arguments[0], false);
+            String suffix = Jslt2Util.toString(arguments[1], false);
+            return Jslt2Util.toJson(string.startsWith(suffix));
+        });
+        runtime.addFunction("ends-with", (input, arguments) -> {
+            String string = Jslt2Util.toString(arguments[0], false);
+            String suffix = Jslt2Util.toString(arguments[1], false);
+            return Jslt2Util.toJson(string.endsWith(suffix));
+        });
+        runtime.addFunction("from-json", (input, arguments) -> {
+            String json = Jslt2Util.toString(arguments[0], true);
+            if (json == null) {
+                return NullNode.instance;
+            }
+
+            try {
+                JsonNode parsed = runtime.getObjectMapper().readTree(json);
+                // if input is "", for example
+                if (parsed == null) { 
+                    return NullNode.instance;
+                }
+                
+                return parsed;
+            } 
+            catch (Exception e) {
+                if (arguments.length == 2) {
+                    return arguments[1]; // return fallback on parse fail
+                }
+                else {
+                    throw new Jslt2Exception("from-json can't parse " + json + ": " + e);
+                }
+            }
+        });
+        runtime.addFunction("to-json", (input, arguments) -> {
+            try {
+                String json = runtime.getObjectMapper().writeValueAsString(arguments[0]);
+                return new TextNode(json);
+            } 
+            catch (Exception e) {
+                throw new Jslt2Exception("to-json can't serialize " + arguments[0] + ": " + e);
+            }
         });
 
         // Boolean
@@ -245,11 +314,136 @@ public class Jslt2StdLibrary {
         runtime.addFunction("is-object", (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isObject());
         });
+        runtime.addFunction("get-key", (input, arguments) -> {
+            String key = Jslt2Util.toString(arguments[1], true);
+            if (key == null) {
+                return NullNode.instance;
+            }
+            
+            JsonNode obj = arguments[0];
+            if (obj.isObject()) {
+                JsonNode value = obj.get(key);
+                if (value == null) {
+                    if (arguments.length == 2) {
+                        return NullNode.instance;
+                    }
+                    else {
+                        return arguments[2]; // fallback argument
+                    }
+                }
+                
+                return value;                
+            } 
+            else if (obj.isNull()) {
+                return NullNode.instance;
+            }
+            
+            throw new Jslt2Exception("get-key: can't look up keys in " + obj);
+        });
         
         // Array
-        
+        runtime.addFunction("array", (input, arguments) -> {            
+            JsonNode value = arguments[0];
+            if (value.isNull() || value.isArray()) {
+                return value;
+            } 
+            else if (value.isObject()) {
+                return Jslt2Util.convertObjectToArray(runtime, value);
+            }
+
+            throw new Jslt2Exception("array() cannot convert " + value);
+        });
         runtime.addFunction("is-array", (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isArray());
+        });
+        runtime.addFunction("flatten", (input, arguments) -> {            
+            JsonNode value = arguments[0];
+            if (value.isNull()) {
+                return value;
+            } 
+            else if (!value.isArray()) {
+                throw new Jslt2Exception("flatten() cannot operate on " + value);
+            }
+
+            ArrayNode array = runtime.newArrayNode(value.size());
+            flatten(array, value);
+            return array;
+        });
+        
+        // Time
+        runtime.addFunction("now", (input, arguments) -> {            
+            long ms = System.currentTimeMillis();
+            return Jslt2Util.toJson(ms / 1000.0);
+        });
+        runtime.addFunction("parse-time", (input, arguments) -> {            
+            String text = Jslt2Util.toString(arguments[0], true);
+            if (text == null) {
+                return NullNode.instance;
+            }
+            
+            String formatstr = Jslt2Util.toString(arguments[1], false);
+            JsonNode fallback = null;
+            if (arguments.length > 2) {
+                fallback = arguments[2];
+            }
+            
+            // the performance of this could be better, but it's not so easy
+            // to fix that when SimpleDateFormat isn't thread-safe, so we
+            // can't safely share it between threads
+
+            try {
+                SimpleDateFormat format = new SimpleDateFormat(formatstr);
+                format.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
+                Date time = format.parse(text);
+                return Jslt2Util.toJson((double) (time.getTime() / 1000.0));
+            } 
+            catch (IllegalArgumentException e) {
+                // thrown if format is bad
+                throw new Jslt2Exception("parse-time: Couldn't parse format '" + formatstr + "': " + e.getMessage());
+            } 
+            catch (ParseException e) {
+                if (fallback == null) {
+                    throw new Jslt2Exception("parse-time: " + e.getMessage());
+                }
+                
+                return fallback;
+            }
+        });
+        runtime.addFunction("format-time", (input, arguments) -> {            
+            JsonNode number = Jslt2Util.number(arguments[0], false, null);
+            if (number == null || number.isNull()) {
+                return NullNode.instance;
+            }
+
+            double timestamp = number.asDouble();
+
+            String formatstr = Jslt2Util.toString(arguments[1], false);
+
+            TimeZone zone = new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC");
+            if (arguments.length == 3) {
+                String zonename = Jslt2Util.toString(arguments[2], false);
+                if (!zonenames.contains(zonename)) {
+                    throw new Jslt2Exception("format-time: Unknown timezone " + zonename);
+                }
+                
+                zone = TimeZone.getTimeZone(zonename);
+            }
+
+            // the performance of this could be better, but it's not so easy
+            // to fix that when SimpleDateFormat isn't thread-safe, so we
+            // can't safely share it between threads
+
+            try {
+                SimpleDateFormat format = new SimpleDateFormat(formatstr);
+                format.setTimeZone(zone);
+                String formatted = format.format(Math.round(timestamp * 1000));
+                
+                return new TextNode(formatted);
+            } 
+            catch (IllegalArgumentException e) {
+                // thrown if format is bad
+                throw new Jslt2Exception("format-time: Couldn't parse format '" + formatstr + "': " + e.getMessage());
+            }
         });
         
         // Aux
@@ -301,4 +495,15 @@ public class Jslt2StdLibrary {
         }
     }
     
+    private static void flatten(ArrayNode array, JsonNode current) {
+        for (int ix = 0; ix < current.size(); ix++) {
+            JsonNode node = current.get(ix);
+            if (node.isArray()) {
+                flatten(array, node);
+            }
+            else {
+                array.add(node);
+            }
+        }
+    }
 }

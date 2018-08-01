@@ -4,6 +4,7 @@
 package jslt2.util;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
@@ -70,6 +73,19 @@ public class Jslt2Util {
         }
 
         throw new Jslt2Exception("Cannot convert " + value + " to array");
+    }
+    
+    public static ArrayNode convertObjectToArray(Jslt2 runtime, JsonNode object) {
+        ArrayNode array = runtime.newArrayNode(object.size());
+        Iterator<Map.Entry<String, JsonNode>> it = object.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> item = it.next();
+            ObjectNode element = runtime.newObjectNode();
+            element.set("key", new TextNode(item.getKey()));
+            element.set("value", item.getValue());
+            array.add(element);
+        }
+        return array;
     }
     
     /**
