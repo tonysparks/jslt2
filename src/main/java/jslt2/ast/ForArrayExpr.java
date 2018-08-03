@@ -14,7 +14,7 @@ public class ForArrayExpr extends Expr {
     private Expr condition;
     private List<LetExpr> lets;    
     private Expr valueExpr;
-    
+    private Expr ifExpr;
     
 
     /**
@@ -22,10 +22,12 @@ public class ForArrayExpr extends Expr {
      * @param lets
      * @param valueExpr
      */
-    public ForArrayExpr(Expr condition, List<LetExpr> lets, Expr valueExpr) {
+    public ForArrayExpr(Expr condition, List<LetExpr> lets, Expr valueExpr, Expr ifExpr) {
         this.condition = becomeParentOf(condition);
         this.lets = becomeParentOf(lets);
         this.valueExpr = becomeParentOf(valueExpr);
+        
+        this.ifExpr = becomeParentOf(ifExpr);
     }
 
     /**
@@ -49,7 +51,13 @@ public class ForArrayExpr extends Expr {
         return lets;
     }
 
-
+    /**
+     * @return the ifExpr
+     */
+    public Expr getIfExpr() {
+        return ifExpr;
+    }
+    
     @Override
     public void visit(NodeVisitor v) {
         v.visit(this);
