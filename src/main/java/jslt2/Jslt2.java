@@ -126,9 +126,7 @@ public class Jslt2 {
     
     private ResourceResolver resolver;
     
-    private Compiler compiler;
-    private VM vm;
-    
+    private Compiler compiler;        
     private Map<String, Jslt2Function> userFunctions;
     
     /**
@@ -150,9 +148,7 @@ public class Jslt2 {
         this.minStackSize = minStackSize;
         this.maxStackSize = maxStackSize;
         
-        this.vm = new VM(this);
-        this.compiler = new Compiler(this);
-        
+        this.compiler = new Compiler(this);        
         this.userFunctions = new HashMap<>();
         
         new Jslt2StdLibrary(this);
@@ -268,8 +264,8 @@ public class Jslt2 {
         if(this.isDebugMode) {
             System.out.println(bytecode.dump());
         }
-        
-        JsonNode result = this.vm.execute(bytecode, input);
+                
+        JsonNode result = new VM(this).execute(bytecode, input);
         if(!this.includeNulls) {
             result = Jslt2Util.removeNullNodes(result);
         }
@@ -318,7 +314,7 @@ public class Jslt2 {
         Parser parser = new Parser(scanner);
         
         Bytecode code = this.compiler.compile(parser.parseProgram());
-        return new Template(this, code);
+        return new Template(new VM(this), code);
     }
     
     /**
