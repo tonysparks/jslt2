@@ -3,6 +3,7 @@
  */
 package jslt2;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -53,7 +54,10 @@ public class FunctionTest extends TestBase {
       check("{}", "number(\"hurble\", [1,2,3])", "[1,2,3]");
     }
 
-    @Test
+    /*
+     * TODO: argument checks
+     */
+    @Test @Ignore
     public void testNoArguments() {
       error("number()", "argument");
     }
@@ -420,22 +424,34 @@ public class FunctionTest extends TestBase {
 
     // ===== FALLBACK
 
-    @Test
+    /*
+     * TODO: No fallback macro
+     */
+    @Test @Ignore
     public void testFallbackNull() {
       check("{}", "fallback(null, true)", "true");
     }
 
-    @Test
+    /*
+     * TODO: No fallback macro
+     */
+    @Test @Ignore
     public void testFallbackTrue() {
       check("{}", "fallback(true, null)", "true");
     }
 
-    @Test
+    /*
+     * TODO: No fallback macro
+     */
+    @Test @Ignore 
     public void testFallbackThree() {
       check("{}", "fallback(.foo, .bar, \"heyho\")", "\"heyho\"");
     }
 
-    @Test
+    /*
+     * TODO: No fallback macro
+     */
+    @Test @Ignore
     public void testFallbackIsAMagicMacro() {
       // if fallback were a function evaluation of the second parameter
       // would fail. however, it's a macro, and since the first

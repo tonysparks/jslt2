@@ -253,8 +253,8 @@ public class Compiler {
                     String endif = asm.jmp();
                     
                     asm.label(skipLabel);
-                    asm.loadnull();
-                    asm.loadnull();
+                    asm.loadjnull();
+                    asm.loadjnull();
                     
                     asm.label(endif);
                 }
@@ -287,9 +287,8 @@ public class Compiler {
                     
                     String endif = asm.jmp();
                     
-                    asm.label(skipLabel);
-                    asm.loadnull();
-                    asm.loadnull();
+                    asm.label(skipLabel);                    
+                    asm.loadjnull();
                     
                     asm.label(endif);
                 }
