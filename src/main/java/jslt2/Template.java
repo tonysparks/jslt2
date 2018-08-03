@@ -9,11 +9,15 @@ import jslt2.vm.Bytecode;
 import jslt2.vm.VM;
 
 /**
+ * The {@link Template#eval(JsonNode)} method is not thread-safe.  If you want to run multiple concurrent template transforms, each thread
+ * must have its own {@link Template} instance.  You can easily do this by {@link Template#clone()}. 
+ * 
  * @author Tony
  *
  */
 public class Template {
 
+    private Jslt2 runtime;
     private VM vm;
     private Bytecode bytecode;
     
@@ -21,9 +25,11 @@ public class Template {
      * @param runtime
      * @param bytecode
      */
-    public Template(VM vm, Bytecode bytecode) {
-        this.vm = vm;
+    public Template(Jslt2 runtime, Bytecode bytecode) {
+        this.runtime = runtime;
         this.bytecode = bytecode;
+        
+        this.vm = new VM(runtime);
     }
     
     /**
@@ -36,4 +42,11 @@ public class Template {
         return this.vm.execute(this.bytecode, input);
     }
 
+    /**
+     * Creates a clone of this {@link Template}
+     */
+    @Override
+    public Template clone() {
+        return new Template(this.runtime, this.bytecode);
+    }
 }

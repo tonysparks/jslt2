@@ -176,6 +176,10 @@ public class Opcodes {
                 op = "LOAD_OUTER";                
                 break;
             }
+            case LOAD_JNULL: {
+                op = "LOAD_JNULL";
+                break;
+            }
             case LOAD_NULL: {
                 op = "LOAD_NULL";
                 break;
@@ -364,69 +368,70 @@ public class Opcodes {
         LOAD_LOCAL = 2,               /* ARGx */
         LOAD_OUTER = 3,               /* ARGx */
         
-        LOAD_NULL  = 4,               /*      */
-        LOAD_TRUE  = 5,               /*      */
-        LOAD_FALSE = 6,               /*      */        
-        LOAD_INPUT = 7,               /*      */
+        LOAD_JNULL = 4,               /*      */
+        LOAD_NULL  = 5,               /*      */
+        LOAD_TRUE  = 6,               /*      */
+        LOAD_FALSE = 7,               /*      */        
+        LOAD_INPUT = 8,               /*      */
         
         /* storage of values */
-        STORE_LOCAL = 8,              /* ARGx */
+        STORE_LOCAL = 9,              /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER  = 9,             /* ARGx */
-        xLOAD_LOCAL  = 10,            /* ARGx */
+        xLOAD_OUTER  = 10,             /* ARGx */
+        xLOAD_LOCAL  = 11,            /* ARGx */
                 
         /* jump instructions */
-        JMP  = 11,                    /* ARGsx */
-        IFEQ = 12,                    /* ARGsx */
+        JMP  = 12,                    /* ARGsx */
+        IFEQ = 13,                    /* ARGsx */
         
         
         /* value creation */
-        NEW_ARRAY  = 13,              /*       */
-        SEAL_ARRAY = 14,
-        NEW_OBJ    = 15,              /*       */
-        SEAL_OBJ   = 16,
+        NEW_ARRAY  = 14,              /*       */
+        SEAL_ARRAY = 15,
+        NEW_OBJ    = 16,              /*       */
+        SEAL_OBJ   = 17,
         
-        ADD_FIELDK   = 17,            /* ARGx  */
-        ADD_FIELD    = 18,            /*       */
-        ADD_ELEMENT  = 19,            /*       */
+        ADD_FIELDK   = 18,            /* ARGx  */
+        ADD_FIELD    = 19,            /*       */
+        ADD_ELEMENT  = 20,            /*       */
 
         /* member access */   
-        GET_FIELDK = 20,              /* ARGx */
-        GET_FIELD  = 21,              /*      */
+        GET_FIELDK = 21,              /* ARGx */
+        GET_FIELD  = 22,              /*      */
         
         /* type declarations */
-        FUNC_DEF       = 22,          /* ARGx  */        
-        FOR_ARRAY_DEF  = 23,          /* ARGx  */
-        FOR_OBJ_DEF    = 24,          /* ARGx  */
+        FUNC_DEF       = 23,          /* ARGx  */        
+        FOR_ARRAY_DEF  = 24,          /* ARGx  */
+        FOR_OBJ_DEF    = 25,          /* ARGx  */
         
-        MATCHER      = 25,            /* ARGx  */
-        ARRAY_SLICE  = 26,            /*      */
+        MATCHER      = 26,            /* ARGx  */
+        ARRAY_SLICE  = 27,            /*      */
         
         /* method invocation */
-        INVOKE      = 27,             /* ARG1, ARG2 */          
-        USER_INVOKE = 28,             /* ARG1, ARG2 */
+        INVOKE      = 28,             /* ARG1, ARG2 */          
+        USER_INVOKE = 29,             /* ARG1, ARG2 */
         
 
         /* arithmetic operators */
-        ADD = 29,                     /*      */
-        SUB = 30,                     /*      */
-        MUL = 31,                     /*      */
-        DIV = 32,                     /*      */
-        MOD = 33,                     /*      */
-        NEG = 34,                     /*      */
+        ADD = 30,                     /*      */
+        SUB = 31,                     /*      */
+        MUL = 32,                     /*      */
+        DIV = 33,                     /*      */
+        MOD = 34,                     /*      */
+        NEG = 35,                     /*      */
             
-        NOT = 35,                     /*      */
+        NOT = 36,                     /*      */
         
-        EQ  = 36,                     /*      */
-        NEQ = 37,                     /*      */
-        GT  = 38,                     /*      */
-        GTE = 39,                     /*      */
-        LT  = 40,                     /*      */
-        LTE = 41,                     /*      */
+        EQ  = 37,                     /*      */
+        NEQ = 38,                     /*      */
+        GT  = 39,                     /*      */
+        GTE = 40,                     /*      */
+        LT  = 41,                     /*      */
+        LTE = 42,                     /*      */
         
         /* debug */
-        LINE = 42                     /* ARGx */
+        LINE = 43                     /* ARGx */
         ;
     
     
@@ -435,6 +440,8 @@ public class Opcodes {
         opcodes.put("LOAD_CONST", LOAD_CONST);
         opcodes.put("LOAD_LOCAL", LOAD_LOCAL);
         opcodes.put("LOAD_OUTER", LOAD_OUTER);        
+        
+        opcodes.put("LOAD_JNULL", LOAD_JNULL);
         opcodes.put("LOAD_NULL", LOAD_NULL);
         opcodes.put("LOAD_TRUE", LOAD_TRUE);
         opcodes.put("LOAD_FALSE", LOAD_FALSE);

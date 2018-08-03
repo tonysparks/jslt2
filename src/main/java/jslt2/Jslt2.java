@@ -29,6 +29,17 @@ import jslt2.vm.compiler.Compiler;
 /**
  * The main API to JSLT2.
  * 
+ * <p>
+ * In general, you only need one instance of <code>Jslt2</code>, but they are lightweight enough to create multiple.  
+ * The method {@link Jslt2#addFunction(String, Jslt2Function)} are not thread-safe, you should add your functions on startup 
+ * of your application.  The rest of the functions (such as {@link Jslt2#eval(Bytecode, JsonNode)}, {@link Jslt2#compile(File)}) are 
+ * thread-safe.  
+ * 
+ * <p>
+ * The {@link Template} class it <b>not</b> thread-safe, please see {@link Template} for more information. 
+ * 
+ * @see Template
+ * 
  * @author Tony
  *
  */
@@ -69,11 +80,18 @@ public class Jslt2 {
         private boolean isDebugMode = false;
         private boolean includeNulls = false;
         
+        private boolean printBytecode = false;
+        
         private int minStackSize = 1024;
         private int maxStackSize = Integer.MAX_VALUE;
         
         private ObjectMapper objectMapper;
         private ResourceResolver resolver = ResourceResolvers.newClassPathResolver();        
+        
+        public Builder printBytecode(boolean printBytecode) {
+            this.printBytecode = printBytecode;
+            return this;
+        }
         
         public Builder enableDebugMode(boolean enableDebugMode) {
             this.isDebugMode = enableDebugMode;
@@ -111,6 +129,7 @@ public class Jslt2 {
                              this.resolver,
                              this.isDebugMode, 
                              this.includeNulls,
+                             this.printBytecode,
                              this.minStackSize, 
                              this.maxStackSize);
         }
@@ -118,6 +137,7 @@ public class Jslt2 {
     
     private boolean isDebugMode;
     private boolean includeNulls;
+    private boolean printBytecode;
     
     private int minStackSize;
     private int maxStackSize;
@@ -136,6 +156,7 @@ public class Jslt2 {
                  ResourceResolver resolver,
                  boolean debugMode,
                  boolean includeNulls,
+                 boolean printBytecode,
                  int minStackSize, 
                  int maxStackSize) {
         
@@ -144,6 +165,7 @@ public class Jslt2 {
         
         this.isDebugMode = debugMode;
         this.includeNulls = includeNulls;
+        this.printBytecode = printBytecode;
         
         this.minStackSize = minStackSize;
         this.maxStackSize = maxStackSize;
@@ -158,6 +180,7 @@ public class Jslt2 {
         this(new ObjectMapper(), 
              ResourceResolvers.newClassPathResolver(), 
              false, 
+             false,
              false,
              1024, 
              Integer.MAX_VALUE);
@@ -261,7 +284,7 @@ public class Jslt2 {
      * @return the {@link JsonNode} result
      */
     public JsonNode eval(Bytecode bytecode, JsonNode input) {
-        if(this.isDebugMode) {
+        if(this.printBytecode) {
             System.out.println(bytecode.dump());
         }
                 
@@ -314,7 +337,7 @@ public class Jslt2 {
         Parser parser = new Parser(scanner);
         
         Bytecode code = this.compiler.compile(parser.parseProgram());
-        return new Template(new VM(this), code);
+        return new Template(this, code);
     }
     
     /**
@@ -336,6 +359,10 @@ public class Jslt2 {
      */
     public boolean includeNulls() {
         return includeNulls;
+    }
+    
+    public boolean printBytecode() {
+        return printBytecode;        
     }
     
     /**

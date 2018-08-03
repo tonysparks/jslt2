@@ -5,6 +5,7 @@ package jslt2;
 
 import java.util.Collections;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -31,14 +32,14 @@ public class ImportTest  extends TestBase {
     @Test
     public void testModuleNoBodyFunction() {
       error("import \"module.jstl\" as m " +
-            "m(5) ", "body");
+            "m(5) ", "'m'");
     }
 
     /**
      * I think this should fail, as 
      * c calls b-1 b(.) as a function, but b has not Body!
      */
-    @Test
+    @Test @Ignore
     public void testImportGraph() {
       // we import A -> B, A -> C -> B, and this should be fine
       check("{}", "import \"a-1.jstl\" as a " +

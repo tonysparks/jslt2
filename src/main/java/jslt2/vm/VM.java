@@ -331,6 +331,10 @@ public class VM {
                         stack[top++] = calleeouters[iname];
                         break;
                     }
+                    case LOAD_JNULL: {
+                        stack[top++] = null;
+                        break;
+                    }
                     case LOAD_NULL: {
                         stack[top++] = NullNode.instance;
                         break;
@@ -384,7 +388,7 @@ public class VM {
                             
                             executeBytecode(forCode, top, current); 
                             JsonNode n = stack[--top];
-                            if(Jslt2Util.isTrue(n)) {
+                            if(n != null) {
                                 array.add(n);
                             }
                         }
@@ -399,7 +403,7 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
-                                if(Jslt2Util.isTrue(n)) {
+                                if(n != null) {
                                     array.add(n);
                                 }
                             }
@@ -411,7 +415,7 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
-                                if(Jslt2Util.isTrue(n)) {
+                                if(n != null) {
                                     array.add(n);
                                 }
                             }                            
@@ -445,7 +449,7 @@ public class VM {
                             JsonNode v = stack[--top];
                             JsonNode k = stack[--top];
                             
-                            if(Jslt2Util.isTrue(k)) {
+                            if(k != null) {
                                 obj.set(k.asText(), v);
                             }
                         }
@@ -462,7 +466,7 @@ public class VM {
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
 
-                                if(Jslt2Util.isTrue(k)) {
+                                if(k != null) {
                                     obj.set(k.asText(), v);
                                 }
                             }                                                        
@@ -476,7 +480,7 @@ public class VM {
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
                                 
-                                if(Jslt2Util.isTrue(k)) {
+                                if(k != null) {
                                     obj.set(k.asText(), v);  
                                 }
                             }                            

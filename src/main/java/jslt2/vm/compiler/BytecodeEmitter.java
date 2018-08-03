@@ -713,6 +713,10 @@ public class BytecodeEmitter {
         instr(LOAD_NULL);
         incrementMaxstackSize();
     }
+    public void loadjnull() {
+        instr(LOAD_JNULL);
+        incrementMaxstackSize();
+    }
     public void loadtrue() {
         instr(LOAD_TRUE);
         incrementMaxstackSize();
