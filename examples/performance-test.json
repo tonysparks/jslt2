@@ -16,6 +16,8 @@ def div(array)
 def objects(obj)
     {for ($obj) "key " + .key : "value " + .value} 
 
+let obj = objects(.)
+
 {
     "input" : .,
     "object" : objects(.),
@@ -26,35 +28,35 @@ def objects(obj)
     //"mod"  : mod(.)
     
     ,"sub1"  : sub(.),
-    "sub2"  : objects(.),
+    "sub2"  : objects($obj),
     "sub3"  : sub(.),
-    "sub4"  : objects(.),
+    "sub4"  : objects($obj),
     "sub5"  : sub(.),
-    "sub6"  : objects(.),
+    "sub6"  : objects($obj),
     "sub7"  : sub(.),
-    "sub8"  : objects(.),
+    "sub8"  : objects($obj),
     "sub9"  : sub(.),
-    "sub0"  : objects(.),
+    "sub0"  : objects($obj),
     "sub11"  : sub(.),
-    "sub12"  : objects(.),
+    "sub12"  : objects($obj),
     "sub13"  : sub(.),
-    "sub14"  : objects(.),
+    "sub14"  : objects($obj),
     "sub15"  : sub(.),
-    "sub16"  : objects(.),
+    "sub16"  : objects($obj),
     "sub17"  : sub(.),
-    "sub18"  : objects(.),
+    "sub18"  : objects($obj),
     "sub19"  : sub(.),
-    "sub20"  : objects(.),
+    "sub20"  : objects($obj),
     "sub21"  : sub(.),
-    "sub22"  : objects(.),
+    "sub22"  : objects($obj),
     "sub23"  : sub(.),
-    "sub24"  : objects(.),
+    "sub24"  : objects($obj),
     "sub25"  : sub(.),
-    "sub26"  : objects(.),
+    "sub26"  : objects($obj),
     "sub27"  : sub(.),
-    "sub28"  : objects(.),
+    "sub28"  : objects($obj),
     "sub29"  : sub(.),
-    "sub30"  : objects(.),
+    "sub30"  : objects($obj),
     "sub31"  : sub(.),
-    "sub32"  : objects(.)
+    "sub32"  : objects($obj)
 }     

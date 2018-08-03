@@ -454,6 +454,19 @@ public class VM {
                             }
                         }
                         else if(object.isObject()) {
+//                            ArrayNode array = Jslt2Util.convertObjectToArray(runtime, object);
+//                            int size = array.size();
+//                            for(int ix = 0; ix < size; ix++) {
+//                                JsonNode current = array.get(ix);
+//                                
+//                                executeBytecode(forCode, top, current); 
+//                                JsonNode v = stack[--top];
+//                                JsonNode k = stack[--top];
+//
+//                                if(k != null) {
+//                                    obj.set(k.asText(), v);
+//                                }
+//                            }
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
                             while(it.hasNext()) {
                                 String key = it.next();
@@ -469,7 +482,7 @@ public class VM {
                                 if(k != null) {
                                     obj.set(k.asText(), v);
                                 }
-                            }                                                        
+                            }                                                   
                         }
                         else if(object.isArray()) {            
                             Iterator<JsonNode> it = object.elements();           
