@@ -165,6 +165,14 @@ public class Parser {
         return node(new IfExpr(lets, condition, thenBranch, elseBranch));
     }
     
+    private Expr ifComprehensionExpr() {        
+        consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
+        Expr condition = expression();
+        consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
+        
+        return node(condition);
+    }
+    
     private ElseExpr elseExpr() {
         List<LetExpr> lets = letDeclarations();
         Expr expr = expression();
@@ -398,8 +406,14 @@ public class Parser {
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
         List<LetExpr> lets = letDeclarations();
         Expr valueExpr = expression();
+
+        Expr ifExpr = null;
+        if(check(IF)) {
+            advance();
+            ifExpr = ifComprehensionExpr();
+        }
         
-        return node(new ForArrayExpr(condition, lets, valueExpr));
+        return node(new ForArrayExpr(condition, lets, valueExpr, ifExpr));
     }
     
     private ForObjectExpr forObjectExpr() {
@@ -412,7 +426,13 @@ public class Parser {
         consume(COLON, ErrorCode.MISSING_COLON);
         Expr value = expression();
         
-        return node(new ForObjectExpr(condition, lets, key, value));
+        Expr ifExpr = null;
+        if(check(IF)) {
+            advance();
+            ifExpr = ifComprehensionExpr();
+        }
+        
+        return node(new ForObjectExpr(condition, lets, key, value, ifExpr));
     }
     
     private ArrayExpr array() {

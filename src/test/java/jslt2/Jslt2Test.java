@@ -161,6 +161,42 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testObjectForIf() {
+        Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        //testAgainstSpec(input, "let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } {for ($t) .key : . if(.value = \"\3\") }");
+        String query = "let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } {for ($t) .key : . if(.value = \"3\") }";
+        String query2 = "let t = {\"one\":1, \"two\": 2, \"three\": 3 } {for ($t) .key : . if(.value = 3 or .value = 2) }";
+        
+        JsonNode result = runtime.eval(query, input);
+        System.out.println(result);
+        assertEquals("{\"three\":{\"key\":\"three\",\"value\":\"3\"}}", result.toString());
+        JsonNode result2 = runtime.eval(query2, input);
+        System.out.println(result2);
+        assertEquals("{\"two\":{\"key\":\"two\",\"value\":2},\"three\":{\"key\":\"three\",\"value\":3}}", result2.toString());
+    }
+    
+    @Test
+    public void testArrayForIf() {
+        Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        //testAgainstSpec(input, "let t = {\"one\":\"1\", \"two\": \"2\", \"three\": \"3\" } {for ($t) .key : . if(.value = \"\3\") }");
+        String query = "let t = [\"1\",\"2\",\"3\",\"4\"] [for ($t) . if(. = \"3\") ]";
+        String query2 = "let t = [1,2,3,4,5] [for ($t) . if(. = 3 or . = 2) ]";
+        
+        JsonNode result = runtime.eval(query, input);
+        System.out.println(result);
+        assertEquals("[\"3\"]", result.toString());
+        JsonNode result2 = runtime.eval(query2, input);
+        System.out.println(result2);
+        assertEquals("[2,3]", result2.toString());
+    }
+    
+    @Test
     public void testObject() {
         ObjectNode input = runtime.newObjectNode();
         input.set("name", TextNode.valueOf("tony"));

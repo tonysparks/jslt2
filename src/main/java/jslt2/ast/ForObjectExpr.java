@@ -15,7 +15,7 @@ public class ForObjectExpr extends Expr {
     private List<LetExpr> lets;
     private Expr keyExpr;
     private Expr valueExpr;
-    
+    private Expr ifExpr;
     
 
     /**
@@ -24,11 +24,13 @@ public class ForObjectExpr extends Expr {
      * @param keyExpr
      * @param valueExpr
      */
-    public ForObjectExpr(Expr condition, List<LetExpr> lets, Expr keyExpr, Expr valueExpr) {
+    public ForObjectExpr(Expr condition, List<LetExpr> lets, Expr keyExpr, Expr valueExpr, Expr ifExpr) {
         this.condition = becomeParentOf(condition);
         this.lets = becomeParentOf(lets);
         this.keyExpr = becomeParentOf(keyExpr);
         this.valueExpr = becomeParentOf(valueExpr);
+        
+        this.ifExpr = becomeParentOf(ifExpr);
     }
 
     /**
@@ -59,6 +61,13 @@ public class ForObjectExpr extends Expr {
         return lets;
     }
 
+    /**
+     * @return the ifExpr
+     */
+    public Expr getIfExpr() {
+        return ifExpr;
+    }
+    
 
     @Override
     public void visit(NodeVisitor v) {

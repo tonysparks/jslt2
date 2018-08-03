@@ -240,11 +240,31 @@ public class Compiler {
             asm.forobjdef();                
                 expr.getLets().forEach(let -> let.visit(this));
                 
-                Expr key = expr.getKeyExpr();
-                key.visit(this);
-                
-                Expr value = expr.getValueExpr();
-                value.visit(this);
+                Expr ifExpr = expr.getIfExpr();
+                if(ifExpr != null) {
+                    ifExpr.visit(this);
+                    String skipLabel = asm.ifeq();
+                    
+                    Expr key = expr.getKeyExpr();
+                    key.visit(this);
+                    
+                    Expr value = expr.getValueExpr();
+                    value.visit(this);
+                    String endif = asm.jmp();
+                    
+                    asm.label(skipLabel);
+                    asm.loadnull();
+                    asm.loadnull();
+                    
+                    asm.label(endif);
+                }
+                else {
+                    Expr key = expr.getKeyExpr();
+                    key.visit(this);
+                    
+                    Expr value = expr.getValueExpr();
+                    value.visit(this);
+                }
             asm.end();
         }
     
@@ -257,8 +277,26 @@ public class Compiler {
             asm.forarraydef();
                 expr.getLets().forEach(let -> let.visit(this));
                 
-                Expr value = expr.getValueExpr();
-                value.visit(this);
+                Expr ifExpr = expr.getIfExpr();
+                if(ifExpr != null) {
+                    ifExpr.visit(this);
+                    String skipLabel = asm.ifeq();
+                    
+                    Expr value = expr.getValueExpr();
+                    value.visit(this);
+                    
+                    String endif = asm.jmp();
+                    
+                    asm.label(skipLabel);
+                    asm.loadnull();
+                    asm.loadnull();
+                    
+                    asm.label(endif);
+                }
+                else {
+                    Expr value = expr.getValueExpr();
+                    value.visit(this);
+                }
             asm.end();
         }
     

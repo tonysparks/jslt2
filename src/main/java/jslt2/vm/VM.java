@@ -384,7 +384,9 @@ public class VM {
                             
                             executeBytecode(forCode, top, current); 
                             JsonNode n = stack[--top];
-                            array.add(n);
+                            if(Jslt2Util.isTrue(n)) {
+                                array.add(n);
+                            }
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
@@ -397,7 +399,9 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
-                                array.add(n);
+                                if(Jslt2Util.isTrue(n)) {
+                                    array.add(n);
+                                }
                             }
                         }
                         else if(object.isArray()) {            
@@ -407,7 +411,9 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
-                                array.add(n);
+                                if(Jslt2Util.isTrue(n)) {
+                                    array.add(n);
+                                }
                             }                            
                         }
                         else {
@@ -439,7 +445,9 @@ public class VM {
                             JsonNode v = stack[--top];
                             JsonNode k = stack[--top];
                             
-                            obj.set(k.asText(), v);
+                            if(Jslt2Util.isTrue(k)) {
+                                obj.set(k.asText(), v);
+                            }
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
@@ -454,7 +462,9 @@ public class VM {
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
 
-                                obj.set(k.asText(), v);
+                                if(Jslt2Util.isTrue(k)) {
+                                    obj.set(k.asText(), v);
+                                }
                             }                                                        
                         }
                         else if(object.isArray()) {            
@@ -466,7 +476,9 @@ public class VM {
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
                                 
-                                obj.set(k.asText(), v);                                
+                                if(Jslt2Util.isTrue(k)) {
+                                    obj.set(k.asText(), v);  
+                                }
                             }                            
                         }
                         else {
