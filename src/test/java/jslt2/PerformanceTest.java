@@ -114,6 +114,24 @@ public class PerformanceTest {
         System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
+    @Test
+    public void testQueens() throws Exception {
+        String query = new String(Files.readAllBytes(new File("./examples/queens.json").toPath()));
+        
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(false)
+                .includeNulls(true)
+                .build();
+        
+        Template template = runtime.compile(query);
+        Expression expr = Parser.compileString(query);
+     
+        Tuple<Long, JsonNode> jsltResult = runJslt(runtime.newArrayNode(5), expr);        
+        Tuple<Long, JsonNode> jslt2Result = runJslt2(runtime.newArrayNode(5), template);
+                
+        System.out.printf("Total JSLT-AST total time: %10d nsec. \n", jsltResult.getFirst());
+        System.out.printf("Total JSLT-VM  total time: %10d nsec. \n", jslt2Result.getFirst());
+    }
     
     @Test
     public void testFunctionCallsNoValidation() throws Exception {
