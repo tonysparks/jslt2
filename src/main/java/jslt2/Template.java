@@ -39,7 +39,8 @@ public class Template {
      * @return the {@link JsonNode} result
      */
     public JsonNode eval(JsonNode input) {
-        return this.vm.execute(this.bytecode, input);
+    //    return this.vm.execute(this.bytecode, input);
+        return new VM(this.runtime).execute(this.bytecode, input);
     }
 
     /**

@@ -50,8 +50,9 @@ public class Jslt2 {
      */
     public static void main(String[] args) throws Exception {
         // TODO: Implement proper command line arguments
-        if(args.length == 0) {
+        if(args.length < 2) {
             System.out.println("<usage> jslt2 [options] ");
+            return;
         }
         
         Jslt2 runtime = Jslt2.builder().enableDebugMode(true).build();

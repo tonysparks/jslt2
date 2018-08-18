@@ -1,0 +1,30 @@
+{
+    "run": {
+        "default": "",
+        "items": [
+            {
+                "name": "jslt2",
+                "projectName": "jslt2",
+                "workingDirectory": "c:\\Users\\chq-tonys\\workspace\\jslt2",
+                "args": [],
+                "vmargs": [],
+                "env": {},
+                "preLaunchTask": ""
+            }
+        ]
+    },
+    "debug": {
+        "default": "",
+        "items": [
+            {
+                "name": "jslt2",
+                "projectName": "jslt2",
+                "workingDirectory": "c:\\Users\\chq-tonys\\workspace\\jslt2",
+                "args": [],
+                "vmargs": [],
+                "env": {},
+                "preLaunchTask": ""
+            }
+        ]
+    }
+}

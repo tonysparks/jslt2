@@ -6,6 +6,7 @@ package jslt2;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
@@ -55,9 +56,13 @@ public class Jslt2Test {
     public void tearDown() throws Exception {
     }
 
-    
     @Ignore
     private void testAgainstSpec(JsonNode input, String query) {
+        testAgainstSpec(input, query, true, null);
+    }
+
+    @Ignore
+    private void testAgainstSpec(JsonNode input, String query, boolean validateAgainstSpec, String expectedResult) {
         File baseDir = new File("./examples");
         
         Expression jslt = new Parser(new StringReader(query))
@@ -80,13 +85,23 @@ public class Jslt2Test {
                 })
                 .compile();
         
-        JsonNode jsltResult = jslt.apply(input);
+        JsonNode jsltResult = (validateAgainstSpec) ? jslt.apply(input) : null;
         JsonNode result = runtime.eval(query, input);
         
         System.out.println("Mine: " + result);
         System.out.println("Jslt: " + jsltResult);
         
-        assertEquals(jsltResult, result);
+        if(validateAgainstSpec) {
+            assertEquals(jsltResult, result);
+        }
+        else {
+            try {
+				assertEquals(runtime.getObjectMapper().readTree(expectedResult), result);
+            } 
+            catch (IOException e) {
+				fail();
+			}
+        }
     }
     
     @Test
@@ -141,6 +156,9 @@ public class Jslt2Test {
         
         testAgainstSpec(input, "def name(x) \"yy\" { \"x\": name(.) }");
         testAgainstSpec(input, "def name(x) $x { \"x\": name(.) }");
+    //    testAgainstSpec(input, "let v = \" sparks\" def name(x) $x.name+$v { \"x\": name(.) }");
+        testAgainstSpec(input, "let v = \" sparks\" def name(x) $x.name+$v { \"x\": name(.) }", false, "{\"x\":\"tony sparks\"}");
+        testAgainstSpec(input, "def name(x) $x.name+$v let v = \" sparks\" { \"x\": name(.) }", false, "{\"x\":\"tony sparks\"}");
     }
     
 

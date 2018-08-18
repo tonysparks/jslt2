@@ -497,11 +497,10 @@ public class VM {
                     }
                     case FUNC_DEF: {
                         int innerIndex = ARGx(i);
-                        Bytecode funcCode = inner[innerIndex].clone();
+                        Bytecode funcCode = inner[innerIndex];//.clone();
                         
                         JsonNode[] outers = funcCode.outers;                            
                         pc += assignOuters(outers, calleeouters, funcCode.numOuters, base, pc, code);
-                        
                         break;
                     }
                     
@@ -711,11 +710,11 @@ public class VM {
     }
     
     private void exitCall(Bytecode code, int base) {
-        final int stackSize = Math.min(stack.length, base+code.maxstacksize);
+        // final int stackSize = Math.min(stack.length, base+code.maxstacksize);
 
-        for(int j=base;j<stackSize;j++) {
-            stack[j] = null;
-        }                
+        // for(int j=base;j<stackSize;j++) {
+        //     stack[j] = null;
+        // }                
 
         top = base;            
     }
