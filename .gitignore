@@ -2,3 +2,7 @@
 /.settings/
 /.classpath
 /.project
+dependency-reduced-pom.xml
+.vscode/launch.json
+.vscode/launch.test.json
+.vscode/settings.json
