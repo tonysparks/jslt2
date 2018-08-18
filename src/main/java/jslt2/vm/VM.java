@@ -186,7 +186,7 @@ public class VM {
                             }
                         }
                         else if(obj.isTextual()) {
-                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
+                            value = new TextNode("" + obj.asText().charAt(index.asInt()));
                         }
                         else {
                             value = NullNode.instance;
@@ -216,7 +216,7 @@ public class VM {
                             }
                         }
                         else if(obj.isTextual()) {
-                            value = TextNode.valueOf("" + obj.asText().charAt(index.asInt()));
+                            value = new TextNode("" + obj.asText().charAt(index.asInt()));
                         }
                         else {
                             value = NullNode.instance;
@@ -263,7 +263,7 @@ public class VM {
                                 error("The end range (" + endIndex + ") is smaller than the start range (" + startIndex + ")");
                             }
                                                                                     
-                            stack[top++] = TextNode.valueOf(text.substring(startIndex, endIndex));
+                            stack[top++] = new TextNode(text.substring(startIndex, endIndex));
                         }
                         else {
                             stack[top++] = NullNode.instance;
@@ -398,7 +398,7 @@ public class VM {
                                 String key = it.next();
                                 
                                 ObjectNode current = runtime.newObjectNode();
-                                current.set("key", TextNode.valueOf(key));
+                                current.set("key", new TextNode(key));
                                 current.set("value", object.get(key));
                                 
                                 executeBytecode(forCode, top, current); 
@@ -409,16 +409,18 @@ public class VM {
                             }
                         }
                         else if(object.isArray()) {            
-                            Iterator<JsonNode> it = object.elements();           
-                            while(it.hasNext()) {
-                                JsonNode current = it.next();
+                            ArrayNode a = (ArrayNode)object;
+                            int size = a.size();
+                            for(int ix = 0; ix < size; ix++) {
+                                JsonNode current = a.get(ix);
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
+                              
                                 if(n != null) {
-                                    array.add(n);
+                                    array.add(n);  
                                 }
-                            }                            
+                            }
                         }
                         else {
                             throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
@@ -459,7 +461,7 @@ public class VM {
                                 String key = it.next();
                                 
                                 ObjectNode current = runtime.newObjectNode();
-                                current.set("key", TextNode.valueOf(key));
+                                current.set("key", new TextNode(key));
                                 current.set("value", object.get(key));
                                 
                                 executeBytecode(forCode, top, current); 
@@ -469,21 +471,21 @@ public class VM {
                                 if(k != null) {
                                     obj.set(k.asText(), v);
                                 }
-                            }                                                        
+                            }                                                   
                         }
                         else if(object.isArray()) {            
-                            Iterator<JsonNode> it = object.elements();           
-                            while(it.hasNext()) {
-                                JsonNode current = it.next();
-                                
+                            ArrayNode array = (ArrayNode)object;
+                            int size = array.size();
+                            for(int ix = 0; ix < size; ix++) {
+                                JsonNode current = array.get(ix);
                                 executeBytecode(forCode, top, current); 
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
-                                
+                              
                                 if(k != null) {
                                     obj.set(k.asText(), v);  
                                 }
-                            }                            
+                            }
                         }
                         else {
                             throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
@@ -544,8 +546,8 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isTextual() || r.isTextual()) {
-                            c = TextNode.valueOf(Jslt2Util.toString(l, false) + 
-                                                 Jslt2Util.toString(r, false)); 
+                            c = new TextNode(Jslt2Util.toString(l, false) + 
+                                             Jslt2Util.toString(r, false)); 
                         }
                         else if(l.isArray() && r.isArray()) {
                             ArrayNode a = (ArrayNode)l;
@@ -567,10 +569,10 @@ public class VM {
                         }
                         else {
                             if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                                c = LongNode.valueOf(l.asLong() + r.asLong());
+                                c = new LongNode(l.asLong() + r.asLong());
                             }
                             else {
-                                c = DoubleNode.valueOf(l.asDouble() + r.asDouble());
+                                c = new DoubleNode(l.asDouble() + r.asDouble());
                             }
                         }
                         stack[top++] = c;
@@ -582,10 +584,10 @@ public class VM {
                         
                         JsonNode c = null;
                         if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                            c = LongNode.valueOf(l.asLong() - r.asLong());
+                            c = new LongNode(l.asLong() - r.asLong());
                         }
                         else {
-                            c = DoubleNode.valueOf(l.asDouble() - r.asDouble());
+                            c = new DoubleNode(l.asDouble() - r.asDouble());
                         }
                         stack[top++] = c;
                         break;
@@ -595,10 +597,10 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                            c = LongNode.valueOf(l.asLong() * r.asLong());
+                            c = new LongNode(l.asLong() * r.asLong());
                         }
                         else {
-                            c = DoubleNode.valueOf(l.asDouble() * r.asDouble());
+                            c = new DoubleNode(l.asDouble() * r.asDouble());
                         }
                         stack[top++] = c;
                         break;
@@ -608,10 +610,10 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                            c = LongNode.valueOf(l.asLong() / r.asLong());
+                            c = new LongNode(l.asLong() / r.asLong());
                         }
                         else {
-                            c = DoubleNode.valueOf(l.asDouble() / r.asDouble());
+                            c = new DoubleNode(l.asDouble() / r.asDouble());
                         }
                         stack[top++] = c;
                         break;
@@ -621,10 +623,10 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                            c = LongNode.valueOf(l.asLong() % r.asLong());
+                            c = new LongNode(l.asLong() % r.asLong());
                         }
                         else {
-                            c = DoubleNode.valueOf(l.asDouble() % r.asDouble());
+                            c = new DoubleNode(l.asDouble() % r.asDouble());
                         }
                         stack[top++] = c;
                         break;
@@ -633,10 +635,10 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isIntegralNumber()) {
-                            c = LongNode.valueOf(-l.asLong());
+                            c = new LongNode(-l.asLong());
                         }
                         else {
-                            c = DoubleNode.valueOf(-l.asDouble());
+                            c = new DoubleNode(-l.asDouble());
                         }
                         stack[top++] = c;
                         break;
