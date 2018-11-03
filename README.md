@@ -11,7 +11,7 @@ Given input:
 	"team" : "Green Bay Packers"
 }
 ```
-and given the JLST script:
+and given the JSLT script:
 
 ```
 {
