@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Function;
+import com.schibsted.spt.data.jslt.FunctionUtils;
 import com.schibsted.spt.data.jslt.JsltException;
 import com.schibsted.spt.data.jslt.Parser;
 import com.schibsted.spt.data.jslt.ResourceResolver;
@@ -78,6 +80,38 @@ public class Jslt2Test {
                         }
                     }
                 })
+                .withFunctions(Arrays.asList(new Function() {                    
+                    @Override
+                    public JsonNode call(JsonNode input, JsonNode[] args) {
+                        if(args == null || args.length < 1) return NullNode.instance;
+                        JsonNode node = args[0];
+                        
+                        StringBuilder sb = new StringBuilder();
+                        for(int i = 0; i < args.length; i++) {
+                            if(i > 0) sb.append(" ");
+                            sb.append(args[i]);
+                        }
+                        
+                        System.out.println(sb);
+                        
+                        return node;
+                    }
+                    
+                    @Override
+                    public int getMinArguments() {                    
+                        return 0;
+                    }
+                    
+                    @Override
+                    public int getMaxArguments() {                    
+                        return 1024;
+                    }
+                    
+                    @Override
+                    public String getName() {                    
+                        return "print";
+                    }
+                }))
                 .compile();
         
         JsonNode jsltResult = jslt.apply(input);
@@ -88,6 +122,28 @@ public class Jslt2Test {
         
         assertEquals(jsltResult, result);
     }
+    
+    @Test
+    public void testExamples() throws Exception {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("Brett Favre"));
+        input.set("team", TextNode.valueOf("Green Bay Packers"));
+        
+        String query = new String(Files.readAllBytes(new File("./examples/example1.json").toPath()));
+        
+        testAgainstSpec(input, query);        
+    }
+    
+    @Test
+    public void testMacro() throws Exception {
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        
+        String query = new String(Files.readAllBytes(new File("./examples/macros.json").toPath()));
+        
+        testAgainstSpec(input, query);        
+    }
+    
     
     @Test
     public void testImport() throws Exception {

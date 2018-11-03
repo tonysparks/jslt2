@@ -17,14 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.LongNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import jslt2.util.Jslt2Util;
 
@@ -461,6 +454,21 @@ public class Jslt2StdLibrary {
             System.out.println(sb);
             
             return node;
+        });
+        
+        
+        // Macro
+        
+        runtime.addMacro("fallback", (vm, input, args) -> {
+            
+            for(int i = 0; i < args.size(); i++) {
+                JsonNode value = vm.execute(args.get(i), input);
+                if(Jslt2Util.isValue(value)) {
+                    return value;
+                }
+            }
+            
+            return NullNode.instance;
         });
     }
 

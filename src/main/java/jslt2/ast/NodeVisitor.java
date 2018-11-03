@@ -24,6 +24,7 @@ public interface NodeVisitor {
     void visit(LetExpr expr);
     void visit(DefExpr expr);
     void visit(FuncCallExpr expr);
+    void visit(MacroCallExpr expr);
     
     void visit(IdentifierExpr expr);
     void visit(VariableExpr expr);

@@ -409,9 +409,9 @@ public class Opcodes {
         ARRAY_SLICE  = 27,            /*      */
         
         /* method invocation */
-        INVOKE      = 28,             /* ARG1, ARG2 */          
-        USER_INVOKE = 29,             /* ARG1, ARG2 */
-        
+        INVOKE       = 28,            /* ARG1, ARG2 */          
+        USER_INVOKE  = 29,            /* ARG1, ARG2 */
+        MACRO_INVOKE = 44,            /* ARG1, ARG2 */
 
         /* arithmetic operators */
         ADD = 30,                     /*      */

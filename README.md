@@ -1,10 +1,36 @@
 # jslt2
-VM based implementation of [JSLT](https://github.com/schibsted/jslt)
+VM based implementation of [JSLT](https://github.com/schibsted/jslt) - which is a JSON query and transformation language.
+
+# Example Translations
+
+Given input:
+
+```json
+{
+	"name" : "Brett Favre",
+	"team" : "Green Bay Packers"
+}
+```
+and given the JSLT script:
+
+```
+{
+	"player" : .name + " played for " + .team
+}
+```
+outputs:
+
+```json
+{
+	"player" : "Brett Favre played for Green Bay Packers"
+}
+```
 
 # Implemented
 * All language features 
 * The standard library 
-* The JSLT test suite - 98% of tests pass with the exception of the mentioned differences 
+* Macro support
+* The JSLT test suite - 99% of tests pass with the exception of the mentioned differences 
 
 
 # How to use
@@ -37,12 +63,13 @@ JsonNode result2 = template.eval(input2);
 
 ```
 
+
+
 # Differences between JSLT and JSLT2
 * Allow for including null or empty nodes - which gives a nice performance boost (~5%):
 ```java
 Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
 ```
 * Currently no function parameter checks - this is considered a bug in JSLT2 
-* Allows block comments via the `/*` and `*/` syntax
-* There is no `fallback` macro 
+* Allows block comments via the `/*` and `*/` syntax 
 * Performance has been interesting.  I've tested on AMD Phenom II and Intel i5; on Intel, JSLT2 can be roughly 5% to 10% faster; and on AMD, JSLT2 is consistently 5%-10% *slower*.  To date, depending on the template the original JSLT code will be generally slightly faster than JSLT2 code.

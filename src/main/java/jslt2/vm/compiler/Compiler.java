@@ -42,7 +42,7 @@ public class Compiler {
     }
     
     
-    private class BytecodeEmitterNodeVisitor implements NodeVisitor {
+    private class BytecodeEmitterNodeVisitor implements NodeVisitor {        
         private BytecodeEmitter asm;
         private Stack<String> moduleStack;
         private Stack<String> libraryStack;
@@ -330,6 +330,26 @@ public class Compiler {
                 expr.getExpr().visit(this);
             asm.end();
         }
+        
+        @Override
+        public void visit(MacroCallExpr expr) {
+            asm.line(expr.getLineNumber());
+    
+            List<Expr> arguments = expr.getArguments();
+            int numberOfArgs = arguments.size();
+            
+            for(Expr arg : arguments) {
+                asm.funcdef(0);
+                arg.visit(this);
+                asm.end();
+            }
+            
+            int bytecodeIndex = asm.getBytecodeIndex();
+            String functionName = expr.getObject().getIdentifier();
+            
+            asm.addAndloadconst(bytecodeIndex);            
+            asm.macroinvoke(numberOfArgs, functionName);            
+        }
     
         @Override
         public void visit(FuncCallExpr expr) {
@@ -422,7 +442,7 @@ public class Compiler {
             
             try {
                 Scanner scanner = new Scanner(new Source(runtime.getResolver().resolve(fileName)));
-                Parser parser = new Parser(scanner);
+                Parser parser = new Parser(runtime, scanner);
                 
                 this.libraryStack.push(fileName);
                 this.moduleStack.push(expr.getAlias());

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 
 import static jslt2.parser.tokens.TokenType.*;
 
+import jslt2.Jslt2;
 import jslt2.ast.*;
 import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
@@ -21,7 +22,8 @@ import jslt2.util.Tuple;
  * @author Tony
  *
  */
-public class Parser {   
+public class Parser {
+    private final Jslt2 runtime;
     private final Scanner scanner;
     private final List<Token> tokens;
     private int current;
@@ -32,7 +34,8 @@ public class Parser {
      * @param scanner
      *            the scanner to be used with this parser.
      */
-    public Parser(Scanner scanner) {
+    public Parser(Jslt2 runtime, Scanner scanner) {
+        this.runtime = runtime;
         this.scanner = scanner;
         this.tokens = scanner.getTokens();
         
@@ -390,7 +393,13 @@ public class Parser {
     }     
     
     private Expr finishFunctionCall(Expr callee) {
-        List<Expr> arguments = arguments();        
+        List<Expr> arguments = arguments();   
+        if(callee instanceof IdentifierExpr) {
+            IdentifierExpr idExpr = (IdentifierExpr)callee;
+            if(this.runtime.hasMacro(idExpr.getIdentifier())) {
+                return node(new MacroCallExpr(idExpr, arguments));        
+            }
+        }
         return node(new FuncCallExpr(callee, arguments));
     }
     
