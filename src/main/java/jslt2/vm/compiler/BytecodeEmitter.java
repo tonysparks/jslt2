@@ -840,6 +840,12 @@ public class BytecodeEmitter {
         return labelName;
     }
     
+    public void macroinvoke(int numberOfArgs, String macroName) {
+        int index = addConst(TextNode.valueOf(macroName));
+        instr2(MACRO_INVOKE, numberOfArgs, index);          
+        decrementMaxstackSize(numberOfArgs-1);
+    }
+    
     public void invoke(int numberOfArgs, int bytecodeIndex) {
         instr2(INVOKE, numberOfArgs, bytecodeIndex);          
         decrementMaxstackSize(numberOfArgs-1);

@@ -6,7 +6,9 @@ package jslt2.vm;
 import static jslt2.vm.Opcodes.*;
 import static jslt2.vm.Bytecode.GLOBAL_FLAG;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,6 +23,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.Jslt2Function;
+import jslt2.Jslt2MacroFunction;
 import jslt2.util.Jslt2Util;
 import jslt2.util.Stack;
 
@@ -535,6 +538,32 @@ public class VM {
                         }
                         
                         JsonNode c = function.execute(input, args);
+                        
+                        stack[top++] = c;
+                        break;
+                    }
+                    case MACRO_INVOKE: {
+                        int nargs = ARG1(i);
+                        int constIndex = ARG2(i);
+                        
+                        int endIndex = stack[--top].asInt();
+                        JsonNode name = constants[constIndex];
+                        
+                        int startIndex = endIndex - nargs;
+                        
+                        
+                        List<Bytecode> args = new ArrayList<>(nargs);
+                        for(int ix = startIndex; ix < endIndex; ix++) {
+                            args.add(inner[ix]);
+                        }
+                        
+                        //JsonNode[] args = readArrayFromStack(nargs, stack);
+                        Jslt2MacroFunction macro = this.runtime.getMacro(name.asText());
+                        if(macro == null) {
+                            error("No macro defined with the name '" + name.asText() + "'");
+                        }
+                        
+                        JsonNode c = macro.execute(this, input, args);
                         
                         stack[top++] = c;
                         break;

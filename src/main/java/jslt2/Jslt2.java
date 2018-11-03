@@ -148,6 +148,7 @@ public class Jslt2 {
     
     private Compiler compiler;        
     private Map<String, Jslt2Function> userFunctions;
+    private Map<String, Jslt2MacroFunction> macroFunctions;
     
     /**
      * @param objectMapper
@@ -172,6 +173,7 @@ public class Jslt2 {
         
         this.compiler = new Compiler(this);        
         this.userFunctions = new HashMap<>();
+        this.macroFunctions = new HashMap<>();
         
         new Jslt2StdLibrary(this);
     }
@@ -231,6 +233,23 @@ public class Jslt2 {
         return this.userFunctions.containsKey(name);
     }
     
+    public void addMacro(Jslt2MacroFunction macro) {
+        this.macroFunctions.put(macro.name(), macro);
+    }
+    
+    public Jslt2 addMacro(String name, Jslt2MacroFunction macro) {
+        this.macroFunctions.put(name, macro);
+        return this;
+    }
+    
+    public Jslt2MacroFunction getMacro(String name) {
+        return this.macroFunctions.get(name);
+    }
+    
+    public boolean hasMacro(String name) {
+        return this.macroFunctions.containsKey(name);
+    }
+    
     public ObjectNode newObjectNode() {
         return new ObjectNode(this.objectMapper.getNodeFactory());
     }
@@ -269,7 +288,7 @@ public class Jslt2 {
     public JsonNode eval(Reader reader, JsonNode input) {
         Source source = new Source(reader);
         Scanner scanner = new Scanner(source);
-        Parser parser = new Parser(scanner);
+        Parser parser = new Parser(this, scanner);
         
         Bytecode code = this.compiler.compile(parser.parseProgram());
         return eval(code, input);
@@ -334,7 +353,7 @@ public class Jslt2 {
     public Template compile(Reader reader) {
         Source source = new Source(reader);
         Scanner scanner = new Scanner(source);
-        Parser parser = new Parser(scanner);
+        Parser parser = new Parser(this, scanner);
         
         Bytecode code = this.compiler.compile(parser.parseProgram());
         return new Template(this, code);

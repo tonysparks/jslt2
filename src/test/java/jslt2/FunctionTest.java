@@ -427,7 +427,7 @@ public class FunctionTest extends TestBase {
     /*
      * TODO: No fallback macro
      */
-    @Test @Ignore
+    @Test 
     public void testFallbackNull() {
       check("{}", "fallback(null, true)", "true");
     }
@@ -435,7 +435,7 @@ public class FunctionTest extends TestBase {
     /*
      * TODO: No fallback macro
      */
-    @Test @Ignore
+    @Test 
     public void testFallbackTrue() {
       check("{}", "fallback(true, null)", "true");
     }
@@ -443,15 +443,12 @@ public class FunctionTest extends TestBase {
     /*
      * TODO: No fallback macro
      */
-    @Test @Ignore 
+    @Test 
     public void testFallbackThree() {
       check("{}", "fallback(.foo, .bar, \"heyho\")", "\"heyho\"");
     }
 
-    /*
-     * TODO: No fallback macro
-     */
-    @Test @Ignore
+    @Test 
     public void testFallbackIsAMagicMacro() {
       // if fallback were a function evaluation of the second parameter
       // would fail. however, it's a macro, and since the first

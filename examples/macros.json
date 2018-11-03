@@ -1,0 +1,8 @@
+
+def x(arg)
+	print("x" + $arg)
+	
+def y(arg)
+	print("y" + $arg)
+
+fallback(if (false) true else null, print("hi"), x(1), y(1))
