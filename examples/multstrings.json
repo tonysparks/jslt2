@@ -1,0 +1,7 @@
+let x = """
+    hello
+    there
+    "in quotes"
+"""
+
+print($x)

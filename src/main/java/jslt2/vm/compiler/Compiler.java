@@ -9,6 +9,7 @@ import java.util.List;
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.ast.*;
+import jslt2.ast.Expr.*;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -42,7 +43,7 @@ public class Compiler {
     }
     
     
-    private class BytecodeEmitterNodeVisitor implements NodeVisitor {        
+    private class BytecodeEmitterNodeVisitor implements ExprVisitor {        
         private BytecodeEmitter asm;
         private Stack<String> moduleStack;
         private Stack<String> libraryStack;
@@ -69,8 +70,8 @@ public class Compiler {
         private void pushInputContext(Expr expr) {
             StringBuilder sb = new StringBuilder();
             
-            Node child = expr;
-            Node parent = expr.getParentNode();
+            Expr child = expr;
+            Expr parent = expr.parentNode;
             if(parent instanceof ArrayExpr) {
                 throw new Jslt2Exception("Object matching not allowed in an array");
             }
@@ -80,8 +81,8 @@ public class Compiler {
             while(parent != null && count < 2) {
                 if(parent instanceof ObjectExpr) {
                     ObjectExpr objExpr = (ObjectExpr) parent;
-                    if(objExpr.getForObjectExpr() == null) {
-                        List<Tuple<Expr, Expr>> fields = objExpr.getFields();
+                    if(objExpr.forObjectExpr == null) {
+                        List<Tuple<Expr, Expr>> fields = objExpr.fields;
                         for(Tuple<Expr, Expr> field : fields) {
                             if(field.getSecond() == child) {
                                 sb.append(field.getFirst()).append(":");
@@ -93,7 +94,7 @@ public class Compiler {
                 }
                 
                 child = parent;
-                parent = parent.getParentNode();
+                parent = parent.parentNode;
                 count++;
             }
             
@@ -102,16 +103,16 @@ public class Compiler {
         
         @Override
         public void visit(NullExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
             asm.loadnull();
         }
     
         @Override
         public void visit(BooleanExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            if(expr.getBoolean()) {
+            if(expr.bool) {
                 asm.loadtrue();
             }
             else {
@@ -121,39 +122,39 @@ public class Compiler {
     
         @Override
         public void visit(NumberExpr expr) {
-            asm.line(expr.getLineNumber());
-            asm.addAndloadconst(expr.getNumber());        
+            asm.line(expr.lineNumber);
+            asm.addAndloadconst(expr.number);        
         }
     
         @Override
         public void visit(StringExpr expr) {
-            asm.line(expr.getLineNumber());
-            asm.addAndloadconst(expr.getString());
+            asm.line(expr.lineNumber);
+            asm.addAndloadconst(expr.string);
         }
     
         @Override
         public void visit(ObjectExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            expr.getLets().forEach(field -> field.visit(this));
+            expr.lets.forEach(field -> field.visit(this));
             
-            ForObjectExpr forExpr = expr.getForObjectExpr();
+            ForObjectExpr forExpr = expr.forObjectExpr;
             if(forExpr != null) {
                 forExpr.visit(this);
             }
             else {
                 asm.newobj();
-                for(Tuple<Expr, Expr> field : expr.getFields()) {
+                for(Tuple<Expr, Expr> field : expr.fields) {
                     
                     
                     Expr fieldName = field.getFirst();
                     if(fieldName instanceof IdentifierExpr) {
                         field.getSecond().visit(this);
-                        asm.addfieldk(((IdentifierExpr)fieldName).getIdentifier());
+                        asm.addfieldk(((IdentifierExpr)fieldName).identifier);
                     }
                     else if(fieldName instanceof StringExpr) {
                         field.getSecond().visit(this);
-                        asm.addfieldk(((StringExpr)fieldName).getString());
+                        asm.addfieldk(((StringExpr)fieldName).string);
                     }
                     else if(fieldName instanceof MatchExpr) {
                         pushInputContext(expr);
@@ -164,7 +165,7 @@ public class Compiler {
                         asm.end();
                     }
                     else {
-                        throw new Jslt2Exception("Invalid field expression: " + fieldName);
+                        throw new Jslt2Exception("Invalid field expression: '" + fieldName + "'");
                     }
                 }
                 asm.sealobj();
@@ -174,15 +175,15 @@ public class Compiler {
     
         @Override
         public void visit(ArrayExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            ForArrayExpr arrayExpr = expr.getForExpr();
+            ForArrayExpr arrayExpr = expr.forExpr;
             if(arrayExpr != null) {
                 arrayExpr.visit(this);
             }
             else {
                 asm.newarray();
-                List<Expr> elements = expr.getElements();
+                List<Expr> elements = expr.elements;
                 for(Expr e : elements) {
                     e.visit(this);
                     asm.addelement();
@@ -193,23 +194,23 @@ public class Compiler {
     
         @Override
         public void visit(IfExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            Expr cond = expr.getCondition();
+            Expr cond = expr.condition;
             cond.visit(this);
             
             asm.markLexicalScope();
-            expr.getLets().forEach(field -> field.visit(this));
+            expr.lets.forEach(field -> field.visit(this));
             
             String elseLabel = asm.ifeq();
-            Expr then = expr.getThenExpr();
+            Expr then = expr.thenExpr;
             then.visit(this);
             String endif = asm.jmp();
             
             asm.unmarkLexicalScope();
             
             asm.label(elseLabel);
-            Expr elseExpr = expr.getElseExpr();
+            Expr elseExpr = expr.elseExpr;
             if(elseExpr != null) {
                 elseExpr.visit(this);            
             }
@@ -222,33 +223,33 @@ public class Compiler {
         
         @Override
         public void visit(ElseExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
             asm.markLexicalScope();
-            expr.getLets().forEach(field -> field.visit(this));
-            expr.getExpr().visit(this);
+            expr.lets.forEach(field -> field.visit(this));
+            expr.expr.visit(this);
             asm.unmarkLexicalScope();
         }
     
         
         @Override
         public void visit(ForObjectExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            Expr cond = expr.getCondition();
+            Expr cond = expr.condition;
             cond.visit(this);
             asm.forobjdef();                
-                expr.getLets().forEach(let -> let.visit(this));
+                expr.lets.forEach(let -> let.visit(this));
                 
-                Expr ifExpr = expr.getIfExpr();
+                Expr ifExpr = expr.ifExpr;
                 if(ifExpr != null) {
                     ifExpr.visit(this);
                     String skipLabel = asm.ifeq();
                     
-                    Expr key = expr.getKeyExpr();
+                    Expr key = expr.keyExpr;
                     key.visit(this);
                     
-                    Expr value = expr.getValueExpr();
+                    Expr value = expr.valueExpr;
                     value.visit(this);
                     String endif = asm.jmp();
                     
@@ -259,10 +260,10 @@ public class Compiler {
                     asm.label(endif);
                 }
                 else {
-                    Expr key = expr.getKeyExpr();
+                    Expr key = expr.keyExpr;
                     key.visit(this);
                     
-                    Expr value = expr.getValueExpr();
+                    Expr value = expr.valueExpr;
                     value.visit(this);
                 }
             asm.end();
@@ -270,19 +271,19 @@ public class Compiler {
     
         @Override
         public void visit(ForArrayExpr expr) {
-            asm.line(expr.getLineNumber());     
+            asm.line(expr.lineNumber);     
             
-            Expr cond = expr.getCondition();
+            Expr cond = expr.condition;
             cond.visit(this);
             asm.forarraydef();
-                expr.getLets().forEach(let -> let.visit(this));
+                expr.lets.forEach(let -> let.visit(this));
                 
-                Expr ifExpr = expr.getIfExpr();
+                Expr ifExpr = expr.ifExpr;
                 if(ifExpr != null) {
                     ifExpr.visit(this);
                     String skipLabel = asm.ifeq();
                     
-                    Expr value = expr.getValueExpr();
+                    Expr value = expr.valueExpr;
                     value.visit(this);
                     
                     String endif = asm.jmp();
@@ -293,7 +294,7 @@ public class Compiler {
                     asm.label(endif);
                 }
                 else {
-                    Expr value = expr.getValueExpr();
+                    Expr value = expr.valueExpr;
                     value.visit(this);
                 }
             asm.end();
@@ -301,41 +302,41 @@ public class Compiler {
     
         @Override
         public void visit(LetExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            String localVarName = "$" + expr.getIdentifier(); 
+            String localVarName = "$" + expr.identifier; 
             int index = asm.addLocal(localVarName);
-            expr.getValue().visit(this);
+            expr.value.visit(this);
             asm.storelocal(index);
         }
     
         @Override
         public void visit(DefExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            String functionName = expr.getIdentifier();
+            String functionName = expr.identifier;
             if(!this.moduleStack.isEmpty()) {
                 asm.addFunction(this.moduleStack.peek() + ":" + functionName, asm.getBytecodeIndex());
             }
             
             asm.addFunction(functionName, asm.getBytecodeIndex());
             
-            List<String> parameters = expr.getParameters();
+            List<String> parameters = expr.parameters;
             asm.funcdef(parameters.size());        
                 for(String param : parameters) {
                     asm.addLocal("$"+param);
                 }
-                expr.getLets().forEach(let -> let.visit(this));
+                expr.lets.forEach(let -> let.visit(this));
                 
-                expr.getExpr().visit(this);
+                expr.expr.visit(this);
             asm.end();
         }
         
         @Override
         public void visit(MacroCallExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
     
-            List<Expr> arguments = expr.getArguments();
+            List<Expr> arguments = expr.arguments;
             int numberOfArgs = arguments.size();
             
             for(Expr arg : arguments) {
@@ -345,7 +346,7 @@ public class Compiler {
             }
             
             int bytecodeIndex = asm.getBytecodeIndex();
-            String functionName = expr.getObject().getIdentifier();
+            String functionName = expr.object.identifier;
             
             asm.addAndloadconst(bytecodeIndex);            
             asm.macroinvoke(numberOfArgs, functionName);            
@@ -353,9 +354,9 @@ public class Compiler {
     
         @Override
         public void visit(FuncCallExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
     
-            List<Expr> arguments = expr.getArguments();
+            List<Expr> arguments = expr.arguments;
             int numberOfArgs = arguments.size();
             
             for(Expr arg : arguments) {
@@ -365,9 +366,9 @@ public class Compiler {
             int bytecodeIndex = -1;
             String functionName = null;
             
-            Expr identifier = expr.getObject();
+            Expr identifier = expr.object;
             if(identifier instanceof IdentifierExpr) {
-                functionName = ((IdentifierExpr)identifier).getIdentifier();
+                functionName = ((IdentifierExpr)identifier).identifier;
                 bytecodeIndex = asm.getFunction(functionName);
                 if(!runtime.hasFunction(functionName)) {
                     asm.addPendingFunction(functionName);
@@ -385,55 +386,55 @@ public class Compiler {
     
         @Override
         public void visit(IdentifierExpr expr) {
-            asm.line(expr.getLineNumber());
-            asm.getfieldk(expr.getIdentifier()); 
+            asm.line(expr.lineNumber);
+            asm.getfieldk(expr.identifier); 
         }
     
         @Override
         public void visit(VariableExpr expr) {
-            asm.line(expr.getLineNumber());
-            if(!asm.load(expr.getVariable())) {
-                throw new Jslt2Exception(expr.getVariable() + " not defined at line: " + expr.getLineNumber());
+            asm.line(expr.lineNumber);
+            if(!asm.load(expr.variable)) {
+                throw new Jslt2Exception("'" + expr.variable + "' not defined at line: " + expr.lineNumber);
             }
         }
     
         @Override
         public void visit(ArraySliceExpr expr) {
-            asm.line(expr.getLineNumber());
-            expr.getArray().visit(this);
-            expr.getStartExpr().visit(this);
-            expr.getEndExpr().visit(this);
+            asm.line(expr.lineNumber);
+            expr.array.visit(this);
+            expr.startExpr.visit(this);
+            expr.endExpr.visit(this);
             asm.arrayslice();
         }
     
     
         @Override
         public void visit(ArrayIndexExpr expr) {
-            expr.getArray().visit(this);
-            expr.getIndex().visit(this);
+            expr.array.visit(this);
+            expr.index.visit(this);
             asm.getfield();        
         }
         
         @Override
         public void visit(GetExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
-            expr.getObject().visit(this);
-            asm.getfieldk(expr.getIdentifier());        
+            expr.object.visit(this);
+            asm.getfieldk(expr.identifier);        
         }
     
         @Override
         public void visit(GroupExpr expr) {
-            asm.line(expr.getLineNumber());
-            expr.getExpr().visit(this);        
+            asm.line(expr.lineNumber);
+            expr.expr.visit(this);        
         }
         
     
         @Override
         public void visit(ImportExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
     
-            String fileName = expr.getLibrary();
+            String fileName = expr.library;
             fileName = fileName.substring(1, fileName.length() - 1);
             
             if(this.libraryStack.contains(fileName)) {
@@ -445,7 +446,7 @@ public class Compiler {
                 Parser parser = new Parser(runtime, scanner);
                 
                 this.libraryStack.push(fileName);
-                this.moduleStack.push(expr.getAlias());
+                this.moduleStack.push(expr.alias);
                 parser.parseModule().visit(this);
                 this.moduleStack.pop();
                 this.libraryStack.pop();
@@ -458,23 +459,23 @@ public class Compiler {
         @Override
         public void visit(ProgramExpr expr) {
             asm.startGlobal();
-                asm.line(expr.getLineNumber());
-                expr.getImports().forEach(imp -> imp.visit(this));
-                expr.getLets().forEach(let -> let.visit(this));
-                expr.getDefs().forEach(def -> def.visit(this));
+                asm.line(expr.lineNumber);
+                expr.imports.forEach(imp -> imp.visit(this));
+                expr.lets.forEach(let -> let.visit(this));
+                expr.defs.forEach(def -> def.visit(this));
                 
-                expr.getExpr().visit(this);
+                expr.expr.visit(this);
             asm.end();
         }
         
         @Override
         public void visit(ModuleExpr expr) {      
-            asm.line(expr.getLineNumber());
-            expr.getImports().forEach(imp -> imp.visit(this));
-            expr.getLets().forEach(let -> let.visit(this));
-            expr.getDefs().forEach(def -> def.visit(this));   
+            asm.line(expr.lineNumber);
+            expr.imports.forEach(imp -> imp.visit(this));
+            expr.lets.forEach(let -> let.visit(this));
+            expr.defs.forEach(def -> def.visit(this));   
             
-            Expr funcExpr = expr.getExpr();
+            Expr funcExpr = expr.expr;
             if(funcExpr != null) {
                 DefExpr defExpr = new DefExpr(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
                 defExpr.visit(this);
@@ -483,10 +484,10 @@ public class Compiler {
     
         @Override
         public void visit(UnaryExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
     
-            expr.getExpr().visit(this);
-            switch(expr.getOperator()) {
+            expr.expr.visit(this);
+            switch(expr.operator) {
                 case NOT:
                     asm.not();
                     break;
@@ -494,21 +495,21 @@ public class Compiler {
                     asm.neg();
                     break;
                 default:
-                    throw new Jslt2Exception("Invalid unary operator: " + expr.getOperator());
+                    throw new Jslt2Exception("Invalid unary operator: " + expr.operator);
             }
         }
     
         @Override
         public void visit(BinaryExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
     
-            TokenType operator = expr.getOperator();
+            TokenType operator = expr.operator;
             switch(operator) {
                 case AND: {
-                    expr.getLeft().visit(this);
+                    expr.left.visit(this);
                     String escape = asm.ifeq();
                     
-                    expr.getRight().visit(this);
+                    expr.right.visit(this);
                     String endif = asm.jmp();
                     asm.label(escape);
                     asm.loadfalse();
@@ -516,12 +517,12 @@ public class Compiler {
                     break;
                 }
                 case OR: {
-                    expr.getLeft().visit(this);
+                    expr.left.visit(this);
                     String secondConditional = asm.ifeq();
                     String skip = asm.jmp();
                     
                     asm.label(secondConditional);
-                    expr.getRight().visit(this);                            
+                    expr.right.visit(this);                            
                     String end = asm.jmp();
                     
                     asm.label(skip);
@@ -531,8 +532,8 @@ public class Compiler {
                     break;
                 }
                 default: {
-                    expr.getLeft().visit(this);
-                    expr.getRight().visit(this);
+                    expr.left.visit(this);
+                    expr.right.visit(this);
                     
                     visitBinaryExpression(operator);        
                 }
@@ -570,13 +571,13 @@ public class Compiler {
     
         @Override
         public void visit(DotExpr expr) {
-            asm.line(expr.getLineNumber());
+            asm.line(expr.lineNumber);
             
             asm.loadinput();        
-            Expr field = expr.getField();
+            Expr field = expr.field;
             if(field != null) {   
                 if(field instanceof StringExpr) {
-                    String fieldName = ((StringExpr)field).getString();
+                    String fieldName = ((StringExpr)field).string;
                     if(fieldName.startsWith("\"") && fieldName.endsWith("\"") && fieldName.length() > 2) {
                         fieldName = fieldName.substring(1, fieldName.length() - 1);
                     }
@@ -590,18 +591,18 @@ public class Compiler {
     
         @Override
         public void visit(MatchExpr expr) {
-            asm.line(expr.getLineNumber());
-            List<Expr> fields = expr.getFields();
+            asm.line(expr.lineNumber);
+            List<Expr> fields = expr.fields;
             int numFieldsToOmit = 0;
             
             if(fields != null) {
                 numFieldsToOmit = fields.size();
                 for(Expr field : fields) {
                     if(field instanceof IdentifierExpr) {
-                        asm.addAndloadconst(((IdentifierExpr)field).getIdentifier());
+                        asm.addAndloadconst(((IdentifierExpr)field).identifier);
                     }
                     else if(field instanceof StringExpr) {
-                        asm.addAndloadconst(((StringExpr)field).getString());
+                        asm.addAndloadconst(((StringExpr)field).string);
                     }
                     else {
                         throw new Jslt2Exception("Invalid match field expression: " + field);

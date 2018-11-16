@@ -110,8 +110,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result.getFirst();
         }
         
-        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST (1) total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM  (1) total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -129,8 +129,8 @@ public class PerformanceTest {
         Tuple<Long, JsonNode> jsltResult = runJslt(runtime.newArrayNode(5), expr);        
         Tuple<Long, JsonNode> jslt2Result = runJslt2(runtime.newArrayNode(5), template);
                 
-        System.out.printf("Total JSLT-AST total time: %10d nsec. \n", jsltResult.getFirst());
-        System.out.printf("Total JSLT-VM  total time: %10d nsec. \n", jslt2Result.getFirst());
+        System.out.printf("Total JSLT-AST (2) total time: %10d nsec. \n", jsltResult.getFirst());
+        System.out.printf("Total JSLT-VM (2)  total time: %10d nsec. \n", jslt2Result.getFirst());
     }
     
     @Test
@@ -185,8 +185,8 @@ public class PerformanceTest {
             jslt2Sum += jslt2Result;
         }
         
-        System.out.printf("Total JSLT-AST total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
-        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST (3) total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM (3)  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -229,7 +229,7 @@ public class PerformanceTest {
             jslt2Sum += time;
         }
         
-        System.out.printf("Total JSLT-VM  total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
+        System.out.printf("Total JSLT-VM (x) total time: %10d nsec.  Avg. %10d nsec. \n", jslt2Sum, (jslt2Sum  / numberOfIterations));
     }
     
     @Test
@@ -273,7 +273,7 @@ public class PerformanceTest {
             jsltSum  += jsltResult;
         }
         
-        System.out.printf("Total JSLT-AST   total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
+        System.out.printf("Total JSLT-AST (x)total time: %10d nsec.  Avg. %10d nsec. \n", jsltSum, (jsltSum  / numberOfIterations));
     }
     
 }

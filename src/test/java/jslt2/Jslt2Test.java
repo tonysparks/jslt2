@@ -381,6 +381,37 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testMatcher2() throws Exception {
+        String query = "{ \"a\": \"b\" }\r\n" + 
+                "+\r\n" + 
+                "{\r\n" + 
+                "  \"type\" : \"Anonymized-View\",\r\n" + 
+                "  * : .\r\n" + 
+                "} \r\n"  
+                ;
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        JsonNode result = runtime.eval(query, input);
+        System.out.println(result);
+       // testAgainstSpec(input, query);
+        assertEquals("{\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\",\"a\":\"b\"}", result.toString());
+    }
+    
+    @Test
+    public void testMultStrings() throws Exception {
+        ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
+        input.set("name", TextNode.valueOf("tony"));
+                
+        String script = new String(Files.readAllBytes(new File("./examples/multstrings.json").toPath()));        
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+        
+        assertEquals("\n    hello\n    there\n    \"in quotes\"\n", result.asText());
+    }
+    
+    @Test
     public void testJsltByFile() throws Exception {
         ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
         input.set("name", TextNode.valueOf("tony"));

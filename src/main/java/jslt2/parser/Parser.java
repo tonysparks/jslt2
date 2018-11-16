@@ -11,6 +11,7 @@ import static jslt2.parser.tokens.TokenType.*;
 
 import jslt2.Jslt2;
 import jslt2.ast.*;
+import jslt2.ast.Expr.*;
 import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
 import jslt2.util.Tuple;
@@ -67,7 +68,7 @@ public class Parser {
             expr = expression();
         }
         
-        return node(new ModuleExpr(imports, lets, defs, expr));
+        return node(new ModuleExpr(imports, lets, defs, expr).optimize().as());
     }
 
     
@@ -95,7 +96,7 @@ public class Parser {
             expr = expression();
         }
         
-        return node(new ProgramExpr(imports, lets, defs, expr));
+        return node(new ProgramExpr(imports, lets, defs, expr).optimize().as());
     }
         
     private ImportExpr importDeclaration() {
@@ -396,7 +397,7 @@ public class Parser {
         List<Expr> arguments = arguments();   
         if(callee instanceof IdentifierExpr) {
             IdentifierExpr idExpr = (IdentifierExpr)callee;
-            if(this.runtime.hasMacro(idExpr.getIdentifier())) {
+            if(this.runtime.hasMacro(idExpr.identifier)) {
                 return node(new MacroCallExpr(idExpr, arguments));        
             }
         }
@@ -565,10 +566,10 @@ public class Parser {
      * @param node
      * @return the supplied node
      */
-    private <T extends Node> T node(T node) {
+    private <T extends Expr> T node(T node) {
         if(this.startToken != null) {
-            node.setSourceLine(this.startToken.getText());
-            node.setLineNumber(this.startToken.getLineNumber());
+            node.sourceLine = this.startToken.getText();
+            node.lineNumber = this.startToken.getLineNumber();
         }
         return node;
     }
