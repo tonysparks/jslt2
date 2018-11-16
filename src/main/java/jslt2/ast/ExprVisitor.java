@@ -3,11 +3,13 @@
  */
 package jslt2.ast;
 
+import jslt2.ast.Expr.*;
+
 /**
  * @author Tony
  *
  */
-public interface NodeVisitor {
+public interface ExprVisitor {
 
     void visit(NullExpr expr);
     void visit(BooleanExpr expr);
