@@ -321,6 +321,10 @@ public class Opcodes {
                 op = "NOT";
                 break;
             }
+            case IS_TRUE:    {
+                op = "IS_TRUE";
+                break;
+            }
             case EQ:    {
                 op = "EQ";
                 break;
@@ -411,27 +415,28 @@ public class Opcodes {
         /* method invocation */
         INVOKE       = 28,            /* ARG1, ARG2 */          
         USER_INVOKE  = 29,            /* ARG1, ARG2 */
-        MACRO_INVOKE = 44,            /* ARG1, ARG2 */
+        MACRO_INVOKE = 30,            /* ARG1, ARG2 */
 
         /* arithmetic operators */
-        ADD = 30,                     /*      */
-        SUB = 31,                     /*      */
-        MUL = 32,                     /*      */
-        DIV = 33,                     /*      */
-        MOD = 34,                     /*      */
-        NEG = 35,                     /*      */
+        ADD = 31,                     /*      */
+        SUB = 32,                     /*      */
+        MUL = 33,                     /*      */
+        DIV = 34,                     /*      */
+        MOD = 35,                     /*      */
+        NEG = 36,                     /*      */
             
-        NOT = 36,                     /*      */
+        NOT     = 37,                 /*      */
+        IS_TRUE = 38,                 /*      */
         
-        EQ  = 37,                     /*      */
-        NEQ = 38,                     /*      */
-        GT  = 39,                     /*      */
-        GTE = 40,                     /*      */
-        LT  = 41,                     /*      */
-        LTE = 42,                     /*      */
+        EQ  = 39,                     /*      */
+        NEQ = 40,                     /*      */
+        GT  = 41,                     /*      */
+        GTE = 42,                     /*      */
+        LT  = 43,                     /*      */
+        LTE = 44,                     /*      */
         
         /* debug */
-        LINE = 43                     /* ARGx */
+        LINE = 45                     /* ARGx */
         ;
     
     
@@ -488,6 +493,7 @@ public class Opcodes {
         opcodes.put("NEG", NEG);
         
         opcodes.put("NOT", NOT);
+        opcodes.put("IS_TRUE", IS_TRUE);
         
         opcodes.put("EQ", EQ);
         opcodes.put("NEQ", NEQ);

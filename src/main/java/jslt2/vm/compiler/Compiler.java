@@ -510,6 +510,8 @@ public class Compiler {
                     String escape = asm.ifeq();
                     
                     expr.right.visit(this);
+                    asm.istrue();
+               
                     String endif = asm.jmp();
                     asm.label(escape);
                     asm.loadfalse();
@@ -522,7 +524,8 @@ public class Compiler {
                     String skip = asm.jmp();
                     
                     asm.label(secondConditional);
-                    expr.right.visit(this);                            
+                    expr.right.visit(this);
+                    asm.istrue();
                     String end = asm.jmp();
                     
                     asm.label(skip);

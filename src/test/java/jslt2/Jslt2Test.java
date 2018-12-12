@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Function;
-import com.schibsted.spt.data.jslt.FunctionUtils;
 import com.schibsted.spt.data.jslt.JsltException;
 import com.schibsted.spt.data.jslt.Parser;
 import com.schibsted.spt.data.jslt.ResourceResolver;
@@ -178,7 +177,17 @@ public class Jslt2Test {
         input.set("name", TextNode.valueOf("tony"));
         
         testAgainstSpec(input, "{ \"x\": if (.name == \"tony\" and .name != \"t\") true else false }");
-        testAgainstSpec(input, "{ \"x\": if ((.name == \"x\" or .name == \"y\") and false) true else false }");        
+        testAgainstSpec(input, "{ \"x\": if ((.name == \"x\" or .name == \"y\") and false) true else false }");
+        
+
+        testAgainstSpec(input, "{ \"x\": 1 and 1 }");
+        testAgainstSpec(input, "{ \"x\": (1 and .) }");
+        
+        testAgainstSpec(input, "{ \"x\": . and 1 }");
+        testAgainstSpec(input, "{ \"x\": (. and 1) }");
+        
+        testAgainstSpec(input, "{ \"x\": 1 and 0 }");
+        testAgainstSpec(input, "{ \"x\": (. and false) }");
     }
     
     @Test
@@ -188,6 +197,15 @@ public class Jslt2Test {
         
         testAgainstSpec(input, "{ \"x\": if (.name == \"tony\" or .name != \"t\") true else false }");
         testAgainstSpec(input, "{ \"x\": if ((.name == \"x\" and .name == \"y\") or true) true else false }");        
+    
+        testAgainstSpec(input, "{ \"x\": 1 or 1 }");
+        testAgainstSpec(input, "{ \"x\": (1 or .) }");
+    
+        testAgainstSpec(input, "{ \"x\": . or 1 }");
+        testAgainstSpec(input, "{ \"x\": (. or 1) }");
+        
+        testAgainstSpec(input, "{ \"x\": 1 or 0 }");
+        testAgainstSpec(input, "{ \"x\": (. or false) }");
     }
     
     @Test
