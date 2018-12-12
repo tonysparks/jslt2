@@ -891,6 +891,9 @@ public class BytecodeEmitter {
     public void not() {
         instr(NOT);
     }
+    public void istrue() {
+        instr(IS_TRUE);
+    }
         
     public void eq() {
         instr(EQ);

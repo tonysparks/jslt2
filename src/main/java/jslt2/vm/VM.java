@@ -639,7 +639,14 @@ public class VM {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
                         if(l.isIntegralNumber() && r.isIntegralNumber()) {
-                            c = new LongNode(l.asLong() / r.asLong());
+                            long ld = l.longValue();
+                            long rd = r.longValue();
+                            if((ld % rd) == 0) {                               
+                                c = new LongNode(l.asLong() / r.asLong());
+                            }
+                            else {
+                                c = new DoubleNode((double)ld / (double)rd);
+                            }
                         }
                         else {
                             c = new DoubleNode(l.asDouble() / r.asDouble());
@@ -679,7 +686,12 @@ public class VM {
                         stack[top++] = c;
                         break;
                     }
-
+                    case IS_TRUE:    {
+                        JsonNode l = stack[--top];
+                        JsonNode c = BooleanNode.valueOf(Jslt2Util.isTrue(l));
+                        stack[top++] = c;
+                        break;
+                    }
                     case EQ:    {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
