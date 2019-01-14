@@ -5,6 +5,7 @@ package jslt2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import jslt2.util.Jslt2Util;
 import jslt2.vm.Bytecode;
 import jslt2.vm.VM;
 
@@ -39,7 +40,12 @@ public class Template {
      * @return the {@link JsonNode} result
      */
     public JsonNode eval(JsonNode input) {
-        return this.vm.execute(this.bytecode, input);
+        JsonNode result = this.vm.execute(this.bytecode, input);
+        if(!this.runtime.includeNulls()) {
+            result = Jslt2Util.removeNullNodes(result);
+        }
+        
+        return result;
     }
 
     /**
