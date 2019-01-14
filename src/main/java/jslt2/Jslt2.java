@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
@@ -51,13 +52,61 @@ public class Jslt2 {
     public static void main(String[] args) throws Exception {
         // TODO: Implement proper command line arguments
         if(args.length == 0) {
-            System.out.println("<usage> jslt2 [options] ");
+            System.out.println("<usage> jslt2 [options] -template [template file path] -input [input file path] -nulls");
+            return;
         }
         
-        Jslt2 runtime = Jslt2.builder().enableDebugMode(true).build();
-        JsonNode input = runtime.getObjectMapper().readTree(new FileReader(new File(args[1])));
+        String templatePath = null;
+        String inputPath = null;
+        boolean removeNulls = false;
         
-        Template template = runtime.compile(new FileReader(new File(args[0])));
+        for(int i = 0; i < args.length; i++) {
+            final String arg = args[i];
+            switch(arg.toLowerCase()) {
+                case "-template": {
+                    if(i+1 >= args.length) {
+                        System.out.println("template option needs a value");
+                        return;
+                    }
+                    
+                    templatePath = args[i+1];
+                    i++; 
+                    break;
+                }
+                case "-input": {
+                    if(i+1 >= args.length) {
+                        System.out.println("input option needs a value");
+                        return;
+                    }
+                    
+                    inputPath = args[i+1];
+                    i++;
+                    break;
+                }
+                case "-nulls": {
+                    removeNulls = true;
+                    break;
+                }
+            }
+        }
+        
+        if(templatePath == null) {
+            System.out.println("Requires -template option");
+            return;
+        }
+        
+        Reader inputReader = null;
+        if(inputPath != null) {
+            inputReader = new FileReader(inputPath);
+        }
+        else {
+            inputReader = new InputStreamReader(System.in);
+        }
+        
+        Jslt2 runtime = Jslt2.builder().enableDebugMode(true).includeNulls(!removeNulls).build();
+        JsonNode input = runtime.getObjectMapper().readTree(inputReader);
+        
+        Template template = runtime.compile(new FileReader(new File(templatePath)));
         JsonNode result = template.eval(input);
         
         System.out.println(result);        
