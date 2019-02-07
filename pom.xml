@@ -5,7 +5,7 @@
 
 	<groupId>com.github.tonysparks.jslt2</groupId>
 	<artifactId>jslt2</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 
 	<description>
         A Virtual Machine based implementation of the JSLT json transformation language
@@ -149,7 +149,7 @@
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
-						<phase>verify</phase>
+						<phase>deploy</phase>
 						<goals>
 							<goal>sign</goal>
 						</goals>

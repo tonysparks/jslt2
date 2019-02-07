@@ -246,7 +246,14 @@ public class Opcodes {
                 op = "GET_FIELD";
                 break;
             }
-            
+            case GET_ARRAY_ELEMENT: {
+                op = "GET_ARRAY_ELEMENT";
+                break;
+            }
+            case GET_INPUT_FIELDK: {
+                op = "GET_INPUT_FIELDK";
+                break;
+            }
             
             case ADD_FIELD: {
                 op = "ADD_FIELD";
@@ -266,7 +273,7 @@ public class Opcodes {
                 break;
             }
             case FOR_ARRAY_DEF: {
-                op = "FOR_DEF";
+                op = "FOR_ARRAY_DEF";
                 break;
             }
             case FOR_OBJ_DEF: {
@@ -403,40 +410,43 @@ public class Opcodes {
         /* member access */   
         GET_FIELDK = 21,              /* ARGx */
         GET_FIELD  = 22,              /*      */
+
+        GET_ARRAY_ELEMENT = 23,       /*      */ 
+        GET_INPUT_FIELDK  = 24,       /* ARGx */
         
         /* type declarations */
-        FUNC_DEF       = 23,          /* ARGx  */        
-        FOR_ARRAY_DEF  = 24,          /* ARGx  */
-        FOR_OBJ_DEF    = 25,          /* ARGx  */
+        FUNC_DEF       = 25,          /* ARGx  */        
+        FOR_ARRAY_DEF  = 26,          /* ARGx  */
+        FOR_OBJ_DEF    = 27,          /* ARGx  */
         
-        MATCHER      = 26,            /* ARGx  */
-        ARRAY_SLICE  = 27,            /*      */
+        MATCHER      = 28,            /* ARGx  */
+        ARRAY_SLICE  = 29,            /*      */
         
         /* method invocation */
-        INVOKE       = 28,            /* ARG1, ARG2 */          
-        USER_INVOKE  = 29,            /* ARG1, ARG2 */
-        MACRO_INVOKE = 30,            /* ARG1, ARG2 */
+        INVOKE       = 30,            /* ARG1, ARG2 */          
+        USER_INVOKE  = 31,            /* ARG1, ARG2 */
+        MACRO_INVOKE = 32,            /* ARG1, ARG2 */
 
         /* arithmetic operators */
-        ADD = 31,                     /*      */
-        SUB = 32,                     /*      */
-        MUL = 33,                     /*      */
-        DIV = 34,                     /*      */
-        MOD = 35,                     /*      */
-        NEG = 36,                     /*      */
+        ADD = 33,                     /*      */
+        SUB = 34,                     /*      */
+        MUL = 35,                     /*      */
+        DIV = 36,                     /*      */
+        MOD = 37,                     /*      */
+        NEG = 38,                     /*      */
             
-        NOT     = 37,                 /*      */
-        IS_TRUE = 38,                 /*      */
+        NOT     = 39,                 /*      */
+        IS_TRUE = 40,                 /*      */
         
-        EQ  = 39,                     /*      */
-        NEQ = 40,                     /*      */
-        GT  = 41,                     /*      */
-        GTE = 42,                     /*      */
-        LT  = 43,                     /*      */
-        LTE = 44,                     /*      */
+        EQ  = 41,                     /*      */
+        NEQ = 42,                     /*      */
+        GT  = 43,                     /*      */
+        GTE = 44,                     /*      */
+        LT  = 45,                     /*      */
+        LTE = 46,                     /*      */
         
         /* debug */
-        LINE = 45                     /* ARGx */
+        LINE = 47                     /* ARGx */
         ;
     
     
@@ -466,9 +476,11 @@ public class Opcodes {
         
         opcodes.put("NEW_OBJ", NEW_OBJ);
         opcodes.put("SEAL_OBJ", SEAL_OBJ);
-
+        
         opcodes.put("GET_FIELDK", GET_FIELDK);
         opcodes.put("GET_FIELD", GET_FIELD);
+        opcodes.put("GET_ARRAY_ELEMENT", GET_ARRAY_ELEMENT);
+        opcodes.put("GET_INPUT_FIELDK", GET_INPUT_FIELDK);
         
         opcodes.put("ADD_FIELD", ADD_FIELD);
         opcodes.put("ADD_FIELDK", ADD_FIELDK);

@@ -1,0 +1,15 @@
+def exists(e)
+    if($e) true else false
+
+{
+    if (.x) .x else .y : .x + "_test",
+    "y": .y,
+    "z" : {
+      "a" : .a,
+      * : .  
+    },
+    "w": if(exists(.z)) {
+        "u": 2
+    },
+    
+}

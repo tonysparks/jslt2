@@ -24,10 +24,10 @@ import jslt2.vm.compiler.DebugSymbols;
  */
 public class Bytecode {
 
-    private static final String lineFormat2 = "%-12s %-16s \n";
-    private static final String lineFormat3 = "%-12s %-16s \t\t; %s \n";
-    private static final String lineFormat4 = "%-12s %-16s \t\t; %-6s (%s) \n";
-    private static final String lineFormat4Ex = "%-12s %-8s %-6s \t\t; %-6s \n";
+    private static final String lineFormat2 = "%-16s %-16s \n";
+    private static final String lineFormat3 = "%-16s %-16s \t\t; %s \n";
+    private static final String lineFormat4 = "%-16s %-16s \t\t; %-6s (%s) \n";
+    private static final String lineFormat4Ex = "%-16s %-8s %-6s \t\t; %-6s \n";
     private static final String Indent = "  ";
     
     public static final int MAGIC_NUMBER = 0x1E01A;

@@ -339,6 +339,10 @@ public class Parser {
                 }
             }
             else if(match(DOT)) {
+                if(expr instanceof IdentifierExpr) {                   
+                     throw error(previous(), ErrorCode.UNEXPECTED_TOKEN);
+                }
+                
                 Token name = null;
                 if(check(STRING)) {
                     name = consume(STRING, ErrorCode.MISSING_IDENTIFIER);
@@ -346,20 +350,9 @@ public class Parser {
                 else {
                     name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
                 }
+                                
                 expr = node(new GetExpr(expr, name.getText()));
-            }/* TODO - Modules
-            else if(match(COLON)) {
-                IdentifierExpr varExpr = null;
-                if((expr instanceof IdentifierExpr)) {
-                    varExpr = (IdentifierExpr)expr;
-                }
-                else {
-                    throw error(previous(), ErrorCode.INVALID_IMPORT_ACCESS);
-                }
-                
-                Token name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
-                expr = node(new ImportGetExpr(varExpr, name.getText()));
-            }*/
+            }
             else {
                 break;
             }
