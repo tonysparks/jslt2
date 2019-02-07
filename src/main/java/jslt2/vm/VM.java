@@ -37,7 +37,7 @@ public class VM {
     /**
      * Default stack size
      */
-    public static final int DEFAULT_STACKSIZE = 1024;
+    public static final int DEFAULT_STACKSIZE = 128;
     
     private Jslt2 runtime;
     
@@ -172,29 +172,11 @@ public class VM {
                         JsonNode index = constants[iname];
                         JsonNode obj = stack[--top];
 
-                        JsonNode value = null;
-                        if(obj.isArray()) {
-                            if(index.isNumber()) {
-                                value = obj.get(index.asInt());
-                            }
-                            
-                            if(value == null) {
-                                value = NullNode.instance;
-                            }
-                        }
-                        else if(obj.isObject()) {
-                            value = obj.get(index.asText());
-                            if(value == null) {
-                                value = NullNode.instance;
-                            }
-                        }
-                        else if(obj.isTextual()) {
-                            value = new TextNode("" + obj.asText().charAt(index.asInt()));
-                        }
-                        else {
+                        JsonNode value = obj.get(index.asText());
+                        if(value == null) {
                             value = NullNode.instance;
                         }
-                        
+                                                
                         stack[top++] = value;
                         break;
                     }     
@@ -202,32 +184,37 @@ public class VM {
                         JsonNode index = stack[--top];
                         JsonNode obj = stack[--top];
 
-                        JsonNode value = null;
-                        if(obj.isArray()) {
-                            if(index.isNumber()) {
-                                value = obj.get(index.asInt());
-                            }
-                            
-                            if(value == null) {
-                                value = NullNode.instance;
-                            }
-                        }
-                        else if(obj.isObject()) {
-                            value = obj.get(index.asText());
-                            if(value == null) {
-                                value = NullNode.instance;
-                            }
-                        }
-                        else if(obj.isTextual()) {
-                            value = new TextNode("" + obj.asText().charAt(index.asInt()));
-                        }
-                        else {
+                        JsonNode value = obj.get(index.asText());
+                        if(value == null) {
                             value = NullNode.instance;
                         }
                         
                         stack[top++] = value;
                         break;
                     } 
+                    case GET_ARRAY_ELEMENT: {                                     
+                        JsonNode index = stack[--top];
+                        JsonNode obj = stack[--top];
+
+                        JsonNode value = obj.get(index.asInt());
+                        if(value == null) {
+                            value = NullNode.instance;
+                        }
+                        
+                        stack[top++] = value;
+                        break;
+                    }
+                    case GET_INPUT_FIELDK: {
+                        int iname = ARGx(i);                        
+                        JsonNode index = constants[iname];
+                        JsonNode value = input.get(index.asText());
+                        if(value == null) {
+                            value = NullNode.instance;
+                        }
+                                                
+                        stack[top++] = value;
+                        break;
+                    }     
                     case ARRAY_SLICE: {
                         JsonNode end = stack[--top];
                         JsonNode start = stack[--top];
@@ -591,8 +578,8 @@ public class VM {
                             ObjectNode a = (ObjectNode)l;
                             ObjectNode b = (ObjectNode)r;
                             ObjectNode union = this.runtime.newObjectNode();
-                            union.setAll(b);
                             union.setAll(a);
+                            union.setAll(b);
                             
                             c = union;
                         }

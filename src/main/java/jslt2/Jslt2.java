@@ -58,7 +58,10 @@ public class Jslt2 {
         
         String templatePath = null;
         String inputPath = null;
+        
         boolean removeNulls = false;
+        boolean displayBytecode = false;
+        boolean debugMode = false;
         
         for(int i = 0; i < args.length; i++) {
             final String arg = args[i];
@@ -87,6 +90,14 @@ public class Jslt2 {
                     removeNulls = true;
                     break;
                 }
+                case "-bytecode": {
+                    displayBytecode = true;
+                    break;
+                }
+                case "-debug": {
+                    debugMode = true;
+                    break;
+                }
             }
         }
         
@@ -103,11 +114,14 @@ public class Jslt2 {
             inputReader = new InputStreamReader(System.in);
         }
         
-        Jslt2 runtime = Jslt2.builder().enableDebugMode(true).includeNulls(!removeNulls).build();
-        JsonNode input = runtime.getObjectMapper().readTree(inputReader);
+        Jslt2 runtime = Jslt2.builder()
+                .enableDebugMode(debugMode)
+                .includeNulls(!removeNulls)
+                .printBytecode(displayBytecode)
+                .build();
         
-        Template template = runtime.compile(new FileReader(new File(templatePath)));
-        JsonNode result = template.eval(input);
+        JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
+        JsonNode result = runtime.eval(new FileReader(new File(templatePath)), input);
         
         System.out.println(result);        
     }
@@ -131,7 +145,7 @@ public class Jslt2 {
         
         private boolean printBytecode = false;
         
-        private int minStackSize = 1024;
+        private int minStackSize = 128;
         private int maxStackSize = Integer.MAX_VALUE;
         
         private ObjectMapper objectMapper;

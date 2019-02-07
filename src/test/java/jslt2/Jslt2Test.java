@@ -21,6 +21,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -31,6 +32,8 @@ import com.schibsted.spt.data.jslt.Parser;
 import com.schibsted.spt.data.jslt.ResourceResolver;
 
 import static org.junit.Assert.*;
+
+import jslt2.parser.ParseException;
 
 /**
  * @author Tony
@@ -380,6 +383,29 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testObjectConcat() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("c", new IntNode(3));
+                        
+        testAgainstSpec(input, new String(Files.readAllBytes(new File("./examples/concat.json").toPath())));
+    }
+    
+    @Test(expected=ParseException.class)
+    public void testIfThenBug() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("c", new IntNode(3));
+        
+        String script = new String(Files.readAllBytes(new File("./examples/if-then-bug.json").toPath()));
+        //Expression jslt = new Parser(new StringReader(script)).compile();
+        //JsonNode jsltResult = jslt.apply(input);
+        
+        Template template = runtime.compile(script);
+        template.eval(input);
+        
+        //testAgainstSpec(input, new String(Files.readAllBytes(new File("./examples/if-then-bug.json").toPath())));
+    }
+    
+    @Test
     public void testJslt() {
         ObjectNode input = new ObjectNode(new ObjectMapper().getNodeFactory());
         input.set("name", TextNode.valueOf("tony"));
@@ -414,7 +440,7 @@ public class Jslt2Test {
         JsonNode result = runtime.eval(query, input);
         System.out.println(result);
        // testAgainstSpec(input, query);
-        assertEquals("{\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\",\"a\":\"b\"}", result.toString());
+        assertEquals("{\"a\":\"b\",\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\"}", result.toString());
     }
     
     @Test

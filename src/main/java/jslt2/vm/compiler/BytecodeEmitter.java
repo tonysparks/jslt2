@@ -816,7 +816,17 @@ public class BytecodeEmitter {
         instr(GET_FIELD);
         incrementMaxstackSize();
     }
-            
+    
+    public void getarrayelement() {        
+        instr(GET_ARRAY_ELEMENT);
+        incrementMaxstackSize();
+    }
+    
+    public void getinputfieldk(String stringconst) {
+        int index = getConstants().store(stringconst);
+        instrx(GET_INPUT_FIELDK, index);
+    }
+    
     public void funcdef(int numberOfParameters) {
         instrx(FUNC_DEF, getBytecodeIndex());        
         incrementMaxstackSize(numberOfParameters);

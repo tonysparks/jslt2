@@ -145,8 +145,6 @@ public class Compiler {
             else {
                 asm.newobj();
                 for(Tuple<Expr, Expr> field : expr.fields) {
-                    
-                    
                     Expr fieldName = field.getFirst();
                     if(fieldName instanceof IdentifierExpr) {
                         field.getSecond().visit(this);
@@ -159,13 +157,15 @@ public class Compiler {
                     else if(fieldName instanceof MatchExpr) {
                         pushInputContext(expr);
                         fieldName.visit(this);
-                        // this is the body of the matcher function
-                        field.getSecond().visit(this);
                         
+                        // this is the body of the matcher function
+                        field.getSecond().visit(this);                        
                         asm.end();
                     }
-                    else {
-                        throw new Jslt2Exception("Invalid field expression: '" + fieldName + "'");
+                    else {                     
+                        fieldName.visit(this);
+                        field.getSecond().visit(this);
+                        asm.addfield();
                     }
                 }
                 asm.sealobj();
@@ -412,7 +412,7 @@ public class Compiler {
         public void visit(ArrayIndexExpr expr) {
             expr.array.visit(this);
             expr.index.visit(this);
-            asm.getfield();        
+            asm.getarrayelement();        
         }
         
         @Override
@@ -576,7 +576,6 @@ public class Compiler {
         public void visit(DotExpr expr) {
             asm.line(expr.lineNumber);
             
-            asm.loadinput();        
             Expr field = expr.field;
             if(field != null) {   
                 if(field instanceof StringExpr) {
@@ -584,12 +583,20 @@ public class Compiler {
                     if(fieldName.startsWith("\"") && fieldName.endsWith("\"") && fieldName.length() > 2) {
                         fieldName = fieldName.substring(1, fieldName.length() - 1);
                     }
-                    asm.getfieldk(fieldName);
+                    asm.getinputfieldk(fieldName);
+                }
+                else if (field instanceof IdentifierExpr) {
+                    IdentifierExpr iExpr = (IdentifierExpr)field;
+                    asm.getinputfieldk(iExpr.identifier);
                 }
                 else {
+                    asm.loadinput();
                     field.visit(this);
                 }
             }        
+            else {
+                asm.loadinput();
+            }
         }
     
         @Override
