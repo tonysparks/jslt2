@@ -87,7 +87,6 @@ public class BytecodeEmitter {
      */
     private boolean isDebugMode;
     
-    
     /**
      */
     public BytecodeEmitter() {
@@ -798,6 +797,13 @@ public class BytecodeEmitter {
         newLocalScopeEmitter(0);
     }
     
+    public void async() {
+        instrx(ASYNC, getBytecodeIndex());
+        peek().localScope.setAsync(true);
+        decrementMaxstackSize();
+        newLocalScopeEmitter(0);
+    }
+    
     public void matcher(int numOfOmittedFields) {
         instr2(MATCHER, numOfOmittedFields, getBytecodeIndex());
         decrementMaxstackSize(numOfOmittedFields);
@@ -969,6 +975,10 @@ public class BytecodeEmitter {
         if (isDebug()) {
             bytecode.setDebug();
             bytecode.debugSymbols = localScope.getDebugSymbols();
+        }
+        
+        if (this.localScope.hasAsync()) {
+            bytecode.setAsync();
         }
                                         
         if (this.localScope.hasConstants()) {

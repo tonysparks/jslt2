@@ -13,6 +13,10 @@ import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -149,7 +153,8 @@ public class Jslt2 {
         private int maxStackSize = Integer.MAX_VALUE;
         
         private ObjectMapper objectMapper;
-        private ResourceResolver resolver = ResourceResolvers.newClassPathResolver();        
+        private ResourceResolver resolver = ResourceResolvers.newClassPathResolver();       
+        private ExecutorService executorService;
         
         public Builder printBytecode(boolean printBytecode) {
             this.printBytecode = printBytecode;
@@ -186,15 +191,33 @@ public class Jslt2 {
             return this;
         }
         
+        public Builder executorService(ExecutorService executorService) {
+            this.executorService = executorService;
+            return this;
+        }
+        
         public Jslt2 build() {
             return new Jslt2(this.objectMapper != null 
                                 ? this.objectMapper : new ObjectMapper(), 
                              this.resolver,
+                             this.executorService != null 
+                                 ? this.executorService : Executors.newCachedThreadPool(new DaemonThreadFactory()),
                              this.isDebugMode, 
                              this.includeNulls,
                              this.printBytecode,
                              this.minStackSize, 
                              this.maxStackSize);
+        }
+    }
+    
+    static class DaemonThreadFactory implements ThreadFactory {
+        AtomicInteger id = new AtomicInteger(0);
+        
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "jslt-thread-" + id.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
         }
     }
     
@@ -206,7 +229,7 @@ public class Jslt2 {
     private int maxStackSize;
     
     private ObjectMapper objectMapper;
-    
+    private ExecutorService executorService;
     private ResourceResolver resolver;
     
     private Compiler compiler;        
@@ -218,6 +241,7 @@ public class Jslt2 {
      */
     public Jslt2(ObjectMapper objectMapper, 
                  ResourceResolver resolver,
+                 ExecutorService executorService,
                  boolean debugMode,
                  boolean includeNulls,
                  boolean printBytecode,
@@ -226,6 +250,7 @@ public class Jslt2 {
         
         this.objectMapper = objectMapper;
         this.resolver = resolver;
+        this.executorService = executorService;
         
         this.isDebugMode = debugMode;
         this.includeNulls = includeNulls;
@@ -243,7 +268,8 @@ public class Jslt2 {
     
     public Jslt2() {
         this(new ObjectMapper(), 
-             ResourceResolvers.newClassPathResolver(), 
+             ResourceResolvers.newClassPathResolver(),
+             Executors.newCachedThreadPool(new DaemonThreadFactory()),
              false, 
              false,
              false,
@@ -319,6 +345,13 @@ public class Jslt2 {
     
     public ArrayNode newArrayNode(int capacity) {
         return new ArrayNode(this.objectMapper.getNodeFactory(), capacity);
+    }
+    
+    /**
+     * @return the executorService
+     */
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
     
     /**

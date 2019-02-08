@@ -146,12 +146,24 @@ public class Compiler {
                 asm.newobj();
                 for(Tuple<Expr, Expr> field : expr.fields) {
                     Expr fieldName = field.getFirst();
-                    if(fieldName instanceof IdentifierExpr) {
-                        field.getSecond().visit(this);
+                    Expr fieldValue = field.getSecond();
+                    
+                    if(fieldValue instanceof AsyncExpr) {                        
+                        if(fieldName instanceof IdentifierExpr) {                            
+                            asm.addAndloadconst(((IdentifierExpr)fieldName).identifier);
+                        }
+                        else if(fieldName instanceof StringExpr) {                            
+                            asm.addAndloadconst(((StringExpr)fieldName).string);
+                        }    
+                        
+                        fieldValue.visit(this);
+                    }
+                    else if(fieldName instanceof IdentifierExpr) {
+                        fieldValue.visit(this);
                         asm.addfieldk(((IdentifierExpr)fieldName).identifier);
                     }
                     else if(fieldName instanceof StringExpr) {
-                        field.getSecond().visit(this);
+                        fieldValue.visit(this);
                         asm.addfieldk(((StringExpr)fieldName).string);
                     }
                     else if(fieldName instanceof MatchExpr) {
@@ -159,12 +171,12 @@ public class Compiler {
                         fieldName.visit(this);
                         
                         // this is the body of the matcher function
-                        field.getSecond().visit(this);                        
+                        fieldValue.visit(this);                        
                         asm.end();
                     }
                     else {                     
                         fieldName.visit(this);
-                        field.getSecond().visit(this);
+                        fieldValue.visit(this);
                         asm.addfield();
                     }
                 }
@@ -184,9 +196,11 @@ public class Compiler {
             else {
                 asm.newarray();
                 List<Expr> elements = expr.elements;
+                
                 for(Expr e : elements) {
                     e.visit(this);
                     asm.addelement();
+                    
                 }
                 asm.sealarray();
             }
@@ -482,6 +496,14 @@ public class Compiler {
             }
         }
     
+        @Override
+        public void visit(AsyncExpr expr) {
+            asm.line(expr.lineNumber);            
+            asm.async();
+            expr.expr.visit(this);
+            asm.end();
+        }
+        
         @Override
         public void visit(UnaryExpr expr) {
             asm.line(expr.lineNumber);

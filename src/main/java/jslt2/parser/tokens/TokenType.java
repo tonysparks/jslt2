@@ -18,7 +18,7 @@ import jslt2.parser.ParseException;
 public enum TokenType {
     // Reserved words.    
     DEF, 
-        LET, FOR, OR, AND, TRUE, FALSE, NULL, ELSE, IMPORT, AS,
+        LET, FOR, OR, AND, TRUE, FALSE, NULL, ELSE, IMPORT, AS, ASYNC,
     IF,
     // end Reserved words
 

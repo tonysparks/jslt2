@@ -153,6 +153,10 @@ public class Parser {
         return or();
     }
     
+    private AsyncExpr asyncExpr() {
+        Expr expr = expression();
+        return node(new AsyncExpr(expr));
+    }
     
     private IfExpr ifExpr() {        
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
@@ -379,9 +383,9 @@ public class Parser {
         if(match(LEFT_BRACKET)) return array();
         if(match(LEFT_BRACE))   return object();
         
-        if(match(IF))   return ifExpr();
-        if(match(DOT))  return dotExpr();
-        if(match(STAR)) return matchExpr();
+        if(match(IF))    return ifExpr();
+        if(match(DOT))   return dotExpr();
+        if(match(STAR))  return matchExpr();
                         
         throw error(peek(), ErrorCode.UNEXPECTED_TOKEN);
     }     
@@ -480,7 +484,7 @@ public class Parser {
 
                 Expr key = expression();
                 consume(COLON, ErrorCode.MISSING_COLON);
-                Expr value = expression();
+                Expr value = match(ASYNC) ? asyncExpr() : expression();
                 
                 elements.add(new Tuple<>(key, value));
 

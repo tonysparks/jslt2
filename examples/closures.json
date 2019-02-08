@@ -1,0 +1,7 @@
+let work = "a"
+ 
+def test() {
+    "test" : $work + "b"
+}     
+
+test()

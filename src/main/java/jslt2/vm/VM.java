@@ -57,15 +57,19 @@ public class VM {
      * The maximum stack size
      */
     private final int maxStackSize;
-        
-    /**
-     * 
-     */
+    private Async async;
+       
     public VM(Jslt2 runtime) {
+        this(runtime, runtime.getMinStackSize() <= 0 
+                ? DEFAULT_STACKSIZE : runtime.getMinStackSize());
+    }
+    
+    /**
+     * @param runtime
+     * @param stackSize - starting stack size
+     */
+    public VM(Jslt2 runtime, int stackSize) {
         this.runtime = runtime;
-        
-        int stackSize = runtime.getMinStackSize();
-        stackSize = (stackSize <= 0) ? DEFAULT_STACKSIZE : stackSize;
 
         this.maxStackSize = Math.max(runtime.getMaxStackSize(), stackSize);
         
@@ -73,7 +77,9 @@ public class VM {
         this.arrayStack  = new Stack<>();
         
         this.stack = new JsonNode[stackSize];
-        this.top = 0;        
+        this.top = 0;   
+        
+        this.async = new Async(runtime);
     }
 
     /**
@@ -260,7 +266,17 @@ public class VM {
                         }
                         break;
                     }
-                    
+                    case ASYNC: {                        
+                        int bytecodeIndex = ARGx(i);
+                        Bytecode asyncCode = inner[bytecodeIndex].clone();
+                        
+                        JsonNode[] outers = asyncCode.outers;                            
+                        pc += assignOuters(outers, calleeouters, asyncCode.numOuters, base, pc, code);
+                        
+                        JsonNode key = stack[--top];
+                        async.submit(this.objectStack.peek(), key.asText(), input, asyncCode);                        
+                        break;
+                    }
                     case MATCHER: {
                         ObjectNode outputObj = this.objectStack.peek();
                         
@@ -383,7 +399,7 @@ public class VM {
                             }
                         }
                         else if(object.isObject()) {
-                            Iterator<String> it = ((ObjectNode)object).fieldNames();            
+                            Iterator<String> it = ((ObjectNode)object).fieldNames();
                             while(it.hasNext()) {
                                 String key = it.next();
                                 
@@ -393,12 +409,13 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
+                                
                                 if(n != null) {
                                     array.add(n);
                                 }
                             }
                         }
-                        else if(object.isArray()) {            
+                        else if(object.isArray()) {
                             ArrayNode a = (ArrayNode)object;
                             int size = a.size();
                             for(int ix = 0; ix < size; ix++) {
@@ -406,7 +423,7 @@ public class VM {
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
-                              
+                                
                                 if(n != null) {
                                     array.add(n);  
                                 }
@@ -489,7 +506,7 @@ public class VM {
                     }
                     case FUNC_DEF: {
                         int innerIndex = ARGx(i);
-                        Bytecode funcCode = inner[innerIndex].clone();
+                        Bytecode funcCode = inner[innerIndex];
                         
                         JsonNode[] outers = funcCode.outers;                            
                         pc += assignOuters(outers, calleeouters, funcCode.numOuters, base, pc, code);
@@ -747,7 +764,11 @@ public class VM {
             stack[j] = null;
         }                
 
-        top = base;            
+        top = base;   
+        
+        if(code.hasAsync()) {
+            this.async.await();
+        }
     }
     
     /**

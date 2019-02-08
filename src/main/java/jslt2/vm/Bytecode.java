@@ -37,6 +37,7 @@ public class Bytecode {
     public static final int FL_BLOCKS      = (1<<1);
     public static final int FL_VARARGS     = (1<<2);
     public static final int FL_PARAMS_IDX  = (1<<3);
+    public static final int FL_ASYNC       = (1<<4);
     
 
     /**
@@ -113,6 +114,19 @@ public class Bytecode {
         return (this.flags & FL_DEBUG) != 0;
     }
     
+    /**
+     * denotes that this byte code contains async tasks
+     */
+    public void setAsync() {
+        this.flags |= FL_ASYNC;
+    }
+    
+    /**
+     * @return true if this contains async tasks
+     */
+    public boolean hasAsync() {
+        return (this.flags & FL_ASYNC) != 0;
+    }
     
     /**
      * Sets the filename in which generated this {@link Bytecode}.  Only

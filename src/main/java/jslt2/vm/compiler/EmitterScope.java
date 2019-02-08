@@ -85,6 +85,7 @@ public class EmitterScope {
     
     private boolean usesLocals;
     private boolean debug;    
+    private boolean hasAsync;
     
     private int currentLineNumber;
     private int numArgs;
@@ -181,6 +182,17 @@ public class EmitterScope {
      */
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+    
+    /**
+     * @return the hasAsync
+     */
+    public boolean hasAsync() {
+        return hasAsync;
+    }
+    
+    public void setAsync(boolean async) {
+        this.hasAsync = async;
     }
     
     /**
