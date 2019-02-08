@@ -72,4 +72,51 @@ Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
 ```
 * Currently no function parameter checks - this is considered a bug in JSLT2 
 * Allows block comments via the `/*` and `*/` syntax 
+* Verbatim strings: 
+
+```
+let x = """this
+   is a "verbatim"
+   string"""
+```
+
 * Performance has been interesting.  I've tested on AMD Phenom II and Intel i5; on Intel, JSLT2 can be roughly 5% to 10% faster; and on AMD, JSLT2 is consistently 5%-10% *slower*.  To date, depending on the template the original JSLT code will be generally slightly faster than JSLT2 code.
+* `async` keyword allows for running an expression in a background thread.  Once all background expressions have been evaluated, the final result is computed.
+NOTE: This is currently an experimental feature and is limited to *object expression values*.  As an example:
+
+```
+// runs the makeDatabaseQuery functions in background threads, which allows them to be computed
+// in parrallel 
+{
+  "a" : async makeDatabaseQuery(.someParam),     
+  "b" : async makeDatabaseQuery(.someOtherParam),
+}
+```
+
+Other expressions are NOT supported:
+
+```
+[for(.) async .] // NOT supported
+{for(.) async .} // NOT supported
+async method()   // NOT supported
+[ async 1 ]      // NOT supported
+let x = async 1  // NOT supported
+
+// only object expression values are supported:
+{
+   "a": async .,    // Valid
+   "b": async true, // Valid
+   "c": async 1,    // Valid
+   "d": async "string", // Valid (any expression is valid here!)
+}
+```
+
+You can customize the `ExecutorService` provided to the `Jslt2` runtime.  The default `ExecutorService` uses daemon threads and `Executors.newCachedThreadPool`.
+
+```java
+// Customize (or use an already created instance) of ExecutorService
+ExecutorService service = ...
+Jslt2 runtime = Jslt2.builder()
+    .executorService(service)    
+    .build();
+```
