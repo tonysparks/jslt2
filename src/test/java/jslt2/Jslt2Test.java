@@ -34,6 +34,10 @@ import com.schibsted.spt.data.jslt.ResourceResolver;
 import static org.junit.Assert.*;
 
 import jslt2.parser.ParseException;
+import jslt2.parser.Scanner;
+import jslt2.parser.Source;
+import jslt2.vm.Bytecode;
+import jslt2.vm.compiler.Compiler;
 
 /**
  * @author Tony
@@ -44,6 +48,18 @@ public class Jslt2Test {
     private Jslt2 runtime = Jslt2.builder()
             .resourceResolver(ResourceResolvers.newFilePathResolver(new File("./examples")))
             .build();
+    
+    {
+        runtime.addFunction("sleep", (in, args) -> {
+            try {
+                Thread.sleep(args[0].asLong());
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return args[1];
+        });
+    }
     
     /**
      * @throws java.lang.Exception
@@ -115,6 +131,8 @@ public class Jslt2Test {
                     }
                 }))
                 .compile();
+        
+
         
         JsonNode jsltResult = jslt.apply(input);
         JsonNode result = runtime.eval(query, input);
@@ -441,6 +459,62 @@ public class Jslt2Test {
         System.out.println(result);
        // testAgainstSpec(input, query);
         assertEquals("{\"a\":\"b\",\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\"}", result.toString());
+    }
+    
+    @Test
+    public void testAsyncConstant() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async.json").toPath()));         
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+       // testAgainstSpec(input, query);
+        assertEquals("{\"g\":\"g2\",\"name\":\"favre\",\"a\":true,\"b\":{\"b1\":\"z\",\"c1\":\"hi\",\"name\":\"tony\",\"team\":\"packers\"},\"c\":20,\"d\":[10,8],\"e\":{\"test\":{\"i\":0}},\"f\":2}", result.toString());
+    }
+    
+    @Test
+    public void testAsyncRemoval() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        //String script = new String(Files.readAllBytes(new File("./examples/async-removal.json").toPath()));
+        jslt2.parser.Parser parser = new jslt2.parser.Parser(runtime, new Scanner(new Source(new FileReader(new File("./examples/async-removal.json")))));
+        jslt2.vm.compiler.Compiler compiler = new Compiler(runtime);
+        Bytecode code = compiler.compile(parser.parseProgram());
+        assertFalse(code.hasAsync());
+        
+        JsonNode result = runtime.eval(code, input);
+        System.out.println(result);
+        assertEquals("{\"First Name\":\"Brett\",\"name\":\"tony\"}", result.toString());
+    }
+    
+    @Test
+    public void testArrays() throws Exception {        
+        ArrayNode input = runtime.newArrayNode(12);
+        for(int i = 0; i < 10; i++) {
+            input.add(i);
+        }
+        
+        String script = new String(Files.readAllBytes(new File("./examples/for-arrays.json").toPath())); 
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+       // testAgainstSpec(input, query);        
+    }
+    
+    @Test
+    public void testClosures() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        String script = new String(Files.readAllBytes(new File("./examples/closures.json").toPath())); 
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+
+        assertEquals("{\"test\":\"ab\"}", result.toString());
     }
     
     @Test

@@ -11,6 +11,8 @@ import jslt2.ast.Expr.*;
  */
 public interface ExprVisitor {
 
+    void visit(AsyncExpr expr);
+    
     void visit(NullExpr expr);
     void visit(BooleanExpr expr);
     void visit(NumberExpr expr);

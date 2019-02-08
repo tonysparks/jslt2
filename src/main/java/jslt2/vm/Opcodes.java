@@ -288,13 +288,16 @@ public class Opcodes {
                 op = "MATCHER";
                 break;
             }
-            
             case INVOKE:    {        
                 op = "INVOKE";
                 break;
             }
             case USER_INVOKE: {
                 op = "USER_INVOKE";
+                break;
+            }
+            case ASYNC: {
+                op = "ASYNC";
                 break;
             }
 
@@ -360,7 +363,7 @@ public class Opcodes {
             case LINE: {
                 op = "LINE";
                 break;
-            }           
+            }
             default: {
                 throw new Jslt2Exception("Unknown Opcode: " + opcode);
             }
@@ -427,26 +430,28 @@ public class Opcodes {
         USER_INVOKE  = 31,            /* ARG1, ARG2 */
         MACRO_INVOKE = 32,            /* ARG1, ARG2 */
 
-        /* arithmetic operators */
-        ADD = 33,                     /*      */
-        SUB = 34,                     /*      */
-        MUL = 35,                     /*      */
-        DIV = 36,                     /*      */
-        MOD = 37,                     /*      */
-        NEG = 38,                     /*      */
-            
-        NOT     = 39,                 /*      */
-        IS_TRUE = 40,                 /*      */
+        ASYNC       = 33,             /* ARG1, ARG2 */
         
-        EQ  = 41,                     /*      */
-        NEQ = 42,                     /*      */
-        GT  = 43,                     /*      */
-        GTE = 44,                     /*      */
-        LT  = 45,                     /*      */
-        LTE = 46,                     /*      */
+        /* arithmetic operators */
+        ADD = 34,                     /*      */
+        SUB = 35,                     /*      */
+        MUL = 36,                     /*      */
+        DIV = 37,                     /*      */
+        MOD = 38,                     /*      */
+        NEG = 39,                     /*      */
+            
+        NOT     = 40,                 /*      */
+        IS_TRUE = 41,                 /*      */
+        
+        EQ  = 42,                     /*      */
+        NEQ = 43,                     /*      */
+        GT  = 44,                     /*      */
+        GTE = 45,                     /*      */
+        LT  = 46,                     /*      */
+        LTE = 47,                     /*      */
         
         /* debug */
-        LINE = 47                     /* ARGx */
+        LINE = 48                     /* ARGx */
         ;
     
     
@@ -495,6 +500,8 @@ public class Opcodes {
                         
         opcodes.put("INVOKE", INVOKE);
         opcodes.put("USER_INVOKE", USER_INVOKE);
+
+        opcodes.put("ASYNC", ASYNC);
         
         /* arithmetic operators */
         opcodes.put("ADD", ADD);
@@ -514,7 +521,7 @@ public class Opcodes {
         opcodes.put("LT", LT);
         opcodes.put("LTE", LTE);
         
-        opcodes.put("LINE", LINE);    
+        opcodes.put("LINE", LINE);
     }
 
 }

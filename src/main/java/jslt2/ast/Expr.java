@@ -95,7 +95,24 @@ public abstract class Expr  {
                                   Expressions 
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     
-    
+    public static class AsyncExpr extends Expr {
+        public Expr expr;
+        
+        public AsyncExpr(Expr expr) {
+            this.expr = becomeParentOf(expr);
+        }
+        
+        @Override
+        public void visit(ExprVisitor v) {
+            v.visit(this);
+        }
+        
+        @Override
+        public Expr optimize() {
+            this.expr = this.expr.optimize();
+            return this;
+        }
+    }
     
     public static class ArrayExpr extends Expr {
         public ForArrayExpr forExpr;

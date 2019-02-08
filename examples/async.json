@@ -1,0 +1,32 @@
+let work = {}
+
+def x(z) {
+    "b1" : "z",
+    "c1" : $z,    
+    * : . 
+}
+
+def v(a) 
+    $a * 2
+
+def w(a) 
+    $a * 4
+    
+def test() {
+    "test" : async $work + { "i": 0 }
+}     
+
+{
+    "name" : async "favre",
+    "a" : async true,
+    "b" : async x("hi", .),
+    "c" : async v(2) + w(4),
+    "d" : async [
+        v(5),
+        v(4)
+    ],
+    "e" : async test(),
+    "f" : async if(.name) v(1) else v(2),
+    "g" : sleep(1000, "g2"),
+     * - team : . 
+} 
