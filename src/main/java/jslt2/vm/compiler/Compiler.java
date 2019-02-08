@@ -151,12 +151,32 @@ public class Compiler {
                     if(fieldValue instanceof AsyncExpr) {                        
                         if(fieldName instanceof IdentifierExpr) {                            
                             asm.addAndloadconst(((IdentifierExpr)fieldName).identifier);
+                            fieldValue.visit(this);
                         }
                         else if(fieldName instanceof StringExpr) {                            
                             asm.addAndloadconst(((StringExpr)fieldName).string);
-                        }    
+                            fieldValue.visit(this);
+                        }   
+                        else {
+                            // we can't do Async because the key is "unknown",
+                            // we we'll grab the actual expression and execute it on the main thread
+                            fieldValue = ((AsyncExpr)fieldValue).expr; 
+                            
+                            if(fieldName instanceof MatchExpr) {
+                                pushInputContext(expr);
+                                fieldName.visit(this);
+                                
+                                // this is the body of the matcher function
+                                fieldValue.visit(this);                        
+                                asm.end();
+                            }
+                            else {                     
+                                fieldName.visit(this);
+                                fieldValue.visit(this);
+                                asm.addfield();
+                            }
+                        }
                         
-                        fieldValue.visit(this);
                     }
                     else if(fieldName instanceof IdentifierExpr) {
                         fieldValue.visit(this);

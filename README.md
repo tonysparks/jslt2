@@ -108,6 +108,7 @@ let x = async 1  // NOT supported
    "b": async true, // Valid
    "c": async 1,    // Valid
    "d": async "string", // Valid (any expression is valid here!)
+   if (.) "e" else "f": async "yo" // Valid, however due to the key being unknown upfront, async is ignored
 }
 ```
 
