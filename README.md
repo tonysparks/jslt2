@@ -35,6 +35,20 @@ outputs:
 
 # How to use
 
+
+Include in your Maven/Gradle project:
+
+```xml
+<!-- https://mvnrepository.com/artifact/com.github.tonysparks.jslt2/jslt2 -->
+<dependency>
+    <groupId>com.github.tonysparks.jslt2</groupId>
+    <artifactId>jslt2</artifactId>
+    <version>0.2.0</version>
+</dependency>
+```
+
+How to initialize and evaluate a template expression:
+
 ```java
 // use out of the box defaults
 Jslt2 runtime = new Jslt2(); 
