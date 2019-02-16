@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import jslt2.Jslt2StdLibrary.Jslt2FunctionValidation;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -298,6 +299,19 @@ public class Jslt2 {
      */
     public Jslt2 addFunction(String name, Jslt2Function function) {        
         this.userFunctions.put(name, function);
+        
+        return this;
+    }
+    
+    /**
+     * Register a user defined {@link Jslt2Function}
+     * 
+     * @param name
+     * @param minArgs minimum number of arguments 
+     * @param function
+     */
+    public Jslt2 addFunction(String name, int minArgs, Jslt2Function function) {        
+        this.userFunctions.put(name, new Jslt2FunctionValidation(minArgs, function));
         
         return this;
     }

@@ -1,12 +1,13 @@
-async {
-    let m = call("2")
-}
-
 def test(a) {
     "c" : $a.result
 }
 
 def call(b) 
     sleep(2000, $b)
+
+async {
+    let m = call("2")
+}
+
 
 test({ "result" : $m })

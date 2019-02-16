@@ -34,10 +34,6 @@ import com.schibsted.spt.data.jslt.ResourceResolver;
 import static org.junit.Assert.*;
 
 import jslt2.parser.ParseException;
-import jslt2.parser.Scanner;
-import jslt2.parser.Source;
-import jslt2.vm.Bytecode;
-import jslt2.vm.compiler.Compiler;
 
 /**
  * @author Tony
@@ -471,7 +467,23 @@ public class Jslt2Test {
         JsonNode result = runtime.eval(script, input);
         System.out.println(result);
        // testAgainstSpec(input, query);
-        assertEquals("{\"g\":\"g2\",\"name\":\"favre\",\"a\":true,\"b\":{\"b1\":\"z\",\"c1\":\"hi\",\"name\":\"tony\",\"team\":\"packers\"},\"c\":20,\"d\":[10,8],\"e\":{\"test\":{\"i\":0}},\"f\":2}", result.toString());
+        assertEquals("{\"name\":\"favre\",\"a\":true,\"b\":{\"b1\":\"z\",\"c1\":\"hi\",\"name\":\"tony\",\"team\":\"packers\"},\"c\":20,\"d\":[10,8],\"e\":{\"test\":{\"i\":0}},\"f\":2,\"g\":\"g2\"}", result.toString());
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testAsyncBadFunctionReference() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-bad-def.json").toPath()));         
+        runtime.eval(script, input);
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testAsyncBadVarReference() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-bad-var.json").toPath()));         
+        runtime.eval(script, input);
     }
     
     @Test
@@ -511,24 +523,7 @@ public class Jslt2Test {
         System.out.println(result);       
         System.out.println("(With Async) Total time: " + (endTime - startTime) + " msec.");
     }
-    
-    @Test
-    public void testAsyncRemoval() throws Exception {        
-        ObjectNode input = runtime.newObjectNode();
-        input.set("name", TextNode.valueOf("tony"));
-        input.set("team", TextNode.valueOf("packers"));
         
-        //String script = new String(Files.readAllBytes(new File("./examples/async-removal.json").toPath()));
-        jslt2.parser.Parser parser = new jslt2.parser.Parser(runtime, new Scanner(new Source(new FileReader(new File("./examples/async-removal.json")))));
-        jslt2.vm.compiler.Compiler compiler = new Compiler(runtime);
-        Bytecode code = compiler.compile(parser.parseProgram());
-        assertFalse(code.hasAsync());
-        
-        JsonNode result = runtime.eval(code, input);
-        System.out.println(result);
-        assertEquals("{\"First Name\":\"Brett\",\"name\":\"tony\"}", result.toString());
-    }
-    
     @Test
     public void testArrays() throws Exception {        
         ArrayNode input = runtime.newArrayNode(12);

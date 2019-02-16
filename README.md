@@ -95,36 +95,68 @@ let x = """this
 ```
 
 * Performance has been interesting.  I've tested on AMD Phenom II and Intel i5; on Intel, JSLT2 can be roughly 5% to 10% faster; and on AMD, JSLT2 is consistently 5%-10% *slower*.  To date, depending on the template the original JSLT code will be generally slightly faster than JSLT2 code.
-* `async` keyword allows for running an expression in a background thread.  Once all background expressions have been evaluated, the final result is computed.
-NOTE: This is currently an experimental feature and is limited to *object expression values*.  As an example:
+* `async` blocks allow for running expressions in separate threads.  This *can* improve performance for long running expressions.
+*NOTE*: This is currently an experimental feature.  
+
+As an example:
 
 ```
-// runs the makeDatabaseQuery functions in background threads, which allows them to be computed
-// in parrallel 
+// runs the makeSlowDatabaseQuery functions in background threads, which allows them to be computed
+// in parallel 
+async {
+  let a = makeSlowDatabaseQuery(.someParam)     
+  let b = makeSlowDatabaseQuery(.someOtherParam)
+} // evaluation will block here until all let expressions have been computed
+
 {
-  "a" : async makeDatabaseQuery(.someParam),     
-  "b" : async makeDatabaseQuery(.someOtherParam),
+	"a": $a, // we can now reference the computed value of $a in our template expression
+	"b": $b,
 }
-```
-
-Other expressions are NOT supported:
 
 ```
-[for(.) async .] // NOT supported
-{for(.) async .} // NOT supported
-async method()   // NOT supported
-[ async 1 ]      // NOT supported
-let x = async 1  // NOT supported
 
-// only object expression values are supported:
+There are several limitations or "gotchas" with `async` blocks:
+
+* Any variables defined in the async block can not reference other variables in the async block:
+
+```
+async {
+  let a = "foo"     
+  let b = "bar" + $a // INVALID, can't reference $a as this value will be computed in parallel with $b
+}
+
+```
+
+* Any variables or functions defined outside of the async block must be declared before the async block:
+
+```
+let y = "bar"
+async {
+  let a = $x // INVALID because x is defined AFTER the async block
+  let b = $y // valid, because y is defined BEFORE the async block  
+}
+
+let x = "foo"
+
+```
+
+* After the async block definition, the variables defined in the async block can be used:
+
+```
+
+async {
+  let a = "hi"  
+}
+
+let x = $a // can reference $a in a new variable
+def y() $a // can reference $a in a function
+
 {
-   "a": async .,    // Valid
-   "b": async true, // Valid
-   "c": async 1,    // Valid
-   "d": async "string", // Valid (any expression is valid here!)
-   if (.) "e" else "f": async "yo" // Valid, however due to the key being unknown upfront, async is ignored
+	"result": $a // can reference $a in the template expression
 }
+
 ```
+
 
 You can customize the `ExecutorService` provided to the `Jslt2` runtime.  The default `ExecutorService` uses daemon threads and `Executors.newCachedThreadPool`.
 

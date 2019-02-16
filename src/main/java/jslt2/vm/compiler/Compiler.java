@@ -48,6 +48,7 @@ public class Compiler {
         private BytecodeEmitter asm;
         private Stack<String> moduleStack;
         private Stack<String> libraryStack;
+        private boolean inAsyncBlock;
     
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
@@ -55,12 +56,18 @@ public class Compiler {
             
             this.moduleStack = new Stack<>();
             this.libraryStack = new Stack<>();
+            
+            this.inAsyncBlock = false;
         }
         
         public Bytecode compile(ProgramExpr program) {
             visit(program);
             
             return this.asm.compile();
+        }
+        
+        private Jslt2Exception error(Expr expr, String msg) {
+            return new Jslt2Exception(msg);
         }
 
         /**
@@ -74,7 +81,7 @@ public class Compiler {
             Expr child = expr;
             Expr parent = expr.parentNode;
             if(parent instanceof ArrayExpr) {
-                throw new Jslt2Exception("Object matching not allowed in an array");
+                throw error(parent, "Object matching not allowed in an array");
             }
             
             int count = 0;
@@ -376,6 +383,10 @@ public class Compiler {
                 functionName = ((IdentifierExpr)identifier).identifier;
                 bytecodeIndex = asm.getFunction(functionName);
                 if(!runtime.hasFunction(functionName)) {
+                    if(inAsyncBlock && bytecodeIndex < 0) {
+                        throw error(identifier, "'" + functionName + "' is undefined or must be defined before the async block");
+                    }
+                    
                     asm.addPendingFunction(functionName);
                     bytecodeIndex = 999;
                 }
@@ -399,7 +410,7 @@ public class Compiler {
         public void visit(VariableExpr expr) {
             asm.line(expr.lineNumber);
             if(!asm.load(expr.variable)) {
-                throw new Jslt2Exception("'" + expr.variable + "' not defined at line: " + expr.lineNumber);
+                throw error(expr, "'" + expr.variable + "' not defined at line: " + expr.lineNumber);
             }
         }
     
@@ -443,7 +454,7 @@ public class Compiler {
             fileName = fileName.substring(1, fileName.length() - 1);
             
             if(this.libraryStack.contains(fileName)) {
-                throw new Jslt2Exception("'" + fileName + "' is already imported");
+                throw error(expr, "'" + fileName + "' is already imported");
             }
             
             try {
@@ -485,6 +496,8 @@ public class Compiler {
         @Override
         public void visit(AsyncBlockDecl expr) {
             asm.line(expr.lineNumber);
+            inAsyncBlock = true;
+            
             List<LetDecl> lets = expr.lets;
             for(LetDecl let : lets) {
                 // store off the local index, so that ASYNC opcode
@@ -500,6 +513,8 @@ public class Compiler {
             }
             
             asm.await();
+            
+            inAsyncBlock = false;
         }
         
         @Override
@@ -515,7 +530,7 @@ public class Compiler {
                     asm.neg();
                     break;
                 default:
-                    throw new Jslt2Exception("Invalid unary operator: " + expr.operator);
+                    throw error(expr, "Invalid unary operator: " + expr.operator);
             }
         }
     
@@ -558,7 +573,7 @@ public class Compiler {
                     expr.left.visit(this);
                     expr.right.visit(this);
                     
-                    visitBinaryExpression(operator);        
+                    visitBinaryExpression(expr, operator);        
                 }
             }
         }
@@ -567,9 +582,8 @@ public class Compiler {
          * Visits a Binary Expression
          * 
          * @param op
-         * @throws EvalException
          */
-        private void visitBinaryExpression(TokenType op) throws Jslt2Exception {
+        private void visitBinaryExpression(Expr expr, TokenType op) {
             switch(op) {
                 case PLUS:  asm.add(); break;
                 case MINUS: asm.sub(); break;
@@ -587,7 +601,7 @@ public class Compiler {
                 case EQUALS:          asm.eq();   break;
                             
                 default: 
-                    throw new Jslt2Exception("Unknown BinaryOperator: " + op);            
+                    throw error(expr, "Unknown BinaryOperator: " + op);            
             }
             
         }
@@ -635,7 +649,7 @@ public class Compiler {
                         asm.addAndloadconst(((StringExpr)field).string);
                     }
                     else {
-                        throw new Jslt2Exception("Invalid match field expression: " + field);
+                        throw error(expr, "Invalid match field expression: " + field);
                     }
                 }
             }
