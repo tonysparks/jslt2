@@ -12,6 +12,7 @@ import static jslt2.parser.tokens.TokenType.*;
 import jslt2.Jslt2;
 import jslt2.ast.*;
 import jslt2.ast.Expr.*;
+import jslt2.ast.Decl.*;
 import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
 import jslt2.util.Tuple;
@@ -52,15 +53,14 @@ public class Parser {
      */
     public ModuleExpr parseModule() {
         
-        List<ImportExpr> imports = new ArrayList<>();
-        List<LetExpr> lets = new ArrayList<>();
-        List<DefExpr> defs = new ArrayList<>();
+        List<Decl> declarations = new ArrayList<>();
         
         while(!isAtEnd()) {
-            if(match(IMPORT))    imports.add(importDeclaration());
-            else if(match(DEF))  defs.add(defDeclaration());
-            else if(match(LET))  lets.add(letDeclaration());            
-            else                 break;
+            if(match(IMPORT))     declarations.add(importDeclaration());
+            else if(match(DEF))   declarations.add(defDeclaration());
+            else if(match(LET))   declarations.add(letDeclaration());     
+            else if(match(ASYNC)) declarations.add(asyncBlockDeclaration());
+            else                  break;
         }
         
         Expr expr = null;
@@ -68,7 +68,7 @@ public class Parser {
             expr = expression();
         }
         
-        return node(new ModuleExpr(imports, lets, defs, expr).optimize().as());
+        return node(new ModuleExpr(declarations, expr).optimize().as());
     }
 
     
@@ -80,26 +80,26 @@ public class Parser {
      */
     public ProgramExpr parseProgram() {
         
-        List<ImportExpr> imports = new ArrayList<>();
-        List<LetExpr> lets = new ArrayList<>();
-        List<DefExpr> defs = new ArrayList<>();
+        List<Decl> declarations = new ArrayList<>();
         
         while(!isAtEnd()) {
-            if(match(IMPORT))    imports.add(importDeclaration());
-            else if(match(DEF))  defs.add(defDeclaration());
-            else if(match(LET))  lets.add(letDeclaration());            
-            else                 break;
+            if(match(IMPORT))     declarations.add(importDeclaration());
+            else if(match(DEF))   declarations.add(defDeclaration());
+            else if(match(LET))   declarations.add(letDeclaration());     
+            else if(match(ASYNC)) declarations.add(asyncBlockDeclaration());
+            else                  break;
         }
         
         Expr expr = null;
-        if(!isAtEnd()) {
-            expr = expression();
+        if(isAtEnd()) {
+            throw error(previous(), ErrorCode.UNEXPECTED_EOF);
         }
         
-        return node(new ProgramExpr(imports, lets, defs, expr).optimize().as());
+        expr = expression();
+        return node(new ProgramExpr(declarations, expr).optimize().as());
     }
         
-    private ImportExpr importDeclaration() {
+    private ImportDecl importDeclaration() {
         source();
         
         String aliasName = null;
@@ -110,11 +110,20 @@ public class Parser {
             aliasName = alias.getText();
         }
         
-        return node(new ImportExpr(library.getText(), aliasName));
+        return node(new ImportDecl(library.getText(), aliasName));
     }
     
-    private List<LetExpr> letDeclarations() {
-        List<LetExpr> lets = new ArrayList<>();
+    private AsyncBlockDecl asyncBlockDeclaration() {
+        source();
+        consume(LEFT_BRACE, ErrorCode.MISSING_LEFT_BRACE);
+        List<LetDecl> lets = letDeclarations();
+        consume(RIGHT_BRACE, ErrorCode.MISSING_RIGHT_BRACE);
+        
+        return node(new AsyncBlockDecl(lets));
+    }
+    
+    private List<LetDecl> letDeclarations() {
+        List<LetDecl> lets = new ArrayList<>();
         while(match(LET)) {
             lets.add(letDeclaration());
         }
@@ -122,26 +131,25 @@ public class Parser {
         return lets;
     }
     
-    private LetExpr letDeclaration() {
+    private LetDecl letDeclaration() {
         source();
         
         Token identifier = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
         consume(EQUALS, ErrorCode.MISSING_EQUALS);
         Expr expr = expression();
         
-        return node(new LetExpr(identifier.getText(), expr));
+        return node(new LetDecl(identifier.getText(), expr));
     }
     
-    private DefExpr defDeclaration() {
+    private DefDecl defDeclaration() {
         source();
         
         Token identifier = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);        
         List<String> parameters = parameters();
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
         Expr body = expression();
-        return node(new DefExpr(identifier.getText(), parameters, lets, body));
+        return node(new DefDecl(identifier.getText(), parameters, lets, body));
     }
-    
     
     /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *                      Expression parsing
@@ -152,18 +160,13 @@ public class Parser {
         source();
         return or();
     }
-    
-    private AsyncExpr asyncExpr() {
-        Expr expr = expression();
-        return node(new AsyncExpr(expr));
-    }
-    
+        
     private IfExpr ifExpr() {        
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
         Expr condition = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
         
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
         Expr thenBranch = expression();
         ElseExpr elseBranch = null;
         if (match(ELSE)) {
@@ -182,7 +185,7 @@ public class Parser {
     }
     
     private ElseExpr elseExpr() {
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
         Expr expr = expression();
         return new ElseExpr(lets, expr);
     }
@@ -411,7 +414,7 @@ public class Parser {
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
         Expr condition = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
         Expr valueExpr = expression();
 
         Expr ifExpr = null;
@@ -427,7 +430,7 @@ public class Parser {
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
         Expr condition = expression();
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
 
         Expr key = expression();
         consume(COLON, ErrorCode.MISSING_COLON);
@@ -468,7 +471,7 @@ public class Parser {
     }
     
     private ObjectExpr object() {
-        List<LetExpr> lets = letDeclarations();
+        List<LetDecl> lets = letDeclarations();
         
         ForObjectExpr forObjectExpr = null;
         List<Tuple<Expr, Expr>> elements = new ArrayList<>();
@@ -484,7 +487,7 @@ public class Parser {
 
                 Expr key = expression();
                 consume(COLON, ErrorCode.MISSING_COLON);
-                Expr value = match(ASYNC) ? asyncExpr() : expression();
+                Expr value = expression();
                 
                 elements.add(new Tuple<>(key, value));
 

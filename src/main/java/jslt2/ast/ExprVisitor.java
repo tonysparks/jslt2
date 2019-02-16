@@ -4,6 +4,7 @@
 package jslt2.ast;
 
 import jslt2.ast.Expr.*;
+import jslt2.ast.Decl.*;
 
 /**
  * @author Tony
@@ -11,7 +12,7 @@ import jslt2.ast.Expr.*;
  */
 public interface ExprVisitor {
 
-    void visit(AsyncExpr expr);
+    void visit(AsyncBlockDecl expr);
     
     void visit(NullExpr expr);
     void visit(BooleanExpr expr);
@@ -25,8 +26,8 @@ public interface ExprVisitor {
     void visit(GroupExpr expr);
     void visit(ForObjectExpr expr);
     void visit(ForArrayExpr expr);
-    void visit(LetExpr expr);
-    void visit(DefExpr expr);
+    void visit(LetDecl expr);
+    void visit(DefDecl expr);
     void visit(FuncCallExpr expr);
     void visit(MacroCallExpr expr);
     
@@ -37,7 +38,7 @@ public interface ExprVisitor {
     void visit(ArrayIndexExpr expr);
     void visit(GetExpr expr);
     
-    void visit(ImportExpr expr);
+    void visit(ImportDecl expr);
     void visit(ProgramExpr expr);
     void visit(ModuleExpr expr);
     

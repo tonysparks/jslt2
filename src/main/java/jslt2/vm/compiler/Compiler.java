@@ -10,6 +10,7 @@ import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
 import jslt2.ast.*;
 import jslt2.ast.Expr.*;
+import jslt2.ast.Decl.*;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -148,37 +149,7 @@ public class Compiler {
                     Expr fieldName = field.getFirst();
                     Expr fieldValue = field.getSecond();
                     
-                    if(fieldValue instanceof AsyncExpr) {                        
-                        if(fieldName instanceof IdentifierExpr) {                            
-                            asm.addAndloadconst(((IdentifierExpr)fieldName).identifier);
-                            fieldValue.visit(this);
-                        }
-                        else if(fieldName instanceof StringExpr) {                            
-                            asm.addAndloadconst(((StringExpr)fieldName).string);
-                            fieldValue.visit(this);
-                        }   
-                        else {
-                            // we can't do Async because the key is "unknown",
-                            // we we'll grab the actual expression and execute it on the main thread
-                            fieldValue = ((AsyncExpr)fieldValue).expr; 
-                            
-                            if(fieldName instanceof MatchExpr) {
-                                pushInputContext(expr);
-                                fieldName.visit(this);
-                                
-                                // this is the body of the matcher function
-                                fieldValue.visit(this);                        
-                                asm.end();
-                            }
-                            else {                     
-                                fieldName.visit(this);
-                                fieldValue.visit(this);
-                                asm.addfield();
-                            }
-                        }
-                        
-                    }
-                    else if(fieldName instanceof IdentifierExpr) {
+                    if(fieldName instanceof IdentifierExpr) {
                         fieldValue.visit(this);
                         asm.addfieldk(((IdentifierExpr)fieldName).identifier);
                     }
@@ -335,7 +306,7 @@ public class Compiler {
         }
     
         @Override
-        public void visit(LetExpr expr) {
+        public void visit(LetDecl expr) {
             asm.line(expr.lineNumber);
             
             String localVarName = "$" + expr.identifier; 
@@ -345,7 +316,7 @@ public class Compiler {
         }
     
         @Override
-        public void visit(DefExpr expr) {
+        public void visit(DefDecl expr) {
             asm.line(expr.lineNumber);
             
             String functionName = expr.identifier;
@@ -465,7 +436,7 @@ public class Compiler {
         
     
         @Override
-        public void visit(ImportExpr expr) {
+        public void visit(ImportDecl expr) {
             asm.line(expr.lineNumber);
     
             String fileName = expr.library;
@@ -494,10 +465,7 @@ public class Compiler {
         public void visit(ProgramExpr expr) {
             asm.startGlobal();
                 asm.line(expr.lineNumber);
-                expr.imports.forEach(imp -> imp.visit(this));
-                expr.lets.forEach(let -> let.visit(this));
-                expr.defs.forEach(def -> def.visit(this));
-                
+                expr.declarations.forEach(decl -> decl.visit(this));                
                 expr.expr.visit(this);
             asm.end();
         }
@@ -505,23 +473,33 @@ public class Compiler {
         @Override
         public void visit(ModuleExpr expr) {      
             asm.line(expr.lineNumber);
-            expr.imports.forEach(imp -> imp.visit(this));
-            expr.lets.forEach(let -> let.visit(this));
-            expr.defs.forEach(def -> def.visit(this));   
+            expr.declarations.forEach(decl -> decl.visit(this));   
             
             Expr funcExpr = expr.expr;
             if(funcExpr != null) {
-                DefExpr defExpr = new DefExpr(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
+                DefDecl defExpr = new DefDecl(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
                 defExpr.visit(this);
             }
         }
     
         @Override
-        public void visit(AsyncExpr expr) {
-            asm.line(expr.lineNumber);            
-            asm.async();
-            expr.expr.visit(this);
-            asm.end();
+        public void visit(AsyncBlockDecl expr) {
+            asm.line(expr.lineNumber);
+            List<LetDecl> lets = expr.lets;
+            for(LetDecl let : lets) {
+                // store off the local index, so that ASYNC opcode
+                // can use it
+                String localVarName = "$" + let.identifier; 
+                int index = asm.addLocal(localVarName);
+                asm.addAndloadconst(index);
+                
+                // now run the value in an async thread
+                asm.async();
+                let.value.visit(this);
+                asm.end();
+            }
+            
+            asm.await();
         }
         
         @Override

@@ -475,6 +475,44 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testAsyncEmbed() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();        
+        String script = new String(Files.readAllBytes(new File("./examples/async-embed.json").toPath()));         
+        long startTime = System.currentTimeMillis();
+        JsonNode result = runtime.eval(script, input);
+        long endTime = System.currentTimeMillis();
+        
+        System.out.println(result);       
+        System.out.println("Total time: " + (endTime - startTime) + " msec.");
+        assertEquals("{\"c\":\"2\"}", result.toString());
+     
+    }
+    
+    @Test
+    public void testAsyncSpeed() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        input.set("name", TextNode.valueOf("tony"));
+        input.set("team", TextNode.valueOf("packers"));
+        
+        String script = new String(Files.readAllBytes(new File("./examples/sleep.json").toPath()));      
+        long startTime = System.currentTimeMillis();
+        JsonNode result = runtime.eval(script, input);
+        long endTime = System.currentTimeMillis();
+        
+        System.out.println(result);       
+        System.out.println("(No Async) Total time: " + (endTime - startTime) + " msec.");
+        
+        
+        String asyncScript = new String(Files.readAllBytes(new File("./examples/sleep-async.json").toPath()));      
+        startTime = System.currentTimeMillis();
+        result = runtime.eval(asyncScript, input);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println(result);       
+        System.out.println("(With Async) Total time: " + (endTime - startTime) + " msec.");
+    }
+    
+    @Test
     public void testAsyncRemoval() throws Exception {        
         ObjectNode input = runtime.newObjectNode();
         input.set("name", TextNode.valueOf("tony"));

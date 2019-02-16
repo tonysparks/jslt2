@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
@@ -27,22 +26,20 @@ public class Async {
     
     static class Task {
         Future<JsonNode> future;
-        ObjectNode object;
-        String key;
+        final JsonNode[] stack;
+        final int index;
         
-        Task(Future<JsonNode> future, ObjectNode object, String key) {
+        Task(Future<JsonNode> future, JsonNode[] stack, int index) {
             this.future = future;
-            this.object = object;
-            this.key = key;
+            this.stack = stack;
+            this.index = index;
         }
         
         void await() {            
             try {
                 JsonNode value = future.get();
                 if(value != null) {
-                    if(this.object != null) {
-                        this.object.set(this.key, value);
-                    }
+                    this.stack[this.index] = value;
                 }
             }
             catch(CancellationException | ExecutionException e) {
@@ -67,17 +64,17 @@ public class Async {
     
     private Future<JsonNode> submitTask(JsonNode input, Bytecode code) {
         return this.runtime.getExecutorService().submit( () -> {
-            VM vm = new VM(runtime, code.maxstacksize);
+            VM vm = new VM(runtime);
             JsonNode value = vm.execute(code, input);
             return value;
         });
     }
     
 
-    public void submit(ObjectNode object, String key, JsonNode input, Bytecode code) {
+    public void submit(JsonNode[] stack, int index, JsonNode input, Bytecode code) {
         Future<JsonNode> future = submitTask(input, code);
         
-        this.pendingTasks.add(new Task(future, object, key));
+        this.pendingTasks.add(new Task(future, stack, index));
     }
     
     /**

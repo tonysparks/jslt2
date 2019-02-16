@@ -1,4 +1,22 @@
 let work = {}
+def tests() {
+    "test" : $work + { "i": 0 }
+}  
+
+async {
+    /*let str = "favre"
+    let bool = true 
+    let func = x("hi", .)     
+    
+    
+    let bin  = v(2) + w(4)
+    let arr  = [v(5), v(4)]*/
+    let func2 = tests()
+    /*let ifStmt = if(.name) v(1) else v(2)
+    let s    = sleep(1000, "g2")
+    */    
+}
+
 
 def x(z) {
     "b1" : "z",
@@ -12,21 +30,16 @@ def v(a)
 def w(a) 
     $a * 4
     
-def test() {
-    "test" : async $work + { "i": 0 }
-}     
+   
 
 {
-    "name" : async "favre",
-    "a" : async true,
-    "b" : async x("hi", .),
-    "c" : async v(2) + w(4),
-    "d" : async [
-        v(5),
-        v(4)
-    ],
-    "e" : async test(),
-    "f" : async if(.name) v(1) else v(2),
-    "g" : sleep(1000, "g2"),
+    /*"name" : $str,
+    "a" : $bool,
+    "b" : $func,
+    "c" : $bin,
+    "d" : $arr,
+    "e" : $func2,
+    "f" : $ifStmt,
+    "g" : $s,*/
      * - team : . 
 } 

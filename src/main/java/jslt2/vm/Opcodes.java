@@ -392,7 +392,7 @@ public class Opcodes {
         STORE_LOCAL = 9,              /* ARGx */
         
         /* pseudo bytecodes */
-        xLOAD_OUTER  = 10,             /* ARGx */
+        xLOAD_OUTER  = 10,            /* ARGx */
         xLOAD_LOCAL  = 11,            /* ARGx */
                 
         /* jump instructions */
@@ -422,7 +422,7 @@ public class Opcodes {
         FOR_ARRAY_DEF  = 26,          /* ARGx  */
         FOR_OBJ_DEF    = 27,          /* ARGx  */
         
-        MATCHER      = 28,            /* ARGx  */
+        MATCHER      = 28,            /* ARG1, ARG2 */ 
         ARRAY_SLICE  = 29,            /*      */
         
         /* method invocation */
@@ -430,28 +430,29 @@ public class Opcodes {
         USER_INVOKE  = 31,            /* ARG1, ARG2 */
         MACRO_INVOKE = 32,            /* ARG1, ARG2 */
 
-        ASYNC       = 33,             /* ARG1, ARG2 */
+        ASYNC       = 33,             /* ARGx */
+        AWAIT       = 34,             /*      */
         
         /* arithmetic operators */
-        ADD = 34,                     /*      */
-        SUB = 35,                     /*      */
-        MUL = 36,                     /*      */
-        DIV = 37,                     /*      */
-        MOD = 38,                     /*      */
-        NEG = 39,                     /*      */
+        ADD = 35,                     /*      */
+        SUB = 36,                     /*      */
+        MUL = 37,                     /*      */
+        DIV = 38,                     /*      */
+        MOD = 39,                     /*      */
+        NEG = 40,                     /*      */
             
-        NOT     = 40,                 /*      */
-        IS_TRUE = 41,                 /*      */
+        NOT     = 41,                 /*      */
+        IS_TRUE = 42,                 /*      */
         
-        EQ  = 42,                     /*      */
-        NEQ = 43,                     /*      */
-        GT  = 44,                     /*      */
-        GTE = 45,                     /*      */
-        LT  = 46,                     /*      */
-        LTE = 47,                     /*      */
+        EQ  = 43,                     /*      */
+        NEQ = 44,                     /*      */
+        GT  = 45,                     /*      */
+        GTE = 46,                     /*      */
+        LT  = 47,                     /*      */
+        LTE = 48,                     /*      */
         
         /* debug */
-        LINE = 48                     /* ARGx */
+        LINE = 49                     /* ARGx */
         ;
     
     

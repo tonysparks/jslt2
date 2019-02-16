@@ -273,8 +273,12 @@ public class VM {
                         JsonNode[] outers = asyncCode.outers;                            
                         pc += assignOuters(outers, calleeouters, asyncCode.numOuters, base, pc, code);
                         
-                        JsonNode key = stack[--top];
-                        async.submit(this.objectStack.peek(), key.asText(), input, asyncCode);                        
+                        JsonNode index = stack[--top];
+                        async.submit(stack, index.asInt(), input, asyncCode);                        
+                        break;
+                    }
+                    case AWAIT: {
+                        async.await();
                         break;
                     }
                     case MATCHER: {
@@ -765,10 +769,6 @@ public class VM {
         }                
 
         top = base;   
-        
-        if(code.hasAsync()) {
-            this.async.await();
-        }
     }
     
     /**

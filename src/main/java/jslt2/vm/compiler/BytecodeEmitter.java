@@ -804,6 +804,10 @@ public class BytecodeEmitter {
         newLocalScopeEmitter(0);
     }
     
+    public void await() {
+        instr(AWAIT);
+    }
+    
     public void matcher(int numOfOmittedFields) {
         instr2(MATCHER, numOfOmittedFields, getBytecodeIndex());
         decrementMaxstackSize(numOfOmittedFields);

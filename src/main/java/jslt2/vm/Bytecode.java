@@ -263,8 +263,10 @@ public class Bytecode {
             String opcode = Opcodes.op2str(iopcode);
             
             for(int t = 0; t < numTabs; t++) sb.append(Indent);
-            switch(iopcode) {
-                case Opcodes.NEW_OBJ: 
+            switch(iopcode) {                
+                case Opcodes.MATCHER:
+                case Opcodes.USER_INVOKE:
+                case Opcodes.MACRO_INVOKE:
                 case Opcodes.INVOKE: {
                     String arg1 = Integer.toString(Opcodes.ARG1(code));
                     String arg2 = Integer.toString(Opcodes.ARG2(code));
@@ -312,6 +314,18 @@ public class Bytecode {
                     break;
                 }            
                 
+                case Opcodes.ARRAY_SLICE:
+                case Opcodes.GET_FIELD:
+                case Opcodes.GET_ARRAY_ELEMENT:
+                
+                case Opcodes.ADD_ELEMENT:
+                case Opcodes.ADD_FIELD:
+                
+                case Opcodes.NEW_OBJ: 
+                case Opcodes.SEAL_OBJ: 
+                case Opcodes.NEW_ARRAY:
+                case Opcodes.SEAL_ARRAY: 
+                
                 case Opcodes.LOAD_NULL:
                 case Opcodes.LOAD_TRUE:
                 case Opcodes.LOAD_FALSE:
@@ -344,9 +358,11 @@ public class Bytecode {
                         String argx = Integer.toString(Opcodes.ARGx(code));                                                         
                         sb.append(String.format(lineFormat3, opcode, argx, i));
                     }
-                    break;
+                    break;                
                 }
+                case Opcodes.ADD_FIELDK:
                 case Opcodes.GET_FIELDK:
+                case Opcodes.GET_INPUT_FIELDK:
                 case Opcodes.LOAD_CONST: {
                     String argx = Integer.toString(Opcodes.ARGx(code));                                                         
                     sb.append(String.format(lineFormat4, opcode, argx, i, bytecode.constants[Opcodes.ARGx(code)]));
