@@ -117,7 +117,7 @@ async {
 
 There are several limitations or "gotchas" with `async` blocks:
 
-* Any variables defined in the async block can not reference other variables in the async block:
+   * Any variables defined in the async block can not reference other variables in the async block:
 
 ```
 async {
@@ -127,7 +127,7 @@ async {
 
 ```
 
-* Any variables or functions defined outside of the async block must be declared before the async block:
+   * Any variables or functions defined outside of the async block must be declared before the async block:
 
 ```
 let y = "bar"
@@ -140,7 +140,7 @@ let x = "foo"
 
 ```
 
-* After the async block definition, the variables defined in the async block can be used:
+   * After the async block definition, the variables defined in the async block can be used:
 
 ```
 

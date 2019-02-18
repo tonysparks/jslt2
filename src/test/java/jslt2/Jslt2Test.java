@@ -486,6 +486,14 @@ public class Jslt2Test {
         runtime.eval(script, input);
     }
     
+    @Test(expected=Jslt2Exception.class)
+    public void testAsyncReferenceVarInAsync() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-bad-var-in-async.json").toPath()));         
+        runtime.eval(script, input);
+    }
+    
     @Test
     public void testAsyncEmbed() throws Exception {        
         ObjectNode input = runtime.newObjectNode();        
