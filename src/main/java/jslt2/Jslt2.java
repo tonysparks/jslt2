@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import jslt2.Jslt2StdLibrary.Jslt2FunctionValidation;
+import jslt2.parser.ParseException;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -119,16 +120,21 @@ public class Jslt2 {
             inputReader = new InputStreamReader(System.in);
         }
         
-        Jslt2 runtime = Jslt2.builder()
-                .enableDebugMode(debugMode)
-                .includeNulls(!removeNulls)
-                .printBytecode(displayBytecode)
-                .build();
-        
-        JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
-        JsonNode result = runtime.eval(new FileReader(new File(templatePath)), input);
-        
-        System.out.println(result);        
+        try {
+            Jslt2 runtime = Jslt2.builder()
+                    .enableDebugMode(debugMode)
+                    .includeNulls(!removeNulls)
+                    .printBytecode(displayBytecode)
+                    .build();
+            
+            JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
+            JsonNode result = runtime.eval(new FileReader(new File(templatePath)), input);
+            
+            System.out.println(result);
+        }
+        catch(ParseException | Jslt2Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
     
     /**

@@ -8,9 +8,11 @@ import java.util.List;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
-import jslt2.ast.*;
-import jslt2.ast.Expr.*;
 import jslt2.ast.Decl.*;
+import jslt2.ast.Expr;
+import jslt2.ast.Expr.*;
+import jslt2.ast.ExprVisitor;
+import jslt2.parser.ErrorCode;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -49,7 +51,8 @@ public class Compiler {
         private Stack<String> moduleStack;
         private Stack<String> libraryStack;
         private boolean inAsyncBlock;
-    
+        private Locals asyncLocals;
+        
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
             this.asm.setDebug(runtime.isDebugMode());
@@ -66,8 +69,8 @@ public class Compiler {
             return this.asm.compile();
         }
         
-        private Jslt2Exception error(Expr expr, String msg) {
-            return new Jslt2Exception(msg);
+        private Jslt2Exception error(Expr expr, String msg) {                
+            return new Jslt2Exception(ErrorCode.errorMessage(expr.token, msg, expr.sourceLine));
         }
 
         /**
@@ -409,9 +412,15 @@ public class Compiler {
         @Override
         public void visit(VariableExpr expr) {
             asm.line(expr.lineNumber);
-            if(!asm.load(expr.variable)) {
-                throw error(expr, "'" + expr.variable + "' not defined at line: " + expr.lineNumber);
+            if(this.inAsyncBlock) {                
+                if(asyncLocals.get(expr.variable) > -1) {
+                    throw error(expr, "'" + expr.variable + "' can't be referenced in the same async block");
+                }
             }
+            
+            if(!asm.load(expr.variable)) {
+                throw error(expr, "'" + expr.variable + "' not defined");
+            }            
         }
     
         @Override
@@ -496,8 +505,10 @@ public class Compiler {
         @Override
         public void visit(AsyncBlockDecl expr) {
             asm.line(expr.lineNumber);
-            inAsyncBlock = true;
             
+            inAsyncBlock = true;            
+            asyncLocals = asm.getLocals();
+                        
             List<LetDecl> lets = expr.lets;
             for(LetDecl let : lets) {
                 // store off the local index, so that ASYNC opcode

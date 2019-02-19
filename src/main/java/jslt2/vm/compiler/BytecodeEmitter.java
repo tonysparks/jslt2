@@ -482,19 +482,6 @@ public class BytecodeEmitter {
     public int addLocal(String reference) {
         return peek().localScope.addLocal(reference);
     }
-
-    /**
-     * Adds the reference to the {@link Locals} pool and calls 
-     * invokes a {@link BytecodeEmitter#storelocal(int)}.
-     * 
-     * @see BytecodeEmitter#addLocal(String)
-     * @see BytecodeEmitter#storelocal(int)
-     * @param reference
-     */
-    public void addAndstorelocal(String reference) {
-        int index = addLocal(reference);
-        storelocal(index);
-    }
     
     /**
      * @return the number of instructions

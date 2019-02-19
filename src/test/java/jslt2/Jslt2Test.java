@@ -491,7 +491,26 @@ public class Jslt2Test {
         ObjectNode input = runtime.newObjectNode();
         
         String script = new String(Files.readAllBytes(new File("./examples/async-bad-var-in-async.json").toPath()));         
-        runtime.eval(script, input);
+        runtime.eval(script, input);        
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testAsyncReferenceVarInAsync2() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-bad-var-in-async2.json").toPath()));         
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+    }
+    
+    @Test
+    public void testAsyncReferenceVarInFunction() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-reference-var-in-function.json").toPath()));         
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+        assertEquals("{\"k\":\"hi\"}", result.toString());
     }
     
     @Test

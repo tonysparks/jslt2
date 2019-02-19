@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 
+import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
 import jslt2.util.Jslt2Util;
 import jslt2.util.Tuple;
@@ -22,6 +23,7 @@ import static jslt2.ast.Decl.*;
 public abstract class Expr  {
     
     public Expr parentNode;
+    public Token token;
     public int lineNumber;
     public String sourceLine;
         

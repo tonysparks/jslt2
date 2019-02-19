@@ -568,7 +568,8 @@ public class Parser {
      */
     private <T extends Expr> T node(T node) {
         if(this.startToken != null) {
-            node.sourceLine = this.startToken.getText();
+            node.sourceLine = this.scanner.getSourceLine(this.startToken.getLineNumber());            
+            node.token = this.startToken;
             node.lineNumber = this.startToken.getLineNumber();
         }
         return node;
@@ -691,34 +692,9 @@ public class Parser {
      * @param errorCode
      * @return the {@link ParseException} to be thrown
      */
-    private ParseException error(Token token, ErrorCode errorCode) {
-        int lineNumber = token.getLineNumber();
-        int position = token.getPosition();
-        String tokenText = token.getType() != TokenType.END_OF_FILE ? token.getText() : null;
-        String errorMessage = errorCode.toString(); 
-        
-        int spaceCount = position + 1;
-        String currentLine = this.scanner.getSourceLine(lineNumber);
-        StringBuilder flagBuffer = new StringBuilder(currentLine != null ? currentLine : "");
-        flagBuffer.append("\n");
-
-        // Spaces up to the error position.
-        for (int i = 1; i < spaceCount; ++i) {
-            flagBuffer.append(' ');
-        }
-
-        // A pointer to the error followed by the error message.
-        flagBuffer.append("^\n*** ").append(errorMessage);
-
-        flagBuffer.append(" [at line: ").append(lineNumber);
-        
-        // Text, if any, of the bad token.
-        if (tokenText != null) {
-            flagBuffer.append(" '").append(tokenText).append("'");
-        }
-        
-        flagBuffer.append("]");
-
-        return new ParseException(errorCode, token, flagBuffer.toString());
+    private ParseException error(Token token, ErrorCode errorCode) {        
+        String currentLine = this.scanner.getSourceLine(token.getLineNumber());
+        String sourceLine = currentLine != null ? currentLine : "";
+        return new ParseException(errorCode, token, ErrorCode.errorMessage(token, errorCode.toString(), sourceLine));
     }
 }

@@ -1,3 +1,5 @@
+let h = "bye"
+
 async {    
     let h = "foo"
     let k = $h
