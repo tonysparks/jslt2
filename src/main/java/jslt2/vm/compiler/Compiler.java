@@ -52,6 +52,7 @@ public class Compiler {
         private Stack<String> libraryStack;
         private boolean inAsyncBlock;
         private Locals asyncLocals;
+        private int asyncLocalsIndex;
         
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
@@ -413,7 +414,7 @@ public class Compiler {
         public void visit(VariableExpr expr) {
             asm.line(expr.lineNumber);
             if(this.inAsyncBlock) {                
-                if(asyncLocals.get(expr.variable) > -1) {
+                if(asyncLocals.get(expr.variable) >= this.asyncLocalsIndex) {
                     throw error(expr, "'" + expr.variable + "' can't be referenced in the same async block");
                 }
             }
@@ -508,13 +509,18 @@ public class Compiler {
             
             inAsyncBlock = true;            
             asyncLocals = asm.getLocals();
-                        
+            asyncLocalsIndex = asyncLocals.getIndex();            
+            
             List<LetDecl> lets = expr.lets;
             for(LetDecl let : lets) {
                 // store off the local index, so that ASYNC opcode
                 // can use it
                 String localVarName = "$" + let.identifier; 
-                int index = asm.addLocal(localVarName);
+                int index = asm.addLocal(localVarName, true);
+                if(index < 0) {
+                    throw error(let, localVarName + " is already defined");
+                }
+                
                 asm.addAndloadconst(index);
                 
                 // now run the value in an async thread

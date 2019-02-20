@@ -1,0 +1,13 @@
+
+def m()
+    "hi"
+let v = m()
+
+
+async {        
+    let k = $v
+}
+    
+{ 
+     "k" : $k
+} 

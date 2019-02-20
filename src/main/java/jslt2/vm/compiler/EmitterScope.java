@@ -208,14 +208,21 @@ public class EmitterScope {
      * Adds the symbol to the {@link Locals}.
      * 
      * @param reference
-     * @return the index it is stored in the locals table
+     * @param unique true if this should check for if this reference is already defined
+     * @return the index it is stored in the locals table.  This returns -1 if unique is true and
+     * the reference already exists
      */
-    public int addLocal(String reference) {
+    public int addLocal(String reference, boolean unique) {
         if(isDebug()) {
             debugSymbols.store(reference, getInstructionCount());
         }
         
         Locals locals = getLocals();
+        
+        if(unique && locals.get(reference) > -1) {
+            return -1; 
+        }
+        
         return locals.store(reference);
     }
     

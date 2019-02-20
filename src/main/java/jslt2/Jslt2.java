@@ -62,12 +62,14 @@ public class Jslt2 {
             return;
         }
         
+        String inlineTemplate = null;
         String templatePath = null;
         String inputPath = null;
         
         boolean removeNulls = false;
         boolean displayBytecode = false;
         boolean debugMode = false;
+        boolean format = false;
         
         for(int i = 0; i < args.length; i++) {
             final String arg = args[i];
@@ -79,6 +81,16 @@ public class Jslt2 {
                     }
                     
                     templatePath = args[i+1];
+                    i++; 
+                    break;
+                }
+                case "-inline": {
+                    if(i+1 >= args.length) {
+                        System.out.println("inline option needs a value");
+                        return;
+                    }
+                    
+                    inlineTemplate = args[i+1];
                     i++; 
                     break;
                 }
@@ -104,11 +116,15 @@ public class Jslt2 {
                     debugMode = true;
                     break;
                 }
+                case "-format": {
+                    format = true;
+                    break;
+                }
             }
         }
         
-        if(templatePath == null) {
-            System.out.println("Requires -template option");
+        if(templatePath == null && inlineTemplate == null) {
+            System.out.println("Requires -template or -inline option");
             return;
         }
         
@@ -120,6 +136,14 @@ public class Jslt2 {
             inputReader = new InputStreamReader(System.in);
         }
         
+        Reader templateReader = null;
+        if(inlineTemplate != null) {
+            templateReader = new StringReader(inlineTemplate);
+        }
+        else {
+            templateReader = new FileReader(new File(templatePath));
+        }
+        
         try {
             Jslt2 runtime = Jslt2.builder()
                     .enableDebugMode(debugMode)
@@ -128,9 +152,14 @@ public class Jslt2 {
                     .build();
             
             JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
-            JsonNode result = runtime.eval(new FileReader(new File(templatePath)), input);
+            JsonNode result = runtime.eval(templateReader, input);
             
-            System.out.println(result);
+            if(format) {
+                System.out.println(runtime.getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result));
+            }
+            else {
+                System.out.println(runtime.getObjectMapper().writer().writeValueAsString(result));
+            }
         }
         catch(ParseException | Jslt2Exception e) {
             System.err.println(e.getMessage());

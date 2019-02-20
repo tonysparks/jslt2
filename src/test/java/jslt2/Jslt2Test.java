@@ -514,6 +514,16 @@ public class Jslt2Test {
     }
     
     @Test
+    public void testAsyncReferenceVar() throws Exception {        
+        ObjectNode input = runtime.newObjectNode();
+        
+        String script = new String(Files.readAllBytes(new File("./examples/async-reference-var.json").toPath()));         
+        JsonNode result = runtime.eval(script, input);
+        System.out.println(result);
+        assertEquals("{\"k\":\"hi\"}", result.toString());
+    }
+    
+    @Test
     public void testAsyncEmbed() throws Exception {        
         ObjectNode input = runtime.newObjectNode();        
         String script = new String(Files.readAllBytes(new File("./examples/async-embed.json").toPath()));         
