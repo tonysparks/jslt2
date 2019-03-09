@@ -10,9 +10,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 
+import jslt2.parser.tokens.Token;
 import jslt2.parser.tokens.TokenType;
 import jslt2.util.Jslt2Util;
 import jslt2.util.Tuple;
+import static jslt2.ast.Decl.*;
 
 /**
  * @author Tony
@@ -21,6 +23,7 @@ import jslt2.util.Tuple;
 public abstract class Expr  {
     
     public Expr parentNode;
+    public Token token;
     public int lineNumber;
     public String sourceLine;
         
@@ -95,24 +98,6 @@ public abstract class Expr  {
                                   Expressions 
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
     
-    public static class AsyncExpr extends Expr {
-        public Expr expr;
-        
-        public AsyncExpr(Expr expr) {
-            this.expr = becomeParentOf(expr);
-        }
-        
-        @Override
-        public void visit(ExprVisitor v) {
-            v.visit(this);
-        }
-        
-        @Override
-        public Expr optimize() {
-            this.expr = this.expr.optimize();
-            return this;
-        }
-    }
     
     public static class ArrayExpr extends Expr {
         public ForArrayExpr forExpr;
@@ -293,37 +278,7 @@ public abstract class Expr  {
         }
     }
     
-    public static class DefExpr extends Expr {
 
-        public String identifier;
-        public List<String> parameters;
-        public List<LetExpr> lets;
-        public Expr expr;
-        
-        public DefExpr(String identifier, List<String> parameters, List<LetExpr> lets, Expr expr) {
-            this.identifier = identifier;
-            this.parameters = parameters;
-            this.lets = becomeParentOf(lets);
-            this.expr = becomeParentOf(expr);
-        }
-        
-        @Override
-        public void visit(ExprVisitor v) {
-            v.visit(this);
-        }
-        
-        @Override
-        public Expr optimize() {
-            for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
-                lets.set(i, let);
-            }
-            
-            expr = expr.optimize();
-            
-            return this;
-        }
-    }
     
     public static class DotExpr extends Expr {
         public Expr field;
@@ -347,10 +302,10 @@ public abstract class Expr  {
     }
     
     public static class ElseExpr extends Expr {
-        public List<LetExpr> lets;
+        public List<LetDecl> lets;
         public Expr expr;
         
-        public ElseExpr(List<LetExpr> lets, Expr expr) {
+        public ElseExpr(List<LetDecl> lets, Expr expr) {
             this.lets = becomeParentOf(lets);
             this.expr = becomeParentOf(expr);
         }
@@ -363,7 +318,7 @@ public abstract class Expr  {
         @Override
         public Expr optimize() {
             for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
+                LetDecl let = lets.get(i).optimize().as();
                 lets.set(i, let);
             }
             
@@ -375,11 +330,11 @@ public abstract class Expr  {
     public static class ForArrayExpr extends Expr {
 
         public Expr condition;
-        public List<LetExpr> lets;    
+        public List<LetDecl> lets;    
         public Expr valueExpr;
         public Expr ifExpr;
         
-        public ForArrayExpr(Expr condition, List<LetExpr> lets, Expr valueExpr, Expr ifExpr) {
+        public ForArrayExpr(Expr condition, List<LetDecl> lets, Expr valueExpr, Expr ifExpr) {
             this.condition = becomeParentOf(condition);
             this.lets = becomeParentOf(lets);
             this.valueExpr = becomeParentOf(valueExpr);
@@ -395,7 +350,7 @@ public abstract class Expr  {
         @Override
         public Expr optimize() {
             for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
+                LetDecl let = lets.get(i).optimize().as();
                 lets.set(i, let);
             }
             
@@ -423,12 +378,12 @@ public abstract class Expr  {
     
     public static class ForObjectExpr extends Expr {
         public Expr condition;
-        public List<LetExpr> lets;
+        public List<LetDecl> lets;
         public Expr keyExpr;
         public Expr valueExpr;
         public Expr ifExpr;
         
-        public ForObjectExpr(Expr condition, List<LetExpr> lets, Expr keyExpr, Expr valueExpr, Expr ifExpr) {
+        public ForObjectExpr(Expr condition, List<LetDecl> lets, Expr keyExpr, Expr valueExpr, Expr ifExpr) {
             this.condition = becomeParentOf(condition);
             this.lets = becomeParentOf(lets);
             this.keyExpr = becomeParentOf(keyExpr);
@@ -445,7 +400,7 @@ public abstract class Expr  {
         @Override
         public Expr optimize() {
             for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
+                LetDecl let = lets.get(i).optimize().as();
                 lets.set(i, let);
             }
             
@@ -563,12 +518,12 @@ public abstract class Expr  {
     }
     
     public static class IfExpr extends Expr {
-        public List<LetExpr> lets;
+        public List<LetDecl> lets;
         public Expr condition;
         public Expr thenExpr;
         public ElseExpr elseExpr;
 
-        public IfExpr(List<LetExpr> lets, Expr condition, Expr thenExpr, ElseExpr elseExpr) {
+        public IfExpr(List<LetDecl> lets, Expr condition, Expr thenExpr, ElseExpr elseExpr) {
             this.lets = becomeParentOf(lets);
             this.condition = becomeParentOf(condition);
             this.thenExpr = becomeParentOf(thenExpr);
@@ -583,7 +538,7 @@ public abstract class Expr  {
         @Override
         public Expr optimize() {
             for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
+                LetDecl let = lets.get(i).optimize().as();
                 lets.set(i, let);
             }
             
@@ -608,50 +563,6 @@ public abstract class Expr  {
             }
             
             
-            return this;
-        }
-    }
-
-    public static class ImportExpr extends Expr {
-
-        public final String library;
-        public final String alias;
-        
-        public ImportExpr(String library, String alias) {
-            this.library = library;
-            this.alias = alias;
-        }
-
-        @Override
-        public void visit(ExprVisitor v) {
-            v.visit(this);
-        }
-        
-        @Override
-        public Expr optimize() {
-            return this;
-        }
-        
-    }
-    
-    public static class LetExpr extends Expr {
-
-        public final String identifier;
-        public Expr value;
-        
-        public LetExpr(String identifier, Expr value) {
-            this.identifier = identifier;
-            this.value = becomeParentOf(value);
-        }
-
-        @Override
-        public void visit(ExprVisitor v) {
-            v.visit(this);
-        }
-        
-        @Override
-        public Expr optimize() {
-            value = value.optimize();
             return this;
         }
     }
@@ -708,17 +619,12 @@ public abstract class Expr  {
 
     public static class ModuleExpr extends Expr {
 
-        public List<ImportExpr> imports;
-        public List<LetExpr> lets;
-        public List<DefExpr> defs;
+        public List<Decl> declarations;
 
         public Expr expr;
 
-        public ModuleExpr(List<ImportExpr> imports, List<LetExpr> lets, List<DefExpr> defs, Expr expr) {
-            this.imports = becomeParentOf(imports);
-            this.lets = becomeParentOf(lets);
-            this.defs = becomeParentOf(defs);
-            
+        public ModuleExpr(List<Decl> declarations, Expr expr) {
+            this.declarations = becomeParentOf(declarations);
             this.expr = becomeParentOf(expr);
         }
         
@@ -729,21 +635,11 @@ public abstract class Expr  {
         
         @Override
         public Expr optimize() {
-            for(int i = 0; i < imports.size(); i++) {
-                ImportExpr imp = imports.get(i).optimize().as();
-                imports.set(i, imp);
+            for(int i = 0; i < declarations.size(); i++) {
+                Decl decl = declarations.get(i).optimize().as();
+                declarations.set(i, decl);
             }
-            
-            for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
-                lets.set(i, let);
-            }
-            
-            for(int i = 0; i < defs.size(); i++) {
-                DefExpr def = defs.get(i).optimize().as();
-                defs.set(i, def);
-            }
-            
+              
             if(expr != null) {
                 expr = expr.optimize();
             }
@@ -807,11 +703,11 @@ public abstract class Expr  {
 
     public static class ObjectExpr extends Expr {
 
-        public List<LetExpr> lets;
+        public List<LetDecl> lets;
         public ForObjectExpr forObjectExpr;
         public List<Tuple<Expr, Expr>> fields;
         
-        public ObjectExpr(List<LetExpr> lets, ForObjectExpr forObjectExpr, List<Tuple<Expr, Expr>> fields) {
+        public ObjectExpr(List<LetDecl> lets, ForObjectExpr forObjectExpr, List<Tuple<Expr, Expr>> fields) {
             this.lets = becomeParentOf(lets);
             this.forObjectExpr = becomeParentOf(forObjectExpr);
             this.fields = becomeParentOfByTuples(fields);
@@ -825,7 +721,7 @@ public abstract class Expr  {
         @Override
         public Expr optimize() {
             for(int i = 0; i < lets.size(); i++) {
-                LetExpr let = lets.get(i).optimize().as();
+                LetDecl let = lets.get(i).optimize().as();
                 lets.set(i, let);
             }
             
@@ -851,8 +747,8 @@ public abstract class Expr  {
 
     public static class ProgramExpr extends ModuleExpr {
         
-        public ProgramExpr(List<ImportExpr> imports, List<LetExpr> lets, List<DefExpr> defs, Expr expr) {
-            super(imports, lets, defs, expr);
+        public ProgramExpr(List<Decl> declarations, Expr expr) {
+            super(declarations, expr);
         }
 
         @Override

@@ -1,0 +1,11 @@
+async {
+    let a = sleep(2000, "1")
+    let b = sleep(2000, "2")
+    let c = sleep(2000, "3")
+}
+
+{    
+    "a" : $a,
+    "b" : $b,
+    "c" : $c, 
+} 

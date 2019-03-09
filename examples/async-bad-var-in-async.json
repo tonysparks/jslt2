@@ -1,0 +1,11 @@
+let h = "bye"
+
+async {    
+    let z = 1
+    let h = "foo"
+    let k = $h
+}
+    
+{ 
+     * : . 
+} 

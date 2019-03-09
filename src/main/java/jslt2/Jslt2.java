@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import jslt2.Jslt2StdLibrary.Jslt2FunctionValidation;
+import jslt2.parser.ParseException;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -60,12 +62,14 @@ public class Jslt2 {
             return;
         }
         
+        String inlineTemplate = null;
         String templatePath = null;
         String inputPath = null;
         
         boolean removeNulls = false;
         boolean displayBytecode = false;
         boolean debugMode = false;
+        boolean format = false;
         
         for(int i = 0; i < args.length; i++) {
             final String arg = args[i];
@@ -77,6 +81,16 @@ public class Jslt2 {
                     }
                     
                     templatePath = args[i+1];
+                    i++; 
+                    break;
+                }
+                case "-inline": {
+                    if(i+1 >= args.length) {
+                        System.out.println("inline option needs a value");
+                        return;
+                    }
+                    
+                    inlineTemplate = args[i+1];
                     i++; 
                     break;
                 }
@@ -102,11 +116,15 @@ public class Jslt2 {
                     debugMode = true;
                     break;
                 }
+                case "-format": {
+                    format = true;
+                    break;
+                }
             }
         }
         
-        if(templatePath == null) {
-            System.out.println("Requires -template option");
+        if(templatePath == null && inlineTemplate == null) {
+            System.out.println("Requires -template or -inline option");
             return;
         }
         
@@ -118,16 +136,34 @@ public class Jslt2 {
             inputReader = new InputStreamReader(System.in);
         }
         
-        Jslt2 runtime = Jslt2.builder()
-                .enableDebugMode(debugMode)
-                .includeNulls(!removeNulls)
-                .printBytecode(displayBytecode)
-                .build();
+        Reader templateReader = null;
+        if(inlineTemplate != null) {
+            templateReader = new StringReader(inlineTemplate);
+        }
+        else {
+            templateReader = new FileReader(new File(templatePath));
+        }
         
-        JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
-        JsonNode result = runtime.eval(new FileReader(new File(templatePath)), input);
-        
-        System.out.println(result);        
+        try {
+            Jslt2 runtime = Jslt2.builder()
+                    .enableDebugMode(debugMode)
+                    .includeNulls(!removeNulls)
+                    .printBytecode(displayBytecode)
+                    .build();
+            
+            JsonNode input = runtime.getObjectMapper().readTree(inputReader);        
+            JsonNode result = runtime.eval(templateReader, input);
+            
+            if(format) {
+                System.out.println(runtime.getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result));
+            }
+            else {
+                System.out.println(runtime.getObjectMapper().writer().writeValueAsString(result));
+            }
+        }
+        catch(ParseException | Jslt2Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
     
     /**
@@ -298,6 +334,19 @@ public class Jslt2 {
      */
     public Jslt2 addFunction(String name, Jslt2Function function) {        
         this.userFunctions.put(name, function);
+        
+        return this;
+    }
+    
+    /**
+     * Register a user defined {@link Jslt2Function}
+     * 
+     * @param name
+     * @param minArgs minimum number of arguments 
+     * @param function
+     */
+    public Jslt2 addFunction(String name, int minArgs, Jslt2Function function) {        
+        this.userFunctions.put(name, new Jslt2FunctionValidation(minArgs, function));
         
         return this;
     }

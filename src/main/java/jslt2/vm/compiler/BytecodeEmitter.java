@@ -477,23 +477,23 @@ public class BytecodeEmitter {
      * Adds the symbol to the {@link Locals}.
      * 
      * @param reference
+     * @param unique
+     * @return the index it is stored in the locals table.  If unique is true, this
+     * will check if the reference already exists, if so, returns -1
+     */
+    public int addLocal(String reference, boolean unique) {
+        return peek().localScope.addLocal(reference, unique);
+    }
+    
+    /**
+     * Adds the symbol to the {@link Locals}.
+     * 
+     * @param reference
+     * @param unique
      * @return the index it is stored in the locals table
      */
     public int addLocal(String reference) {
-        return peek().localScope.addLocal(reference);
-    }
-
-    /**
-     * Adds the reference to the {@link Locals} pool and calls 
-     * invokes a {@link BytecodeEmitter#storelocal(int)}.
-     * 
-     * @see BytecodeEmitter#addLocal(String)
-     * @see BytecodeEmitter#storelocal(int)
-     * @param reference
-     */
-    public void addAndstorelocal(String reference) {
-        int index = addLocal(reference);
-        storelocal(index);
+        return addLocal(reference, false);
     }
     
     /**
@@ -802,6 +802,10 @@ public class BytecodeEmitter {
         peek().localScope.setAsync(true);
         decrementMaxstackSize();
         newLocalScopeEmitter(0);
+    }
+    
+    public void await() {
+        instr(AWAIT);
     }
     
     public void matcher(int numOfOmittedFields) {

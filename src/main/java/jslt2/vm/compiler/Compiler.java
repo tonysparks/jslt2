@@ -8,8 +8,11 @@ import java.util.List;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
-import jslt2.ast.*;
+import jslt2.ast.Decl.*;
+import jslt2.ast.Expr;
 import jslt2.ast.Expr.*;
+import jslt2.ast.ExprVisitor;
+import jslt2.parser.ErrorCode;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
@@ -47,19 +50,28 @@ public class Compiler {
         private BytecodeEmitter asm;
         private Stack<String> moduleStack;
         private Stack<String> libraryStack;
-    
+        private boolean inAsyncBlock;
+        private Locals asyncLocals;
+        private int asyncLocalsIndex;
+        
         public BytecodeEmitterNodeVisitor() {
             this.asm = new BytecodeEmitter(new EmitterScopes());
             this.asm.setDebug(runtime.isDebugMode());
             
             this.moduleStack = new Stack<>();
             this.libraryStack = new Stack<>();
+            
+            this.inAsyncBlock = false;
         }
         
         public Bytecode compile(ProgramExpr program) {
             visit(program);
             
             return this.asm.compile();
+        }
+        
+        private Jslt2Exception error(Expr expr, String msg) {                
+            return new Jslt2Exception(ErrorCode.errorMessage(expr.token, msg, expr.sourceLine));
         }
 
         /**
@@ -73,7 +85,7 @@ public class Compiler {
             Expr child = expr;
             Expr parent = expr.parentNode;
             if(parent instanceof ArrayExpr) {
-                throw new Jslt2Exception("Object matching not allowed in an array");
+                throw error(parent, "Object matching not allowed in an array");
             }
             
             int count = 0;
@@ -148,37 +160,7 @@ public class Compiler {
                     Expr fieldName = field.getFirst();
                     Expr fieldValue = field.getSecond();
                     
-                    if(fieldValue instanceof AsyncExpr) {                        
-                        if(fieldName instanceof IdentifierExpr) {                            
-                            asm.addAndloadconst(((IdentifierExpr)fieldName).identifier);
-                            fieldValue.visit(this);
-                        }
-                        else if(fieldName instanceof StringExpr) {                            
-                            asm.addAndloadconst(((StringExpr)fieldName).string);
-                            fieldValue.visit(this);
-                        }   
-                        else {
-                            // we can't do Async because the key is "unknown",
-                            // we we'll grab the actual expression and execute it on the main thread
-                            fieldValue = ((AsyncExpr)fieldValue).expr; 
-                            
-                            if(fieldName instanceof MatchExpr) {
-                                pushInputContext(expr);
-                                fieldName.visit(this);
-                                
-                                // this is the body of the matcher function
-                                fieldValue.visit(this);                        
-                                asm.end();
-                            }
-                            else {                     
-                                fieldName.visit(this);
-                                fieldValue.visit(this);
-                                asm.addfield();
-                            }
-                        }
-                        
-                    }
-                    else if(fieldName instanceof IdentifierExpr) {
+                    if(fieldName instanceof IdentifierExpr) {
                         fieldValue.visit(this);
                         asm.addfieldk(((IdentifierExpr)fieldName).identifier);
                     }
@@ -335,7 +317,7 @@ public class Compiler {
         }
     
         @Override
-        public void visit(LetExpr expr) {
+        public void visit(LetDecl expr) {
             asm.line(expr.lineNumber);
             
             String localVarName = "$" + expr.identifier; 
@@ -345,7 +327,7 @@ public class Compiler {
         }
     
         @Override
-        public void visit(DefExpr expr) {
+        public void visit(DefDecl expr) {
             asm.line(expr.lineNumber);
             
             String functionName = expr.identifier;
@@ -405,6 +387,10 @@ public class Compiler {
                 functionName = ((IdentifierExpr)identifier).identifier;
                 bytecodeIndex = asm.getFunction(functionName);
                 if(!runtime.hasFunction(functionName)) {
+                    if(inAsyncBlock && bytecodeIndex < 0) {
+                        throw error(identifier, "'" + functionName + "' is undefined or must be defined before the async block");
+                    }
+                    
                     asm.addPendingFunction(functionName);
                     bytecodeIndex = 999;
                 }
@@ -427,9 +413,15 @@ public class Compiler {
         @Override
         public void visit(VariableExpr expr) {
             asm.line(expr.lineNumber);
-            if(!asm.load(expr.variable)) {
-                throw new Jslt2Exception("'" + expr.variable + "' not defined at line: " + expr.lineNumber);
+            if(this.inAsyncBlock) {                
+                if(asyncLocals.get(expr.variable) >= this.asyncLocalsIndex) {
+                    throw error(expr, "'" + expr.variable + "' can't be referenced in the same async block");
+                }
             }
+            
+            if(!asm.load(expr.variable)) {
+                throw error(expr, "'" + expr.variable + "' not defined");
+            }            
         }
     
         @Override
@@ -465,14 +457,14 @@ public class Compiler {
         
     
         @Override
-        public void visit(ImportExpr expr) {
+        public void visit(ImportDecl expr) {
             asm.line(expr.lineNumber);
     
             String fileName = expr.library;
             fileName = fileName.substring(1, fileName.length() - 1);
             
             if(this.libraryStack.contains(fileName)) {
-                throw new Jslt2Exception("'" + fileName + "' is already imported");
+                throw error(expr, "'" + fileName + "' is already imported");
             }
             
             try {
@@ -494,10 +486,7 @@ public class Compiler {
         public void visit(ProgramExpr expr) {
             asm.startGlobal();
                 asm.line(expr.lineNumber);
-                expr.imports.forEach(imp -> imp.visit(this));
-                expr.lets.forEach(let -> let.visit(this));
-                expr.defs.forEach(def -> def.visit(this));
-                
+                expr.declarations.forEach(decl -> decl.visit(this));                
                 expr.expr.visit(this);
             asm.end();
         }
@@ -505,23 +494,44 @@ public class Compiler {
         @Override
         public void visit(ModuleExpr expr) {      
             asm.line(expr.lineNumber);
-            expr.imports.forEach(imp -> imp.visit(this));
-            expr.lets.forEach(let -> let.visit(this));
-            expr.defs.forEach(def -> def.visit(this));   
+            expr.declarations.forEach(decl -> decl.visit(this));   
             
             Expr funcExpr = expr.expr;
             if(funcExpr != null) {
-                DefExpr defExpr = new DefExpr(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
+                DefDecl defExpr = new DefDecl(this.moduleStack.peek(), new ArrayList<>(), new ArrayList<>(), funcExpr);
                 defExpr.visit(this);
             }
         }
     
         @Override
-        public void visit(AsyncExpr expr) {
-            asm.line(expr.lineNumber);            
-            asm.async();
-            expr.expr.visit(this);
-            asm.end();
+        public void visit(AsyncBlockDecl expr) {
+            asm.line(expr.lineNumber);
+            
+            inAsyncBlock = true;            
+            asyncLocals = asm.getLocals();
+            asyncLocalsIndex = asyncLocals.getIndex();            
+            
+            List<LetDecl> lets = expr.lets;
+            for(LetDecl let : lets) {
+                // store off the local index, so that ASYNC opcode
+                // can use it
+                String localVarName = "$" + let.identifier; 
+                int index = asm.addLocal(localVarName, true);
+                if(index < 0) {
+                    throw error(let, localVarName + " is already defined");
+                }
+                
+                asm.addAndloadconst(index);
+                
+                // now run the value in an async thread
+                asm.async();
+                let.value.visit(this);
+                asm.end();
+            }
+            
+            asm.await();
+            
+            inAsyncBlock = false;
         }
         
         @Override
@@ -537,7 +547,7 @@ public class Compiler {
                     asm.neg();
                     break;
                 default:
-                    throw new Jslt2Exception("Invalid unary operator: " + expr.operator);
+                    throw error(expr, "Invalid unary operator: " + expr.operator);
             }
         }
     
@@ -580,7 +590,7 @@ public class Compiler {
                     expr.left.visit(this);
                     expr.right.visit(this);
                     
-                    visitBinaryExpression(operator);        
+                    visitBinaryExpression(expr, operator);        
                 }
             }
         }
@@ -589,9 +599,8 @@ public class Compiler {
          * Visits a Binary Expression
          * 
          * @param op
-         * @throws EvalException
          */
-        private void visitBinaryExpression(TokenType op) throws Jslt2Exception {
+        private void visitBinaryExpression(Expr expr, TokenType op) {
             switch(op) {
                 case PLUS:  asm.add(); break;
                 case MINUS: asm.sub(); break;
@@ -609,7 +618,7 @@ public class Compiler {
                 case EQUALS:          asm.eq();   break;
                             
                 default: 
-                    throw new Jslt2Exception("Unknown BinaryOperator: " + op);            
+                    throw error(expr, "Unknown BinaryOperator: " + op);            
             }
             
         }
@@ -657,7 +666,7 @@ public class Compiler {
                         asm.addAndloadconst(((StringExpr)field).string);
                     }
                     else {
-                        throw new Jslt2Exception("Invalid match field expression: " + field);
+                        throw error(expr, "Invalid match field expression: " + field);
                     }
                 }
             }

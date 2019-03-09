@@ -31,11 +31,33 @@ public class Jslt2StdLibrary {
       zonenames.addAll(Arrays.asList(TimeZone.getAvailableIDs()));
     }
     
+    static class Jslt2FunctionValidation implements Jslt2Function {
+        
+        int minArgs;
+        Jslt2Function func;
+        
+        public Jslt2FunctionValidation(int minArgs, Jslt2Function func) {
+            this.minArgs = minArgs;
+            this.func = func;
+        }
+        
+        @Override
+        public JsonNode execute(JsonNode input, JsonNode... args) throws Jslt2Exception {
+            if(this.minArgs > -1) {
+                if(args == null || args.length < this.minArgs) {
+                    throw new Jslt2Exception(this.func.name() + " requires at least " + this.minArgs + " arguments");
+                }
+            }
+                
+            return this.func.execute(input, args);
+        }
+    }
+    
     public Jslt2StdLibrary(final Jslt2 runtime) {
         
         // General
         
-        runtime.addFunction("contains", (input, arguments) -> {
+        runtime.addFunction("contains", 2, (input, arguments) -> {
             if (arguments[1].isNull())
                 return BooleanNode.FALSE; // nothing is contained in null
 
@@ -64,7 +86,7 @@ public class Jslt2StdLibrary {
 
             return BooleanNode.FALSE;
         });
-        runtime.addFunction("size", (input, arguments) -> {
+        runtime.addFunction("size", 1, (input, arguments) -> {
             if (arguments[0].isArray() || arguments[0].isObject()) {
                 return IntNode.valueOf(arguments[0].size());
             }
@@ -79,7 +101,7 @@ public class Jslt2StdLibrary {
             throw new Jslt2Exception("Function size() cannot work on " + arguments[0]);
         });
         
-        runtime.addFunction("error", (input, arguments) -> {
+        runtime.addFunction("error", 1, (input, arguments) -> {
             String msg = Jslt2Util.toString(arguments[0], false);
             throw new Jslt2Exception("error: " + msg);
         });
@@ -89,10 +111,10 @@ public class Jslt2StdLibrary {
         
         // Numeric
         
-        runtime.addFunction("is-number", (input, arguments) -> {
+        runtime.addFunction("is-number", 1, (input, arguments) -> {
             return Jslt2Util.toJson(arguments[0].isNumber());
         });
-        runtime.addFunction("number", (input, arguments) -> {
+        runtime.addFunction("number", 1, (input, arguments) -> {
             if (arguments.length == 1) {
                 return Jslt2Util.number(arguments[0], true, null);
             }
@@ -100,7 +122,7 @@ public class Jslt2StdLibrary {
             return Jslt2Util.number(arguments[0], true, arguments[1]);
             
         });
-        runtime.addFunction("round", (input, arguments) -> {
+        runtime.addFunction("round", 1, (input, arguments) -> {
             JsonNode number = arguments[0];
             if (number.isNull()) {
                 return NullNode.instance;
@@ -111,7 +133,7 @@ public class Jslt2StdLibrary {
 
             return LongNode.valueOf(Math.round(number.doubleValue()));
         });
-        runtime.addFunction("floor", (input, arguments) -> {
+        runtime.addFunction("floor", 1, (input, arguments) -> {
             JsonNode number = arguments[0];
             if (number.isNull())
               return NullNode.instance;
@@ -120,7 +142,7 @@ public class Jslt2StdLibrary {
 
             return LongNode.valueOf((long) Math.floor(number.doubleValue()));
         });
-        runtime.addFunction("ceiling", (input, arguments) -> {
+        runtime.addFunction("ceiling", 1, (input, arguments) -> {
             JsonNode number = arguments[0];
             if (number.isNull())
               return NullNode.instance;
@@ -138,17 +160,17 @@ public class Jslt2StdLibrary {
         
         // String
         
-        runtime.addFunction("is-string", (input, arguments) -> {            
+        runtime.addFunction("is-string", 1, (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isTextual());
         });
-        runtime.addFunction("string", (input, arguments) -> {            
+        runtime.addFunction("string", 1, (input, arguments) -> {            
             if (arguments[0].isTextual()) {
                 return arguments[0];
             }
             
             return TextNode.valueOf(arguments[0].toString());
         });
-        runtime.addFunction("test", (input, arguments) -> {
+        runtime.addFunction("test", 2, (input, arguments) -> {
             // if data is missing then it doesn't match, end of story
             if (arguments[0].isNull()) {
                 return BooleanNode.FALSE;
@@ -164,7 +186,7 @@ public class Jslt2StdLibrary {
             java.util.regex.Matcher m = p.matcher(string);
             return Jslt2Util.toJson(m.find(0));
         });
-        runtime.addFunction("capture", (input, arguments) -> {
+        runtime.addFunction("capture", 2, (input, arguments) -> {
             // if data is missing then it doesn't match, end of story
             if (arguments[0].isNull()) {
                 return arguments[0]; // null
@@ -193,7 +215,7 @@ public class Jslt2StdLibrary {
 
             return node;
         });
-        runtime.addFunction("split", (input, arguments) -> {
+        runtime.addFunction("split", 2, (input, arguments) -> {
             // if input string is missing then we're doing nothing
             if (arguments[0].isNull()) {
                 return arguments[0]; // null
@@ -207,7 +229,7 @@ public class Jslt2StdLibrary {
             
             return Jslt2Util.toJson(runtime, string.split(split));
         });
-        runtime.addFunction("join", (input, arguments) -> {
+        runtime.addFunction("join", 2, (input, arguments) -> {
             ArrayNode array = Jslt2Util.toArray(arguments[0], true);
             if (array == null) {
                 return NullNode.instance;
@@ -225,7 +247,7 @@ public class Jslt2StdLibrary {
             }
             return TextNode.valueOf(buf.toString());
         });
-        runtime.addFunction("lowercase", (input, arguments) -> {
+        runtime.addFunction("lowercase", 1, (input, arguments) -> {
             // if input string is missing then we're doing nothing
             if (arguments[0].isNull()) {
                 return arguments[0]; // null
@@ -234,7 +256,7 @@ public class Jslt2StdLibrary {
             String string = Jslt2Util.toString(arguments[0], false);
             return TextNode.valueOf(string.toLowerCase());
         });
-        runtime.addFunction("uppercase", (input, arguments) -> {
+        runtime.addFunction("uppercase", 1, (input, arguments) -> {
             // if input string is missing then we're doing nothing
             if (arguments[0].isNull()) {
                 return arguments[0]; // null
@@ -243,17 +265,17 @@ public class Jslt2StdLibrary {
             String string = Jslt2Util.toString(arguments[0], false);
             return TextNode.valueOf(string.toUpperCase());
         });
-        runtime.addFunction("starts-with", (input, arguments) -> {
+        runtime.addFunction("starts-with", 2, (input, arguments) -> {
             String string = Jslt2Util.toString(arguments[0], false);
             String suffix = Jslt2Util.toString(arguments[1], false);
             return Jslt2Util.toJson(string.startsWith(suffix));
         });
-        runtime.addFunction("ends-with", (input, arguments) -> {
+        runtime.addFunction("ends-with", 2, (input, arguments) -> {
             String string = Jslt2Util.toString(arguments[0], false);
             String suffix = Jslt2Util.toString(arguments[1], false);
             return Jslt2Util.toJson(string.endsWith(suffix));
         });
-        runtime.addFunction("from-json", (input, arguments) -> {
+        runtime.addFunction("from-json", 1, (input, arguments) -> {
             String json = Jslt2Util.toString(arguments[0], true);
             if (json == null) {
                 return NullNode.instance;
@@ -277,7 +299,7 @@ public class Jslt2StdLibrary {
                 }
             }
         });
-        runtime.addFunction("to-json", (input, arguments) -> {
+        runtime.addFunction("to-json", 1, (input, arguments) -> {
             try {
                 String json = runtime.getObjectMapper().writeValueAsString(arguments[0]);
                 return new TextNode(json);
@@ -295,19 +317,19 @@ public class Jslt2StdLibrary {
             
             return BooleanNode.valueOf(!Jslt2Util.isTrue(node));
         });
-        runtime.addFunction("boolean", (input, arguments) -> {            
+        runtime.addFunction("boolean", 1, (input, arguments) -> {            
             return Jslt2Util.toJson(Jslt2Util.isTrue(arguments[0]));
         });
-        runtime.addFunction("is-boolean", (input, arguments) -> {            
+        runtime.addFunction("is-boolean", 1, (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isBoolean());
         });
         
         // Object
         
-        runtime.addFunction("is-object", (input, arguments) -> {            
+        runtime.addFunction("is-object", 1, (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isObject());
         });
-        runtime.addFunction("get-key", (input, arguments) -> {
+        runtime.addFunction("get-key", 2, (input, arguments) -> {
             String key = Jslt2Util.toString(arguments[1], true);
             if (key == null) {
                 return NullNode.instance;
@@ -335,7 +357,7 @@ public class Jslt2StdLibrary {
         });
         
         // Array
-        runtime.addFunction("array", (input, arguments) -> {            
+        runtime.addFunction("array", 1, (input, arguments) -> {            
             JsonNode value = arguments[0];
             if (value.isNull() || value.isArray()) {
                 return value;
@@ -346,10 +368,10 @@ public class Jslt2StdLibrary {
 
             throw new Jslt2Exception("array() cannot convert " + value);
         });
-        runtime.addFunction("is-array", (input, arguments) -> {            
+        runtime.addFunction("is-array", 1, (input, arguments) -> {            
             return Jslt2Util.toJson(arguments[0].isArray());
         });
-        runtime.addFunction("flatten", (input, arguments) -> {            
+        runtime.addFunction("flatten", 1, (input, arguments) -> {            
             JsonNode value = arguments[0];
             if (value.isNull()) {
                 return value;
@@ -368,7 +390,7 @@ public class Jslt2StdLibrary {
             long ms = System.currentTimeMillis();
             return Jslt2Util.toJson(ms / 1000.0);
         });
-        runtime.addFunction("parse-time", (input, arguments) -> {            
+        runtime.addFunction("parse-time", 2, (input, arguments) -> {            
             String text = Jslt2Util.toString(arguments[0], true);
             if (text == null) {
                 return NullNode.instance;
@@ -402,7 +424,7 @@ public class Jslt2StdLibrary {
                 return fallback;
             }
         });
-        runtime.addFunction("format-time", (input, arguments) -> {            
+        runtime.addFunction("format-time", 2, (input, arguments) -> {            
             JsonNode number = Jslt2Util.number(arguments[0], false, null);
             if (number == null || number.isNull()) {
                 return NullNode.instance;

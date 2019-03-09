@@ -8,21 +8,15 @@
 package jslt2;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.LongNode;
 
 import static org.junit.Assert.*;
 
-import jslt2.ast.Expr.IfExpr;
-import jslt2.ast.Expr.LetExpr;
 import jslt2.parser.Parser;
 import jslt2.parser.Scanner;
 import jslt2.parser.Source;
-import jslt2.vm.Bytecode;
 import jslt2.ast.Expr;
 import jslt2.ast.Expr.*;
 

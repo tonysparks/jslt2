@@ -1,0 +1,12 @@
+
+def m(x)
+    $x
+
+async {        
+    let h = "hi"
+    let k = m($h)
+}
+    
+{ 
+     "k" : $k
+} 

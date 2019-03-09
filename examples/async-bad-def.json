@@ -1,0 +1,10 @@
+async {    
+    let func2 = tests()
+        
+}
+    
+def tests() "hi"     
+
+{ 
+     * : . 
+} 
