@@ -1,0 +1,15 @@
+
+let v = "test"
+async {        
+    let k = $v
+}
+
+let w = "bar"
+async {       
+    let n = $w 
+    let z = $k
+}
+    
+{ 
+     "z" : $z + $n
+} 

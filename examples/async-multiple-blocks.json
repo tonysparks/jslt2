@@ -1,0 +1,13 @@
+
+let v = "test"
+async {        
+    let k = $v
+}
+
+async {        
+    let z = $k
+}
+    
+{ 
+     "z" : $z
+} 
