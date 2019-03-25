@@ -17,6 +17,8 @@ import com.schibsted.spt.data.jslt.JsltException;
 
 import static org.junit.Assert.*;
 
+import jslt2.parser.ParseException;
+
 /**
  * @author Tony
  *
@@ -62,15 +64,20 @@ public class TestBase {
             
             JsonNode actual = runtime.eval(query, context);
             System.out.println("VM: " + actual);
-            if (actual == null)
-                throw new JsltException("Returned Java null");
-
-            // reparse to handle IntNode(2) != LongNode(2)
-            actual = mapper.readTree(mapper.writeValueAsString(actual));
-
-            JsonNode expected = mapper.readTree(result);
-
-            assertEquals("actual class " + actual.getClass() + ", expected class " + expected.getClass(), expected, actual);
+            if (actual == null) {
+                //throw new JsltException("Returned Java null");
+                JsonNode expected = mapper.readTree(result);
+                
+                assertEquals("actual class 'null', expected class " + expected.getClass(), expected, actual);
+            }
+            else {
+                // reparse to handle IntNode(2) != LongNode(2)
+                actual = mapper.readTree(mapper.writeValueAsString(actual));
+    
+                JsonNode expected = mapper.readTree(result);
+    
+                assertEquals("actual class " + actual.getClass() + ", expected class " + expected.getClass(), expected, actual);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +107,7 @@ public class TestBase {
             JsonNode r = runtime.eval(query, context);
             System.out.println("Should not have output: " + r);
             fail("JSTL did not detect error");
-        } catch (JsltException|Jslt2Exception e) {
+        } catch (ParseException|JsltException|Jslt2Exception e) {
             assertTrue("incorrect error message: '" + e.getMessage() + "'", e.getMessage().indexOf(result) != -1);
         } catch (IOException e) {
             throw new RuntimeException(e);

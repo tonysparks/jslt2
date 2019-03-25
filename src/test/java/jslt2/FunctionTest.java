@@ -305,7 +305,41 @@ public class FunctionTest extends TestBase {
     public void testJoinThree() {
       check("{}", "join([1,2,3], \", \")", "\"1, 2, 3\"");
     }
+    
+    // ===== Substr
+    
+    @Test
+    public void testSubstrOneArg() {
+      check("{}", "substr(\"racecar\", 4)", "\"car\"");
+    }
+    
+    @Test
+    public void testSubstrTwoArg() {
+      check("{}", "substr(\"racecar\", 1, 4)", "\"ace\"");
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testSubstrFirstOutOfBounds() {
+      check("{}", "substr(\"racecar\", -1, 4)", "\"\"");
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testSubstrSecondOutOfBounds() {
+      check("{}", "substr(\"racecar\", 1, 14)", "\"\"");
+    }
+    
+    @Test(expected=Jslt2Exception.class)
+    public void testSubstrFirstBiggerThanSecond() {
+      check("{}", "substr(\"racecar\", 1, 0)", "\"\"");
+    }
 
+    // ===== replace
+    
+    @Test
+    public void testReplaceDash() {
+      check("\"hey-ho-ho\"", "replace(., \"-\", \" \")", "\"hey ho ho\"");
+    }
+    
     // ===== NOT
 
     @Test

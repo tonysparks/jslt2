@@ -1,0 +1,10 @@
+{
+    "description" : "Simple one off test",
+    "tests" : [
+    {
+      "input" : "\"12345\"",
+      "query" : ".[0]",
+      "output" : "\"1\""
+   }
+    ]
+}

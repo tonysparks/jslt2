@@ -102,7 +102,7 @@ public enum ErrorCode {
         }
 
         // A pointer to the error followed by the error message.
-        flagBuffer.append("^\n*** ").append(errorMessage);
+        flagBuffer.append("^\n*** Parse error: ").append(errorMessage);
 
         flagBuffer.append(" [at line: ").append(lineNumber);
         

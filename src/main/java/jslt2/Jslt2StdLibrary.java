@@ -8,11 +8,13 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +24,9 @@ import com.fasterxml.jackson.databind.node.*;
 import jslt2.util.Jslt2Util;
 
 /**
- * @author Tony
+ * @see https://github.com/schibsted/jslt/blob/master/src/main/java/com/schibsted/spt/data/jslt/impl/BuiltinFunctions.java
+ * 
+ * Code intentially taken from original JSLT source to be as compliant as possible with original functionality.
  *
  */
 public class Jslt2StdLibrary {
@@ -53,7 +57,14 @@ public class Jslt2StdLibrary {
         }
     }
     
+    private Map<String, Pattern> regexCache;
+    
     public Jslt2StdLibrary(final Jslt2 runtime) {
+        this(runtime, new ConcurrentHashMap<>());
+    }
+    
+    public Jslt2StdLibrary(final Jslt2 runtime, Map<String, Pattern> regexCache) {
+        this.regexCache = regexCache;
         
         // General
         
@@ -308,7 +319,95 @@ public class Jslt2StdLibrary {
                 throw new Jslt2Exception("to-json can't serialize " + arguments[0] + ": " + e);
             }
         });
+        
+        runtime.addFunction("substr", 2, (input, arguments) -> {
+            String str = arguments[0].asText();
+            int startIndex = arguments[1].asInt();
+            
+            if(arguments.length > 2) {
+                int endIndex = arguments[2].asInt();
+                return new TextNode(str.substring(startIndex, endIndex));
+            }
+            
+            return new TextNode(str.substring(startIndex));
+        });
 
+        runtime.addFunction("replace", 3, (input, arguments) -> {
+            String string = Jslt2Util.toString(arguments[0], true);
+            if (string == null)
+              return NullNode.instance;
+
+            String regexp = Jslt2Util.toString(arguments[1], false);
+            String sep = Jslt2Util.toString(arguments[2], false);
+
+            Pattern p = getRegexp(regexp);
+            Matcher m = p.matcher(string);
+            char[] buf = new char[string.length() * Math.max(sep.length(), 1)];
+            int pos = 0; // next untouched character in input
+            int bufix = 0; // next unwritten character in buf
+
+            while (m.find(pos)) {
+              // we found another match, and now matcher state has been updated
+              if (m.start() == m.end())
+                throw new Jslt2Exception("Regexp " + regexp + " in replace() matched empty string in '" + arguments[0] + "'");
+
+              // if there was text between pos and start of match, copy to output
+              if (pos < m.start())
+                bufix = copy(string, buf, bufix, pos, m.start());
+
+              // copy sep to output (corresponds with the match)
+              bufix = copy(sep, buf, bufix, 0, sep.length());
+
+              // step over match
+              pos = m.end();
+            }
+
+            if (pos == 0 && arguments[0].isTextual())
+              // there were matches, so the string hasn't changed
+              return arguments[0];
+            else if (pos < string.length())
+              // there was text remaining after the end of the last match. must copy
+              bufix = copy(string, buf, bufix, pos, string.length());
+
+            return new TextNode(new String(buf, 0, bufix));
+        });
+        
+        runtime.addFunction("trim", 1, (input, arguments) -> {
+            String string = Jslt2Util.toString(arguments[0], true);
+            if (string == null)
+              return NullNode.instance;
+
+            int prefix = 0; // first non-space character
+
+            // first: find leading spaces
+            for (;
+                 prefix < string.length() && isSpace(string, prefix);
+                 prefix++)
+              ;
+
+            // if the whole thing is spaces we're done
+            if (prefix == string.length())
+              return new TextNode("");
+
+            int suffix = string.length() - 1; // last non-space character
+
+            // second: find trailing spaces
+            for (;
+                 suffix >= 0 && isSpace(string, suffix);
+                 suffix--)
+              ;
+
+            // INV suffix >= prefix (they're equal if non-space part is 1 character)
+
+            // if there are no leading or trailing spaces: keep input
+            if (prefix == 0 && suffix == string.length() - 1 &&
+                arguments[0].isTextual())
+              return arguments[0];
+
+            // copy out middle section and we're done
+            return new TextNode(string.substring(prefix, suffix + 1));
+        });
+        
         // Boolean
         
         runtime.addFunction("not", (input, args) -> {
@@ -535,5 +634,27 @@ public class Jslt2StdLibrary {
                 array.add(node);
             }
         }
+    }
+
+    private Pattern getRegexp(String regexp) {
+        Pattern p = regexCache.get(regexp);
+        if (p == null) {
+            p = Pattern.compile(regexp);
+            regexCache.put(regexp, p);
+        }
+        return p;
+    }
+
+    private static int copy(String input, char[] buf, int bufix, int from, int to) {
+        for (int ix = from; ix < to; ix++) {
+            buf[bufix++] = input.charAt(ix);
+        }
+        
+        return bufix;
+    }
+    
+    private static boolean isSpace(String string, int ix) {
+        char ch = string.charAt(ix);
+        return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
     }
 }

@@ -330,7 +330,7 @@ public class Parser {
                         endIndexExpr = expression();
                     }
                     else {
-                        endIndexExpr = new NumberExpr(IntNode.valueOf(-1));
+                        endIndexExpr = new NullExpr();
                     }
                     
                     if(startIndexExpr == null) {
