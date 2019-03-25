@@ -43,7 +43,7 @@ Include in your Maven/Gradle project:
 <dependency>
     <groupId>com.github.tonysparks.jslt2</groupId>
     <artifactId>jslt2</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
 </dependency>
 ```
 
