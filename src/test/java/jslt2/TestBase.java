@@ -62,15 +62,20 @@ public class TestBase {
             
             JsonNode actual = runtime.eval(query, context);
             System.out.println("VM: " + actual);
-            if (actual == null)
-                throw new JsltException("Returned Java null");
-
-            // reparse to handle IntNode(2) != LongNode(2)
-            actual = mapper.readTree(mapper.writeValueAsString(actual));
-
-            JsonNode expected = mapper.readTree(result);
-
-            assertEquals("actual class " + actual.getClass() + ", expected class " + expected.getClass(), expected, actual);
+            if (actual == null) {
+                //throw new JsltException("Returned Java null");
+                JsonNode expected = mapper.readTree(result);
+                
+                assertEquals("actual class 'null', expected class " + expected.getClass(), expected, actual);
+            }
+            else {
+                // reparse to handle IntNode(2) != LongNode(2)
+                actual = mapper.readTree(mapper.writeValueAsString(actual));
+    
+                JsonNode expected = mapper.readTree(result);
+    
+                assertEquals("actual class " + actual.getClass() + ", expected class " + expected.getClass(), expected, actual);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

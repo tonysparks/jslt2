@@ -216,8 +216,23 @@ public abstract class Expr  {
                             new LongNode(l.number.asLong() - r.number.asLong()) : new DoubleNode(l.number.asDouble() - r.number.asDouble()));
                     case STAR: return new NumberExpr(l.number.isIntegralNumber() && r.number.isIntegralNumber() ?
                             new LongNode(l.number.asLong() * r.number.asLong()) : new DoubleNode(l.number.asDouble() * r.number.asDouble()));
-                    case SLASH: return new NumberExpr(l.number.isIntegralNumber() && r.number.isIntegralNumber() ?                    
-                            new LongNode(l.number.asLong() / r.number.asLong()) : new DoubleNode(l.number.asDouble() / r.number.asDouble()));                    
+                    case SLASH: {
+                        JsonNode c = null;
+                        if(l.number.isIntegralNumber() && r.number.isIntegralNumber()) {
+                            long ld = l.number.longValue();
+                            long rd = r.number.longValue();
+                            if((ld % rd) == 0) {                               
+                                c = new LongNode(ld / rd);
+                            }
+                            else {
+                                c = new DoubleNode((double)ld / (double)rd);
+                            }
+                        }
+                        else {
+                            c = new DoubleNode(l.number.doubleValue() / r.number.doubleValue());
+                        }
+                        return new NumberExpr(c);
+                    }
                     case MOD: return new NumberExpr(l.number.isIntegralNumber() && r.number.isIntegralNumber() ?
                             new LongNode(l.number.asLong() % r.number.asLong()) : new DoubleNode(l.number.asDouble() % r.number.asDouble()));
                     default: {

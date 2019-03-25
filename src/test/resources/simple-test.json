@@ -1,0 +1,10 @@
+{
+    "description" : "Simple one off test",
+    "tests" : [
+    {
+      "output" : "null",
+      "query" : "[for (null) number(.)]",
+      "input" : "[]"
+    }
+    ]
+}

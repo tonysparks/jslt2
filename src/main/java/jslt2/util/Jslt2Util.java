@@ -202,15 +202,27 @@ public class Jslt2Util {
      * @param node
      */
     public static JsonNode removeNullNodes(JsonNode node) {
+        if(node.isNull()) {
+            return node;
+        }
+        
         Iterator<JsonNode> it = node.iterator();
         while (it.hasNext()) {
             JsonNode child = it.next();
             
-            removeNullNodes(child);
+            if(removeNullNodes(child).isNull()) {
+                it.remove();
+                continue;
+            }
             
             if (child.isNull() || ((child.isArray()||child.isObject()) && child.size() == 0)) {
                 it.remove();
+                continue;
             }
+        }
+        
+        if ((node.isArray()||node.isObject()) && node.size() == 0) {
+            return NullNode.instance;
         }
         
         return node;

@@ -395,7 +395,7 @@ public class VM {
                         
                         if(object.isNull()) {
                             JsonNode current = NullNode.instance;
-                            
+                            // Should just return NULL
                             executeBytecode(forCode, top, current); 
                             JsonNode n = stack[--top];
                             if(n != null) {
@@ -650,14 +650,14 @@ public class VM {
                             long ld = l.longValue();
                             long rd = r.longValue();
                             if((ld % rd) == 0) {                               
-                                c = new LongNode(l.asLong() / r.asLong());
+                                c = new LongNode(ld / rd);
                             }
                             else {
                                 c = new DoubleNode((double)ld / (double)rd);
                             }
                         }
                         else {
-                            c = new DoubleNode(l.asDouble() / r.asDouble());
+                            c = new DoubleNode(l.doubleValue() / r.doubleValue());
                         }
                         stack[top++] = c;
                         break;
