@@ -266,6 +266,8 @@
       "input" : "{}",
       "output" : "null"
    },
+   /*
+    Custom Variables are not implemented yet!
    {
       "output" : "42",
       "query" : "$foo",
@@ -273,7 +275,8 @@
          "foo" : 42
       },
       "input" : "{}"
-   },
+   },*/
+   
    {
       "output" : "true",
       "query" : "123 <= 123",
@@ -449,6 +452,8 @@
       "query" : "\"abc\" < \"def\"",
       "input" : "{}"
    },
+   /*
+    Custom Variables are not implemented yet!
    {
       "query" : "number( $num )",
       "input" : "{}",
@@ -456,7 +461,7 @@
          "num" : "22"
       },
       "output" : "22"
-   },
+   },*/
    {
       "input" : "{}",
       "query" : "null > 2",

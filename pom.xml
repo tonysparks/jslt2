@@ -5,7 +5,7 @@
 
 	<groupId>com.github.tonysparks.jslt2</groupId>
 	<artifactId>jslt2</artifactId>
-	<version>0.2.2</version>
+	<version>0.2.3</version>
 
 	<description>
         A Virtual Machine based implementation of the JSLT json transformation language
@@ -68,7 +68,14 @@
 		<dependency>
 			<groupId>com.schibsted.spt.data</groupId>
 			<artifactId>jslt</artifactId>
-			<version>0.1.6</version>
+			<version>0.1.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hjson</groupId>
+			<artifactId>hjson</artifactId>
+			<version>3.0.0</version>
 			<scope>test</scope>
 		</dependency>
 

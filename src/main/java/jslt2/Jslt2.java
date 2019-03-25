@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import jslt2.Jslt2StdLibrary.Jslt2FunctionValidation;
@@ -450,6 +451,10 @@ public class Jslt2 {
     public JsonNode eval(Bytecode bytecode, JsonNode input) {
         if(this.printBytecode) {
             System.out.println(bytecode.dump());
+        }
+        
+        if(input == null) {
+            input = NullNode.instance;
         }
                 
         JsonNode result = new VM(this).execute(bytecode, input);

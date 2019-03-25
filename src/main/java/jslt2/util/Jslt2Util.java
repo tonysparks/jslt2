@@ -221,10 +221,6 @@ public class Jslt2Util {
             }
         }
         
-        if ((node.isArray()||node.isObject()) && node.size() == 0) {
-            return NullNode.instance;
-        }
-        
         return node;
     }
 }

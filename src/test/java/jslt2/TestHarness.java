@@ -4,8 +4,10 @@
 package jslt2;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
 
+import org.hjson.JsonValue;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -27,17 +29,27 @@ public class TestHarness extends TestBase {
         public String input;
         public String output;
         public String query;
+        public String error;
         public Map<String, JsonNode> variables;
+    }
+    
+    @Ignore
+    private TestSuite loadTestSuite(String filename) throws Exception {
+        InputStream iStream = TestHarness.class.getResourceAsStream(filename);
+        String json = JsonValue.readHjson(new InputStreamReader(iStream)).toString();
+        TestSuite suite = mapper.readValue(json, TestSuite.class);
+        
+        return suite;
     }
 
     @Ignore
     private void executeTests(String filename) throws Exception {
-        InputStream iStream = TestHarness.class.getResourceAsStream(filename);
-        TestSuite suite = mapper.readValue(iStream, TestSuite.class);
+        TestSuite suite = loadTestSuite(filename);
         
         System.out.println("Running: " + suite.description);
         
         for(TestCase test : suite.tests) {
+            System.out.println("Test: " + test.query);
             if(test.variables != null) {
                 check(test.input, test.query, test.output, test.variables);
             }
@@ -46,6 +58,24 @@ public class TestHarness extends TestBase {
             }
         }
     }
+    
+    @Ignore
+    private void executeFailTests(String filename) throws Exception {
+        TestSuite suite = loadTestSuite(filename);
+        
+        System.out.println("Running: " + suite.description);
+        
+        for(TestCase test : suite.tests) {
+            System.out.println("Test: " + test.query);            
+            error(test.input, test.query, test.error);            
+        }
+    }
+    
+    @Test
+    public void queryErrorTests() throws Exception {
+        executeFailTests("/query-error-tests.json");
+    }
+    
     
     @Test
     public void queryTests() throws Exception {

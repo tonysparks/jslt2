@@ -17,6 +17,8 @@ import com.schibsted.spt.data.jslt.JsltException;
 
 import static org.junit.Assert.*;
 
+import jslt2.parser.ParseException;
+
 /**
  * @author Tony
  *
@@ -105,7 +107,7 @@ public class TestBase {
             JsonNode r = runtime.eval(query, context);
             System.out.println("Should not have output: " + r);
             fail("JSTL did not detect error");
-        } catch (JsltException|Jslt2Exception e) {
+        } catch (ParseException|JsltException|Jslt2Exception e) {
             assertTrue("incorrect error message: '" + e.getMessage() + "'", e.getMessage().indexOf(result) != -1);
         } catch (IOException e) {
             throw new RuntimeException(e);

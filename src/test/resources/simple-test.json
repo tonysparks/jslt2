@@ -2,9 +2,9 @@
     "description" : "Simple one off test",
     "tests" : [
     {
-      "output" : "null",
-      "query" : "[for (null) number(.)]",
-      "input" : "[]"
-    }
+      "input" : "\"12345\"",
+      "query" : ".[0]",
+      "output" : "\"1\""
+   }
     ]
 }

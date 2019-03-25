@@ -453,8 +453,8 @@ public class Jslt2Test {
         
         JsonNode result = runtime.eval(query, input);
         System.out.println(result);
-       // testAgainstSpec(input, query);
-        assertEquals("{\"a\":\"b\",\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\"}", result.toString());
+        testAgainstSpec(input, query);
+        assertEquals("{\"type\":\"Anonymized-View\",\"name\":\"tony\",\"team\":\"packers\",\"a\":\"b\"}", result.toString());
     }
     
     @Test

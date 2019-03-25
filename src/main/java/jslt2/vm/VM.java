@@ -202,9 +202,15 @@ public class VM {
                         JsonNode index = stack[--top];
                         JsonNode obj = stack[--top];
 
-                        JsonNode value = obj.get(index.asInt());
-                        if(value == null) {
-                            value = NullNode.instance;
+                        JsonNode value = null;
+                        if(obj.isTextual()) {
+                            value = new TextNode("" + obj.asText().charAt(index.intValue()));
+                        }
+                        else {
+                            value = obj.get(index.asInt());
+                            if(value == null) {
+                                value = NullNode.instance;
+                            }
                         }
                         
                         stack[top++] = value;
@@ -226,14 +232,18 @@ public class VM {
                         JsonNode start = stack[--top];
                         JsonNode array = stack[--top];
                         
-                        int startIndex = start.asInt();
-                        int endIndex = end.asInt();
+                        int startIndex = start.intValue();
                         
                         if(array.isArray()) {
                             ArrayNode a = (ArrayNode)array;
+                            int size = a.size();
                             
+                            int endIndex = end.isNull() ? size : end.intValue();
                             if(endIndex < 0) {
-                                endIndex = a.size(); 
+                                endIndex = size + endIndex; 
+                            }
+                            else if(endIndex > size) {
+                                endIndex = size;
                             }
                             
                             if(endIndex < startIndex) {
@@ -250,9 +260,14 @@ public class VM {
                         else if(array.isTextual()) {
                             TextNode a = (TextNode)array;
                             String text = a.asText();
+                            int size = text.length();
                             
+                            int endIndex = end.isNull() ? size : end.intValue();
                             if(endIndex < 0) {
-                                endIndex = text.length(); 
+                                endIndex = size + endIndex; 
+                            }
+                            else if(endIndex > size) {
+                                endIndex = size;
                             }
                             
                             if(endIndex < startIndex) {
@@ -393,14 +408,9 @@ public class VM {
                         JsonNode object = stack[--top];
                         ArrayNode array = this.runtime.newArrayNode(object.size());
                         
-                        if(object.isNull()) {
-                            JsonNode current = NullNode.instance;
-                            // Should just return NULL
-                            executeBytecode(forCode, top, current); 
-                            JsonNode n = stack[--top];
-                            if(n != null) {
-                                array.add(n);
-                            }
+                        if(object.isNull()) {                            
+                            stack[top++] = NullNode.instance;
+                            continue;
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();
@@ -434,7 +444,7 @@ public class VM {
                             }
                         }
                         else {
-                            throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
+                            throw new Jslt2Exception("ForIterationError: For loop can't iterate over '" + object + "'");
                         }
                         
                         stack[top++] = array;
@@ -456,15 +466,8 @@ public class VM {
                         
                         JsonNode object = stack[--top];
                         if(object.isNull()) {
-                            JsonNode current = NullNode.instance;
-                            
-                            executeBytecode(forCode, top, current); 
-                            JsonNode v = stack[--top];
-                            JsonNode k = stack[--top];
-                            
-                            if(k != null) {
-                                obj.set(k.asText(), v);
-                            }
+                            stack[top++] = NullNode.instance;
+                            continue;
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();            
@@ -498,8 +501,8 @@ public class VM {
                                 }
                             }
                         }
-                        else {
-                            throw new Jslt2Exception("ForIterationError: " + object + " is not an iterable element");
+                        else {                            
+                            throw new Jslt2Exception("ForIterationError: For loop can't iterate over '" + object + "'");
                         }
                         
                         stack[top++] = obj;
@@ -599,13 +602,19 @@ public class VM {
                             ObjectNode a = (ObjectNode)l;
                             ObjectNode b = (ObjectNode)r;
                             ObjectNode union = this.runtime.newObjectNode();
-                            union.setAll(a);
                             union.setAll(b);
+                            union.setAll(a);
                             
                             c = union;
                         }
                         else {
-                            if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                            l = Jslt2Util.number(l, true, null);
+                            r = Jslt2Util.number(r, true, null);
+                            
+                            if(l.isNull() || r.isNull()) {
+                                c = NullNode.instance;
+                            }
+                            else if(l.isIntegralNumber() && r.isIntegralNumber()) {
                                 c = new LongNode(l.asLong() + r.asLong());
                             }
                             else {
@@ -617,10 +626,16 @@ public class VM {
                     }
                     case SUB:    {
                         JsonNode r = stack[--top];
-                        JsonNode l = stack[--top];
-                        
+                        JsonNode l = stack[--top];                        
                         JsonNode c = null;
-                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                        
+                        l = Jslt2Util.number(l, true, null);
+                        r = Jslt2Util.number(r, true, null);
+                        
+                        if(l.isNull() || r.isNull()) {
+                            c = NullNode.instance;
+                        }
+                        else if(l.isIntegralNumber() && r.isIntegralNumber()) {
                             c = new LongNode(l.asLong() - r.asLong());
                         }
                         else {
@@ -633,7 +648,35 @@ public class VM {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
                         JsonNode c = null;
-                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                                                
+                        if(l.isNull() || r.isNull()) {
+                            c = NullNode.instance;
+                        }
+                        else if(l.isTextual() || r.isTextual()) {
+                            
+                            String str = null;
+                            int num = 0;
+                            
+                            if(l.isTextual() && r.isTextual()) {
+                                error("Can't multiply two strings!");    
+                            }
+                            else if(l.isTextual()) {
+                                str = l.asText();
+                                num = r.intValue();
+                            }
+                            else {
+                                str = r.asText();
+                                num = l.intValue();
+                            }
+                            
+                            StringBuilder buf = new StringBuilder();
+                            for(; num > 0; num--) {
+                                buf.append(str);
+                            }
+                            
+                            c = new TextNode(buf.toString());
+                        }
+                        else if(l.isIntegralNumber() && r.isIntegralNumber()) {
                             c = new LongNode(l.asLong() * r.asLong());
                         }
                         else {
@@ -646,7 +689,14 @@ public class VM {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
                         JsonNode c = null;
-                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                        
+                        l = Jslt2Util.number(l, true, null);
+                        r = Jslt2Util.number(r, true, null);
+                        
+                        if(l.isNull() || r.isNull()) {
+                            c = NullNode.instance;
+                        }
+                        else if(l.isIntegralNumber() && r.isIntegralNumber()) {                        
                             long ld = l.longValue();
                             long rd = r.longValue();
                             if((ld % rd) == 0) {                               
@@ -659,6 +709,8 @@ public class VM {
                         else {
                             c = new DoubleNode(l.doubleValue() / r.doubleValue());
                         }
+                        
+                        
                         stack[top++] = c;
                         break;
                     }
@@ -666,7 +718,14 @@ public class VM {
                         JsonNode r = stack[--top];
                         JsonNode l = stack[--top];
                         JsonNode c = null;
-                        if(l.isIntegralNumber() && r.isIntegralNumber()) {
+                        
+                        l = Jslt2Util.number(l, true, null);
+                        r = Jslt2Util.number(r, true, null);
+                        
+                        if(l.isNull() || r.isNull()) {
+                            c = NullNode.instance;
+                        }
+                        else if(l.isIntegralNumber() && r.isIntegralNumber()) {
                             c = new LongNode(l.asLong() % r.asLong());
                         }
                         else {
@@ -678,7 +737,10 @@ public class VM {
                     case NEG:    {
                         JsonNode l = stack[--top];
                         JsonNode c = null;
-                        if(l.isIntegralNumber()) {
+                        if(l.isNull()) {
+                            c = NullNode.instance;
+                        }
+                        else if(l.isIntegralNumber()) {
                             c = new LongNode(-l.asLong());
                         }
                         else {
