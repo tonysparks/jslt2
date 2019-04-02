@@ -686,6 +686,21 @@
       "input" : "{}",
       "query" : "123 == 123.0",
       "output" : "true"
+   },
+   {
+      "input" : "{ \"data\": { \"x\" : \"hello\" } }",
+      "query" : ".data.x[1:3]",
+      "output" : "\"el\""
+   },
+   {
+      "input" : "{ \"data\": { \"x\" : \"hello\" } }",
+      "query" : "{ \"y\": .data.x[1:3] }",
+      "output" : "{\"y\":\"el\"}"
+   },
+   {
+      "input" : "{ \"data\": { \"x\" : \"hello\" } }",
+      "query" : "{ \"y\": \"hello\"[1:3] }",
+      "output" : "{\"y\":\"el\"}"
    }
     ]
 }

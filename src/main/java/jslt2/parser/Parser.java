@@ -311,6 +311,8 @@ public class Parser {
                 if(!(expr instanceof FuncCallExpr ||
                    expr instanceof VariableExpr || 
                    expr instanceof DotExpr ||
+                   expr instanceof GetExpr ||
+                   expr instanceof StringExpr ||
                    expr instanceof ArraySliceExpr ||
                    expr instanceof ArrayIndexExpr)) {
                     return expr;
