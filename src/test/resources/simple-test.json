@@ -2,9 +2,9 @@
     "description" : "Simple one off test",
     "tests" : [
     {
-      "input" : "\"12345\"",
-      "query" : ".[0]",
-      "output" : "\"1\""
+      "input" : "{ \"data\": { \"x\" : \"hello\" } }",
+      "query" : "{ \"y\": \"hello\"[1:3] }",
+      "output" : "{\"y\":\"el\"}"
    }
     ]
 }
