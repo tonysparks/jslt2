@@ -117,6 +117,27 @@ public class Jslt2StdLibrary {
             throw new Jslt2Exception("error: " + msg);
         });
         
+        runtime.addFunction("min", 2, (input, arguments) -> {
+            // this works because null is the smallest of all values
+            if (Jslt2Util.compare(arguments[0], arguments[1]) < 0) {
+                return arguments[0];
+            }
+            else {
+              return arguments[1];
+            }
+        });
+        
+        runtime.addFunction("max", 2, (input, arguments) -> {
+            if (arguments[0].isNull() || arguments[1].isNull()) {
+                return NullNode.instance;
+            }
+            else if (Jslt2Util.compare(arguments[0], arguments[1]) > 0) {
+                return arguments[0];
+            }
+            else {
+                return arguments[1];
+            }
+        });
         
         
         
