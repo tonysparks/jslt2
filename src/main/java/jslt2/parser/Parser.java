@@ -352,15 +352,15 @@ public class Parser {
                      throw error(previous(), ErrorCode.UNEXPECTED_TOKEN);
                 }
                 
-                Token name = null;
+                String identifier = null;
                 if(check(STRING)) {
-                    name = consume(STRING, ErrorCode.MISSING_IDENTIFIER);
+                    identifier = consume(STRING, ErrorCode.MISSING_IDENTIFIER).getValue().toString();
                 }
                 else {
-                    name = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
+                    identifier = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER).getText();
                 }
                                 
-                expr = node(new GetExpr(expr, name.getText()));
+                expr = node(new GetExpr(expr, identifier));
             }
             else {
                 break;
