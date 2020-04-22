@@ -1,10 +1,307 @@
 {
     "description" : "Simple one off test",
     "tests" : [
-       {
-          "input" : "{ \"data\": { \"x\" : \"hello\" } }",
+       /*{
+          "input" : '''
+            { "data": { "x" : "hello" } }
+          ''',
           "query" : "{ \"y\": .data.\"x\" }",
           "output" : "{\"y\":\"hello\"}"
+       }*/
+       {
+          "input" : '''
+            {
+                "a": {
+                    "b": 1,
+                    "c": 2,
+                    "d": 3
+                }
+            }
+          ''',
+          "query" : '''
+            .a | [.b, .c, .d]
+          ''',
+          "output" : '''
+            [1,2,3]
+          '''
+       },
+       {
+          "input" : '''
+            { "bar": "a", "baz": {"bar": "b"}}
+          ''',
+          "query" : '''
+            {
+                "foo" : .bar,
+                * : .
+            } | .baz
+          ''',
+          "output" : '''
+            {"bar": "b"}
+          '''
+       },
+       {
+          "input" : '''
+            { "bar": "a", "baz": {"bar": "b"}}
+          ''',
+          "query" : '''
+            .baz | {
+                "foo" : .bar,
+                * : .
+            }
+          ''',
+          "output" : '''
+            {"foo": "b", "bar": "b"}
+          '''
+       },
+       {
+          "input" : '''
+            { "foo": {"a": "b"}}
+          ''',
+          "query" : '''
+            .foo | {"x": "y", * : .}
+          ''',
+          "output" : '''
+            {
+                "x": "y",
+                "a": "b"
+            }
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            { "a": "b" } | 
+            {
+                "type" : "Anonymized-View",
+                * : .
+            }
+          ''',
+          "output" : '''
+            {
+                "type": "Anonymized-View",
+                "a": "b"
+            }
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            {
+                "bar": "baz",
+                "foo" : { "a": "b" } | 
+                    {
+                        "type" : "Anonymized-View",
+                        * : .
+                    }
+            }
+          ''',
+          "output" : '''
+            {
+                "bar": "baz",
+                "foo" : {
+                    "type" : "Anonymized-View",
+                     "a": "b"
+                }
+            }
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            1 == 3 | {"a" : .}
+          ''',
+          "output" : '''
+            {"a": false}
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            false or false | { "a" : .}
+          ''',
+          "output" : '''
+            {"a": false}
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            1 + 3 | . * 5
+          ''',
+          "output" : '''
+            20
+          '''
+       },
+       {
+          "input" : '''
+            
+          ''',
+          "query" : '''
+            1 | [.,.] | {"a": ., "b": .}
+          ''',
+          "output" : '''
+            { "a": [1,1],"b": [1,1]}
+          '''
+       },
+       {
+          "input" : '''
+            1
+          ''',
+          "query" : '''
+            (if (. < 10) true else false) | {"a": .}
+          ''',
+          "output" : '''
+            {"a": true}
+          '''
+       },
+       {
+          "input" : '''
+            1
+          ''',
+          "query" : '''
+            if (. < 10) true else false | {"a": .}
+          ''',
+          "output" : '''
+            true
+          '''
+       },
+       {
+          "input" : '''
+            1
+          ''',
+          "query" : '''
+            if (. < 10) true | {"a": .} else false
+          ''',
+          "output" : '''
+            {"a": true}
+          '''
+       },
+       {
+          "input" : '''
+            {
+                "a": {
+                  "b": 1,
+                  "c": 2,
+                  "d": 3
+                }
+            }
+          ''',
+          "query" : '''
+            if (.a | .b+.c == 3) "pass" else "fail"
+          ''',
+          "output" : '''
+            "pass"
+          '''
+       },
+       {
+          "input" : '''
+            [1,2,3]
+          ''',
+          "query" : '''
+            [for (.) .*10] | {"a": .}
+          ''',
+          "output" : '''
+            {"a": [10,20,30]}
+          '''
+       },
+       {
+          "input" : '''
+            {"a": [1,2,3]}
+          ''',
+          "query" : '''
+            .a | [for (.) .*10]
+          ''',
+          "output" : '''
+            [10,20,30]
+          '''
+       },
+       {
+          "input" : '''
+            {
+                "a": {
+                  "b": 1,
+                  "c": 2,
+                  "d": 3
+                }
+            }
+          ''',
+          "query" : '''
+            [for (.a | [.b, .c, .d]) . * 10]
+          ''',
+          "output" : '''
+            [10,20,30]
+          '''
+       },
+       {
+          "input" : '''
+            [{"a":1},{"a":2},{"a": 3}]
+          ''',
+          "query" : '''
+            [for (.) .a | . * 10]
+          ''',
+          "output" : '''
+            [10,20,30]
+          '''
+       },
+       {
+          "input" : '''
+            {
+                "a": {
+                  "b": 1,
+                  "c": 2,
+                  "d": 3
+                }
+            }  
+          ''',
+          "query" : '''
+            {for (.a | [.b, .c, .d]) string(.) : . * 10}
+          ''',
+          "output" : '''
+             {"1":10, "2": 20, "3": 30}
+          '''
+       },
+       {
+          "input" : '''
+            [{"a":1},{"a":2},{"a": 3}]    
+          ''',
+          "query" : '''
+            {for (.)  .a | string(.) : .a | . * 10}
+          ''',
+          "output" : '''
+            {"1":10, "2": 20, "3": 30}
+          '''
+       },
+       {
+          "input" : '''
+            {"foo" : 25}
+          ''',
+          "query" : '''
+            if (true) "Отключен" else "Подключен"
+          ''',
+          "output" : '''
+             "Отключен"    
+          '''
+       },
+       {
+          "input" : '''
+            {"foo" : 25}
+          ''',
+          "query" : '''
+            if (true) "string ends with a slash\\" else "let it be"
+          ''',
+          "output" : '''
+            "string ends with a slash\\"    
+          '''
        }
     ]
 }

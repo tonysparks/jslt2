@@ -797,6 +797,11 @@ public class BytecodeEmitter {
         newLocalScopeEmitter(0);
     }
     
+    public void pipe() {
+        instrx(PIPE, getBytecodeIndex());
+        newLocalScopeEmitter(0);
+    }
+    
     public void async() {
         instrx(ASYNC, getBytecodeIndex());
         peek().localScope.setAsync(true);

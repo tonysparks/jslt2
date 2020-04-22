@@ -104,6 +104,12 @@ public class Compiler {
                     
                     count = 0;
                 }
+                else if(parent instanceof BinaryExpr) {
+                    BinaryExpr bExpr = (BinaryExpr)parent;
+                    if(bExpr.operator.equals(TokenType.PIPE)) {
+                        break;
+                    }
+                }
                 
                 child = parent;
                 parent = parent.parentNode;
@@ -583,6 +589,15 @@ public class Compiler {
                     asm.label(skip);
                     asm.loadtrue();
                     asm.label(end);
+                    
+                    break;
+                }
+                case PIPE: {
+                    expr.left.visit(this);
+                    
+                    asm.pipe();
+                    expr.right.visit(this);
+                    asm.end();
                     
                     break;
                 }

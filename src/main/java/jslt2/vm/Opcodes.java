@@ -360,6 +360,11 @@ public class Opcodes {
                 break;
             }
 
+            case PIPE:    {
+                op = "PIPE";
+                break;
+            }
+            
             case LINE: {
                 op = "LINE";
                 break;
@@ -451,8 +456,10 @@ public class Opcodes {
         LT  = 47,                     /*      */
         LTE = 48,                     /*      */
         
+        PIPE = 49,                    /* ARGx */
+        
         /* debug */
-        LINE = 49                     /* ARGx */
+        LINE = 50                     /* ARGx */
         ;
     
     
@@ -521,6 +528,8 @@ public class Opcodes {
         opcodes.put("GTE", GTE);
         opcodes.put("LT", LT);
         opcodes.put("LTE", LTE);
+        
+        opcodes.put("PIPE", PIPE);
         
         opcodes.put("LINE", LINE);
     }
