@@ -24,7 +24,7 @@ public enum TokenType {
 
     // Special symbols.
     PLUS("+"), 
-        MINUS("-"), STAR("*"), MOD("%"), SLASH("/"), DOLLAR("$"),
+        MINUS("-"), STAR("*"), MOD("%"), SLASH("/"), DOLLAR("$"), PIPE("|"),
         DOT("."), VAR_ARGS("..."), AT("@"), QUESTION_MARK("?"), COMMA(","), SEMICOLON(";"), COLON(":"),
         EQUALS_EQUALS("=="), EQUALS("="), NOT_EQUALS("!="), LESS_THAN("<"), LESS_EQUALS("<="),
         GREATER_EQUALS(">="), GREATER_THAN(">"), LEFT_PAREN("("), RIGHT_PAREN(")"),

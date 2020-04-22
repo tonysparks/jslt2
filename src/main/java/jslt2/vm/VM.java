@@ -808,6 +808,21 @@ public class VM {
                         stack[top++] = c;
                         break;
                     }
+                    case PIPE: {
+                        JsonNode newInput = stack[--top];
+                        
+                        int bytecodeIndex = ARGx(i);
+                        Bytecode pipeCode = inner[bytecodeIndex].clone();
+                        
+                        JsonNode[] outers = pipeCode.outers;                            
+                        pc += assignOuters(outers, calleeouters, pipeCode.numOuters, base, pc, code);
+                        
+                        prepareStack(pipeCode);
+                        
+                        JsonNode result = executeStackFrame(pipeCode, top, newInput);
+                        stack[top++] = result;
+                        break;
+                    }
                     default: {
                         error("Unknown opcode '" + opcode + "' found for the Bytecode '" + Integer.toHexString(i) + "'");
                     }

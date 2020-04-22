@@ -137,6 +137,7 @@ public class Parser {
         Token identifier = consume(IDENTIFIER, ErrorCode.MISSING_IDENTIFIER);
         consume(EQUALS, ErrorCode.MISSING_EQUALS);
         Expr expr = expression();
+        eatSemicolon();
         
         return node(new LetDecl(identifier.getText(), expr));
     }
@@ -148,6 +149,8 @@ public class Parser {
         List<String> parameters = parameters();
         List<LetDecl> lets = letDeclarations();
         Expr body = expression();
+        eatSemicolon();
+        
         return node(new DefDecl(identifier.getText(), parameters, lets, body));
     }
     
@@ -158,7 +161,7 @@ public class Parser {
     
     private Expr expression() {
         source();
-        return or();
+        return pipe();
     }
         
     private IfExpr ifExpr() {        
@@ -209,6 +212,18 @@ public class Parser {
         }
         
         return node(new MatchExpr(fields));
+    }
+    
+    private Expr pipe() {
+        Expr expr = or();
+        
+        while(match(PIPE)) {
+            Token operator = previous();
+            Expr right = or();
+            expr = node(new BinaryExpr(expr, operator.getType(), right));
+        }
+        
+        return expr;
     }
     
     private Expr or() {
@@ -551,7 +566,9 @@ public class Parser {
         return arguments;
     }
        
-
+    private void eatSemicolon() {
+        match(SEMICOLON);
+    }
     
     /**
      * Mark the start of parsing a statement
