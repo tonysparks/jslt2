@@ -86,4 +86,10 @@ public class TestHarness extends TestBase {
     public void simpleTest() throws Exception {
         executeTests("/simple-test.json");
     }
+    
+    
+    @Test
+    public void forIndexTests() throws Exception {
+        executeTests("/for-index-tests.json");
+    }
 }

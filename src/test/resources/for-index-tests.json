@@ -1,0 +1,182 @@
+{
+    "description" : "Test automatic $index__ variable for 'for' expressions",
+    "tests" : [
+        {
+          "output" : '''
+            {
+                "i0" : 1,
+                "i1" : 2,
+                "i2" : 3
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                ("i" + $index__) : .
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i1" : 31,
+                "i2" : 31,
+                "i3" : 31
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                let index__ = 31
+                ("i" + .) : $index__
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i31" : 3
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                let index__ = 31
+                ("i" + $index__) : . 
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i0" : "6a",
+                "i1" : "6b",
+                "i2" : "6c"
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                let a = 2
+                let b = 4
+                let z = ["a", "b", "c"]
+                ("i" + $index__) : ($a + $b) + $z[$index__]
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i0":[0,1,2],
+                "i1":[0,1,2],
+                "i2":[0,1,2],
+                "i3":[0,1,2],
+                "i4":[0,1,2],
+                "i5":[0,1,2]
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3,4,5,6])
+                let a = 2
+                let b = 4
+                let z = ["a", "b", "c"]
+                ("i" + $index__) : [for ($z) $index__ ]
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i0":[0,0,0],
+                "i1":[1,1,1],
+                "i2":[2,2,2],
+                "i3":[3,3,3],
+                "i4":[4,4,4],
+                "i5":[5,5,5]
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3,4,5,6])
+                let a = 2
+                let b = 4
+                let z = ["a", "b", "c"]
+                let upIndex = $index__
+                ("i" + $index__) : [for ($z) $upIndex ]
+            }
+          '''
+        },
+        
+        {
+          "output" : '''
+            {
+                "i0":[0,1,2],
+                "i1":[0,1,2],
+                "i2":[0,1,2],
+                "i3":[0,1,2]
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ({"a":1,"b":2,"c":3,"d":4})
+                let a = 2
+                let b = 4
+                let z = {"w":55, "y":56, "z":57}
+                ("i" + $index__) : [for ($z) $index__ ]
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "i0":[0,0,0],
+                "i1":[1,1,1],
+                "i2":[2,2,2],
+                "i3":[3,3,3]
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ({"a":1,"b":2,"c":3,"d":4})
+                let a = 2
+                let b = 4
+                let z = {"w":55, "y":56, "z":57}
+                let upIndex = $index__
+                ("i" + $index__) : [for ($z) $upIndex ]
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "key_0":1,
+                "key_1":2,
+                "key_2":3
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                ("key_" + $index__) : .
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "key_0":[0,0,0],
+                "key_1":[0,1,2],
+                "key_2":[0,2,4]
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1,2,3])
+                let parentIndex = $index__
+                ("key_" + $index__) : [for (["a", "b", "c"]) $parentIndex * $index__ ]
+            }
+          '''
+        },
+    ]
+}

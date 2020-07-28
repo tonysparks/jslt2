@@ -261,6 +261,9 @@ public class Compiler {
             Expr cond = expr.condition;
             cond.visit(this);
             asm.forobjdef();                
+                // the automatic index variable 
+                asm.addLocal("$index__");
+            
                 expr.lets.forEach(let -> let.visit(this));
                 
                 Expr ifExpr = expr.ifExpr;
@@ -298,6 +301,9 @@ public class Compiler {
             Expr cond = expr.condition;
             cond.visit(this);
             asm.forarraydef();
+                // the automatic index variable 
+                asm.addLocal("$index__");
+                
                 expr.lets.forEach(let -> let.visit(this));
                 
                 Expr ifExpr = expr.ifExpr;

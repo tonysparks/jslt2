@@ -1046,7 +1046,23 @@
           "output" : '''
             "string ends with a slash\\"    
           '''
-       }
+       },
+// Index checks
+    {
+      "output" : '''
+        {
+            "i0" : 1,
+            "i1" : 2,
+            "i2" : 3,
+        }
+      ''',
+      "input" : "{}",
+      "query" : '''
+        {for ([1,2,3]
+            "i" + $index__ : .
+        }
+      '''
+    },       
    
    ]
 }
