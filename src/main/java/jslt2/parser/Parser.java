@@ -163,6 +163,22 @@ public class Parser {
         source();
         return pipe();
     }
+    
+    private Expr expressionWithIdentifier() {
+        source();
+        
+        int rewind = this.current;
+        if(match(IDENTIFIER)) {
+            if(check(LEFT_PAREN)) {
+                this.current = rewind;
+            }
+            else {
+                return node(new IdentifierExpr(previous().getText()));
+            }
+        }
+        
+        return pipe();
+    }
         
     private IfExpr ifExpr() {        
         consume(LEFT_PAREN, ErrorCode.MISSING_LEFT_PAREN);
@@ -382,6 +398,10 @@ public class Parser {
             }
         }
         
+        if(expr instanceof IdentifierExpr) {
+            throw error(previous(), ErrorCode.UNEXPECTED_TOKEN);
+        }
+        
         return expr;
     }
     
@@ -449,7 +469,7 @@ public class Parser {
         consume(RIGHT_PAREN, ErrorCode.MISSING_RIGHT_PAREN);
         List<LetDecl> lets = letDeclarations();
 
-        Expr key = expression();
+        Expr key = expressionWithIdentifier();
         consume(COLON, ErrorCode.MISSING_COLON);
         Expr value = expression();
         
@@ -502,7 +522,7 @@ public class Parser {
                     break;
                 }
 
-                Expr key = expression();
+                Expr key = expressionWithIdentifier();
                 consume(COLON, ErrorCode.MISSING_COLON);
                 Expr value = expression();
                 

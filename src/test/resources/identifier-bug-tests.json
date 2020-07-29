@@ -1,0 +1,161 @@
+{
+    "description" : "Test identifier syntax errors",
+    "tests" : [
+        {
+          "output" : '''
+            {
+                "1" : 10
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1]) string(.) : . * 10}
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "test" : 10
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {for ([1]) test : . * 10}
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "test" : 10,
+                "test2" : 20
+            }
+          ''',
+          "input" : "{}",
+          "query" : '''
+            {
+                test : 10,
+                "test2" : 20
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "1" : "zzz"
+            }
+          ''',
+          "input" : '''
+            {
+                "a": {
+                    "b": {
+                        "c": {
+                            "x":1,
+                            "y":2
+                        }                    
+                    }
+                }
+            }
+          ''',
+          "query" : '''
+            {
+                .a.b.c.x : "zzz",
+            }
+          '''
+        },
+        {
+          "output" : '''
+            {
+                "1" : "zzz",
+                "zzz" : 1
+            }
+          ''',
+          "input" : '''
+            {
+                "a": {
+                    "b": {
+                        "c": {
+                            "x":1,
+                            "y":2
+                        }                    
+                    }
+                }
+            }
+          ''',
+          "query" : '''
+            {
+                .a.b.c.x : "zzz",
+                "zzz": .a.b.c.x 
+            }
+          '''
+        },
+        {
+          "error" : '''
+            Missing : [at line: 2 '.']
+          ''', 
+          "input" : '''
+            {
+                "a": {
+                    "b": {
+                        "c": {
+                            "x":1,
+                            "y":2
+                        }                    
+                    }
+                }
+            }
+          ''',
+          "query" : '''
+            {
+                a.b.c.x : "zzz",
+            }
+          '''
+        },
+        {
+          "error" : '''
+            Unexpected token [at line: 3 'bye']
+          ''',
+          "input" : "{}",
+          "query" : '''
+            let k = "brett"
+            {
+                (bye + "hi"): $k,
+            }
+          '''
+        },
+        {
+          "error" : '''
+            Missing : [at line: 2 '+']
+          ''',          
+          "input" : "{}",
+          "query" : '''
+            {
+                bye + "hi": "hello"
+            }
+          '''
+        },
+        {
+          "error" : '''
+            Unexpected token [at line: 3 'hi']
+          ''',          
+          "input" : "{}",
+          "query" : '''
+            {
+                bye : "hello",
+                "s" + hi: "addios",
+            }
+          '''
+        },
+        {
+          "error" : '''
+            Unexpected token [at line: 3 'name']
+          ''',
+          "input" : "{}",
+          "query" : '''
+            let k = "brett"
+            {
+                "hi": $k + name,
+            }
+          '''
+        },
+    ]
+}

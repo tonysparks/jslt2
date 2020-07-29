@@ -272,7 +272,13 @@ public class Compiler {
                     String skipLabel = asm.ifeq();
                     
                     Expr key = expr.keyExpr;
-                    key.visit(this);
+                    if(key instanceof IdentifierExpr) {
+                        IdentifierExpr idExpr = (IdentifierExpr)key;
+                        asm.addAndloadconst(idExpr.identifier);
+                    }
+                    else {
+                        key.visit(this);
+                    }
                     
                     Expr value = expr.valueExpr;
                     value.visit(this);
@@ -286,7 +292,13 @@ public class Compiler {
                 }
                 else {
                     Expr key = expr.keyExpr;
-                    key.visit(this);
+                    if(key instanceof IdentifierExpr) {
+                        IdentifierExpr idExpr = (IdentifierExpr)key;
+                        asm.addAndloadconst(idExpr.identifier);
+                    }
+                    else {
+                        key.visit(this);
+                    }
                     
                     Expr value = expr.valueExpr;
                     value.visit(this);
