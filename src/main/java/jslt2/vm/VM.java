@@ -12,13 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.LongNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import jslt2.Jslt2;
 import jslt2.Jslt2Exception;
@@ -321,6 +315,7 @@ public class VM {
                         ObjectNode inputObj = (ObjectNode)inputNode;
                         Iterator<Map.Entry<String, JsonNode>> it = inputObj.fields();
                         
+                        int localTop = top;
                         while(it.hasNext()) {
                             Map.Entry<String, JsonNode> next = it.next();
                             String key = next.getKey();
@@ -334,6 +329,7 @@ public class VM {
                                 
                                 outputObj.set(key, value);
                             }
+                            top = localTop;
                         }
                         
                         exitCall(valueCode, top);
@@ -414,6 +410,9 @@ public class VM {
                         }
                         else if(object.isObject()) {
                             Iterator<String> it = ((ObjectNode)object).fieldNames();
+                            int index = 0;
+                            int localTop = top;
+                            
                             while(it.hasNext()) {
                                 String key = it.next();
                                 
@@ -421,19 +420,29 @@ public class VM {
                                 current.set("key", new TextNode(key));
                                 current.set("value", object.get(key));
                                 
+                                // include the current index in the automatic local variable 
+                                stack[localTop] = IntNode.valueOf(index);
+                                
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
                                 
                                 if(n != null) {
                                     array.add(n);
                                 }
+                                
+                                index++;
+                                top = localTop;
                             }
                         }
                         else if(object.isArray()) {
                             ArrayNode a = (ArrayNode)object;
                             int size = a.size();
+                            int localTop = top;
                             for(int ix = 0; ix < size; ix++) {
                                 JsonNode current = a.get(ix);
+                                
+                                // include the current index in the automatic local variable
+                                stack[localTop] = IntNode.valueOf(ix);
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode n = stack[--top];
@@ -441,6 +450,8 @@ public class VM {
                                 if(n != null) {
                                     array.add(n);  
                                 }
+                                
+                                top = localTop;
                             }
                         }
                         else {
@@ -470,13 +481,19 @@ public class VM {
                             continue;
                         }
                         else if(object.isObject()) {
-                            Iterator<String> it = ((ObjectNode)object).fieldNames();            
+                            Iterator<String> it = ((ObjectNode)object).fieldNames();
+                            int index = 0;
+                            int localTop = top;
+                            
                             while(it.hasNext()) {
                                 String key = it.next();
                                 
                                 ObjectNode current = runtime.newObjectNode();
                                 current.set("key", new TextNode(key));
                                 current.set("value", object.get(key));
+                                
+                                // include the current index in the automatic local variable 
+                                stack[localTop] = IntNode.valueOf(index);
                                 
                                 executeBytecode(forCode, top, current); 
                                 JsonNode v = stack[--top];
@@ -485,13 +502,21 @@ public class VM {
                                 if(k != null) {
                                     obj.set(k.asText(), v);
                                 }
+                                
+                                index++;
+                                top = localTop; 
                             }                                                   
                         }
                         else if(object.isArray()) {            
                             ArrayNode array = (ArrayNode)object;
                             int size = array.size();
+                            int localTop = top;
                             for(int ix = 0; ix < size; ix++) {
                                 JsonNode current = array.get(ix);
+                                
+                                // include the current index in the automatic local variable
+                                stack[localTop] = IntNode.valueOf(ix);
+                                
                                 executeBytecode(forCode, top, current); 
                                 JsonNode v = stack[--top];
                                 JsonNode k = stack[--top];
@@ -499,6 +524,8 @@ public class VM {
                                 if(k != null) {
                                     obj.set(k.asText(), v);  
                                 }
+                                
+                                top = localTop;
                             }
                         }
                         else {                            

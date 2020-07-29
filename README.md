@@ -43,7 +43,7 @@ Include in your Maven/Gradle project:
 <dependency>
     <groupId>com.github.tonysparks.jslt2</groupId>
     <artifactId>jslt2</artifactId>
-    <version>0.2.4</version>
+    <version>0.2.7</version>
 </dependency>
 ```
 
@@ -92,6 +92,38 @@ Jslt2 runtime = Jslt2.builder().includeNulls(true).build();
 let x = """this
    is a "verbatim"
    string"""
+```
+* Automatic index variable with `for` expressions.  The variable is injected with the value of the current iteration index (zero based) and stored in the variable `index__`.  This variable exists for both Object and Array `for` expressions:
+
+```
+{for ([1,2,3])
+    ("key_" + $index__) : .
+}
+
+// outputs:
+{
+    "key_0":1,
+    "key_1":2,
+    "key_2":3
+}
+```
+
+If you need to embed `for` expressions, you can reference the parent index by:
+
+```
+{for ([1,2,3])
+    let parentIndex = $index__
+    ("key_" + $index__) : [for (["a", "b", "c"]) $parentIndex * $index__ ]
+}
+
+// outputs:
+
+{
+    "key_0":[0,0,0],
+    "key_1":[0,1,2],
+    "key_2":[0,2,4]
+}
+
 ```
 
 * Performance has been interesting.  I've tested on AMD Phenom II and Intel i5; on Intel, JSLT2 can be roughly 5% to 10% faster; and on AMD, JSLT2 is consistently 5%-10% *slower*.  To date, depending on the template the original JSLT code will be generally slightly faster than JSLT2 code.
