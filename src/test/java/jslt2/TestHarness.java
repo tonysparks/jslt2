@@ -50,11 +50,16 @@ public class TestHarness extends TestBase {
         
         for(TestCase test : suite.tests) {
             System.out.println("Test: " + test.query);
-            if(test.variables != null) {
-                check(test.input, test.query, test.output, test.variables);
+            if(test.error != null) {
+                error(test.input, test.query, test.error);
             }
             else {
-                check(test.input, test.query, test.output);
+                if(test.variables != null) {
+                    check(test.input, test.query, test.output, test.variables);
+                }
+                else {
+                    check(test.input, test.query, test.output);
+                }
             }
         }
     }
@@ -91,5 +96,10 @@ public class TestHarness extends TestBase {
     @Test
     public void forIndexTests() throws Exception {
         executeTests("/for-index-tests.json");
+    }
+    
+    @Test
+    public void identifierBugFixTests() throws Exception {
+        executeTests("/identifier-bug-tests.json");
     }
 }
