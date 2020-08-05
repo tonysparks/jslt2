@@ -102,4 +102,9 @@ public class TestHarness extends TestBase {
     public void identifierBugFixTests() throws Exception {
         executeTests("/identifier-bug-tests.json");
     }
+    
+    @Test
+    public void matcherBugFixTests() throws Exception {
+        executeTests("/matcher-bug-tests.json");
+    }
 }
