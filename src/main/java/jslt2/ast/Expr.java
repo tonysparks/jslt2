@@ -530,6 +530,11 @@ public abstract class Expr  {
         public Expr optimize() {
             return this;
         }
+        
+        @Override
+        public String toString() {
+            return this.identifier;
+        }
     }
     
     public static class IfExpr extends Expr {
